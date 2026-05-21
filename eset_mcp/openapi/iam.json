@@ -1,0 +1,1637 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - Identity",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a>",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://eu.iam.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "IdentityProvider"
+    },
+    {
+      "name": "Permissions"
+    },
+    {
+      "name": "Roles"
+    }
+  ],
+  "paths": {
+    "/v2/permissions": {
+      "get": {
+        "tags": [
+          "Permissions"
+        ],
+        "summary": "List permissions",
+        "description": "List all possible permissions.",
+        "operationId": "Permissions_ListPermissions",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2ListPermissionsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/role-assignments": {
+      "get": {
+        "tags": [
+          "IdentityProvider"
+        ],
+        "summary": "List roles",
+        "description": "List [role]s of [subject]s.\n\n> **Info:**\n> Not only Users are [subject]s, but anything that can have roles attached. For example, Devices.\n\n> **Info:**\n> Modeled after [List role assignments](https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-list-portal).\n\nMight be filtered by the specified [subject] or [scope]s.\n\nIf the filters are left empty, all the roles available to the caller are returned.\n\nExample:\nRequest*\n```yaml\n---\nscopes:\n- msp_uuid: af631cc9-3e9f-4fd7-8f29-ed8121b4cf8a\n```\n\nResponse*\n```yaml\n---\nassignments:\n- subject_reference: 286f5456-a0ac-4e8a-8508-5c2224b47ae6\nroles:\n- role_name: admin\nscopes:\n- msp_uuid: af631cc9-3e9f-4fd7-8f29-ed8121b4cf8a\n- customer_uuid: 30bd93aa-c0ef-4fcf-a73f-ce80610bd161\n- role_name: auditor\nscopes:\n- msp_uuid: 30bd93aa-c0ef-4fcf-a73f-ce80610bd161\n- subject_reference: ae9e45d2-9ee6-43e7-9b68-a650d62eeff1\nroles:\n- role_name: admin\nscopes:\n- msp_uuid: af631cc9-3e9f-4fd7-8f29-ed8121b4cf8a\n- customer_uuid: ff572f63-8965-47da-9d9d-cb994dc9da10\n- role_name: auditor\nscopes:\n- msp_uuid: af631cc9-3e9f-4fd7-8f29-ed8121b4cf8a\n- customer_uuid: 30bd93aa-c0ef-4fcf-a73f-ce80610bd161\n```",
+        "operationId": "IdentityProvider_ListRoles",
+        "parameters": [
+          {
+            "name": "includeNestedScopes",
+            "in": "query",
+            "description": "Scopes can be nested, and some scopes naturally exist within the boundaries of another scope.\n\nIf true, besides the requested scopes, nested scopes are also included in the response.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "subjectReference",
+            "in": "query",
+            "description": "Return only roles of the [subject](https://pages.nist.gov/800-63-3/sp800-63-3.html#subject)\n\nReference can be the User UUID, EPC instance UUID, or whatever identifies the subject.\n\nIf omitted, all the subjects (accessible to the caller) are returned.\n\n> **Info:**\n> `sub` claim can be used:\n> [JSON Web Token Claims](https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-token-claims#reserved-claims)\n>\n> Identical to the `principal` concept from the Microsoft literature: [Security principals](https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-principals)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "subjectType",
+            "in": "query",
+            "description": "Type of the subject in reference.\n\n - SUBJECT_TYPE_UNSPECIFIED: fallback\n - SUBJECT_TYPE_USER: Subject represents a [user].\n - SUBJECT_TYPE_DEVICE: Subject represents a [device].\n - SUBJECT_TYPE_USER_GROUP: Roles can be assigned to a user group.\n\nThen, the roles are inferred from the groups of the authenticated user.\n - SUBJECT_TYPE_MANAGED_IDENTITY: The subject has a managed identity.\n\nManaged identities are used by the API clients to access services.\n - SUBJECT_TYPE_SERVICE: The subject represents a [service].",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "default": "SUBJECT_TYPE_UNSPECIFIED",
+              "enum": [
+                "SUBJECT_TYPE_UNSPECIFIED",
+                "SUBJECT_TYPE_USER",
+                "SUBJECT_TYPE_DEVICE",
+                "SUBJECT_TYPE_USER_GROUP",
+                "SUBJECT_TYPE_MANAGED_IDENTITY",
+                "SUBJECT_TYPE_SERVICE"
+              ]
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Comma-separated list of fields (from the request resource).\n\nAllowed formats are:\n- [snake_case version of the field name](https://developers.google.com/protocol-buffers/docs/style#message_and_field_names) as used by protocol buffers.\n- [JSON version of the field name](https://developers.google.com/protocol-buffers/docs/proto3#json)\n\nThe syntax is described at [Standard Methods: List Ordering](https://google.aip.dev/132#ordering)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2ListRolesResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/role-assignments:assignRole": {
+      "post": {
+        "tags": [
+          "IdentityProvider"
+        ],
+        "summary": "Assign role",
+        "description": "Assign a role to a subject. Eventually, the subject ends with its existing roles and those assigned by this operation.\n\nFor example:\n\"User X\" is an \"admin\" of the Subscription B. \n`AssignRole( \"User X\", { \"admin\", [\"Subscription A\", \"Subscription C\"]) `\nleaves the user being an admin of the Subscriptions A, B, and C.",
+        "operationId": "IdentityProvider_AssignRole",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2AssignRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2AssignRoleResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v2/role-assignments:revokeRole": {
+      "post": {
+        "tags": [
+          "IdentityProvider"
+        ],
+        "summary": "Remove assigned role",
+        "description": "Remove the assigned role from the subject. Eventually, the subject ends without roles or scopes unassigned by this operation.\n\nFor example:\n\"User X\" is an \"admin\" of the Subscriptions A, B, C. \n`RevokeRole( \"User X\", { \"admin\", \"Subscription B\"}) `\nleaves the user being an admin of the Subscriptions A and C.",
+        "operationId": "IdentityProvider_RevokeRole",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2RevokeRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2RevokeRoleResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v2/roles": {
+      "post": {
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Create role",
+        "description": "Creates a new custom [Role].\nThe role name must be unique within the scope in which the role is created.\n\n> **Info:**\n> For EPC, name must be unique within the EPC Instance.",
+        "operationId": "Roles_CreateRole",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2CreateRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2CreateRoleResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v2/roles/{roleName}": {
+      "delete": {
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Delete role",
+        "description": "Delete specified role.",
+        "operationId": "Roles_DeleteRole",
+        "parameters": [
+          {
+            "name": "roleName",
+            "in": "path",
+            "description": "Role name of deleted role.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2DeleteRoleResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "protobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": {
+          "type": "object"
+        }
+      },
+      "rpcStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        }
+      },
+      "v2AssignRoleRequest": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/v2ScopedRole"
+          },
+          "subjectReference": {
+            "type": "string",
+            "description": "Reference to the [user], [device] or whatever identifies the subject."
+          },
+          "subjectType": {
+            "$ref": "#/components/schemas/v2SubjectType"
+          }
+        }
+      },
+      "v2AssignRoleResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v2CreateRoleRequest": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/v2Role"
+          }
+        }
+      },
+      "v2CreateRoleResponse": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/v2Role"
+          }
+        }
+      },
+      "v2DeleteRoleResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v2ListPermissionsResponse": {
+        "type": "object",
+        "properties": {
+          "permissions": {
+            "title": "List of permissions",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/v2Permission"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          }
+        }
+      },
+      "v2ListRolesResponse": {
+        "type": "object",
+        "properties": {
+          "assignments": {
+            "type": "array",
+            "description": "List of subject-roles tuples.",
+            "items": {
+              "$ref": "#/components/schemas/v2SubjectRoles"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          },
+          "totalSize": {
+            "type": "integer",
+            "description": "The total count of items in the list irrespective of pagination.\n\n> **Info:**\n> One of the [standard fields](https://cloud.google.com/apis/design/standard_fields)\n\n`Page_size` might differ for every call (it is an input parameter) so the calculation of how many pages there is in total is caller's responsibility.",
+            "format": "int64"
+          }
+        }
+      },
+      "v2Permission": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Permission name. It is a unique ID of the permission.\n\nIt must be a URL-safe identifier. It must consist only of alphanumeric characters (a-z, A-Z, 0-9), dashes (-), and underscores (_). Spaces and special characters are not allowed.\n\n> **Info:**\n> For EPC, the display name is formed by concatenating strings for functionality and possible actions (Read, Write, Use) in the format functionality.action, separated by the symbol '.'\n> Example: Rogue Detection Sensor Database Reset.Read"
+          }
+        },
+        "description": "Permission specifies the allowed actions that can be performed."
+      },
+      "v2RevokeRoleRequest": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/v2ScopedRole"
+          },
+          "subjectReference": {
+            "type": "string",
+            "description": "Reference to the [user], [device] or whatever identifies the subject."
+          },
+          "subjectType": {
+            "$ref": "#/components/schemas/v2SubjectType"
+          }
+        }
+      },
+      "v2RevokeRoleResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v2Role": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "A human-readable description of the role definition."
+          },
+          "displayName": {
+            "type": "string",
+            "description": "A human-readable name of the Role."
+          },
+          "name": {
+            "type": "string",
+            "description": "The role name.\nIt is a unique ID of the role in the defined scope.\n\nIt must be a URL-safe identifier. It must consist only of alphanumeric characters (a-z, A-Z, 0-9), dashes (-), and underscores (_). Spaces and special characters are not allowed."
+          },
+          "permissionNames": {
+            "type": "array",
+            "description": "The names of the permissions this role grants.\n\nPermissions are referenced by their name.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "A Role is a collection of permissions that define what actions can be performed."
+      },
+      "v2Scope": {
+        "type": "object",
+        "properties": {
+          "assetGroupUuid": {
+            "type": "string",
+            "description": "Scope of the referenced [group] from asset management.\n\ntype: asset_management.v1.Group"
+          },
+          "customerUuid": {
+            "type": "string",
+            "description": "Scope of the referenced [customer].\n\n> **Info:**\n> The [customer] scope is covered by the more abstract [tenant] scope, which will eventually be used instead of the [customer] scope.\n\ntype: customer_management.v2.Customer"
+          },
+          "deviceUuid": {
+            "type": "string",
+            "description": "Scope of the referenced [device].\n\ntype: device_management.v1.Device"
+          },
+          "mspUuid": {
+            "type": "string",
+            "description": "Scope of the referenced [MSP].\n\n> **Info:**\n> The [MSP] scope is covered by the more abstract [tenant] scope, which will eventually be used instead of the [customer] scope.\n\ntype: msp_management.v1.Msp"
+          },
+          "policyUuid": {
+            "type": "string",
+            "description": "Scope of the referenced [policy].\n\ntype: policy_management.v1.Policy"
+          },
+          "siteUuid": {
+            "type": "string",
+            "description": "[Site] reference.\n\ntype: organization_site_management.v1.Site"
+          },
+          "subscriptionUuid": {
+            "type": "string",
+            "description": "Scope of the referenced [subscription].\n\ntype: subscription_management.v1.Subscription"
+          },
+          "userUuid": {
+            "type": "string",
+            "description": "Scope of the referenced [user].\n\ntype: user_management.v1.User"
+          },
+          "tenantUuid": {
+            "type": "string",
+            "description": "Tenant typically represents an organization unit recognized by ESET.\n\nTenant defines the logical scope of the managed entities. Each managed entity is owned by exactly one tenant, which means its life cycle is inherently dependent on the tenant\u2019s life cycle.\n\ntype: tenant_management.v1.Tenant"
+          }
+        },
+        "description": "[Scope] for a role assignment. Scope narrows down the application of a role.\n\n[Scope]s can be hierarchical, which implies role inheritance.\n\n> **Info:**\n> On the Internet the concept of the scope (for example, [Scope](https://learn.microsoft.com/en-us/azure/role-based-access-control/scope-overview)) can be found under different names:\n>\n> `Condition` from:\n> [REST Resource: roleAssignments](https://developers.google.com/admin-sdk/directory/reference/rest/v1/roleAssignments)\n>\n> `Context` from:\n> [Term Definition: Contextual Role](http://www.unified-am.com/UAM/UAM/guidances/termdefinitions/uam_context-role_B9C4F862.html)"
+      },
+      "v2ScopedRole": {
+        "type": "object",
+        "properties": {
+          "roleName": {
+            "type": "string",
+            "description": "The role name is the identifier of the Role.\n\nFor example, \"admin\", or \"security.viewer\", or  \"2a2b9908-6ea1-4ae2-8e65-a410df84e7d1\"\n\nRoles are referenced by their names."
+          },
+          "scopes": {
+            "type": "array",
+            "description": "Map of [role]s to [scope]s.\n\nIf the [scope] is left empty, the role is considered global for all the [scope]s.\n\nThe first string stands for the role (for example, \"Auditor\").",
+            "items": {
+              "$ref": "#/components/schemas/v2Scope"
+            }
+          }
+        },
+        "description": "Combines the [role] and [scope]s. Roles might have effects limited by the scopes. For example, a user might be an admin of a specific device.\n\n> **Info:**\n> On the Internet the concept of the scope (for example, [Scope](https://learn.microsoft.com/en-us/azure/role-based-access-control/scope-overview)) can be found under different names:\n>\n> `Condition` from:\n> [REST Resource: roleAssignments](https://developers.google.com/admin-sdk/directory/reference/rest/v1/roleAssignments)\n>\n> `Context` from:\n> [Term Definition: Contextual Role](http://www.unified-am.com/UAM/UAM/guidances/termdefinitions/uam_context-role_B9C4F862.html)"
+      },
+      "v2SubjectRoles": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "description": "List of [role]s with their respective scopes.",
+            "items": {
+              "$ref": "#/components/schemas/v2ScopedRole"
+            }
+          },
+          "subjectReference": {
+            "type": "string",
+            "description": "Reference of the [subject](https://pages.nist.gov/800-63-3/sp800-63-3.html#subject).\n\n> **Info:**\n> Identical to the `principal` concept from the Microsoft literature: [Security principals](https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-principals)"
+          },
+          "subjectType": {
+            "$ref": "#/components/schemas/v2SubjectType"
+          }
+        },
+        "description": "Assignment of [role]s to a [subject]."
+      },
+      "v2SubjectType": {
+        "type": "string",
+        "description": "The type of principal represented by the subject to whom the roles are assigned.\n\n - SUBJECT_TYPE_UNSPECIFIED: fallback\n - SUBJECT_TYPE_USER: Subject represents a [user].\n - SUBJECT_TYPE_DEVICE: Subject represents a [device].\n - SUBJECT_TYPE_USER_GROUP: Roles can be assigned to a user group.\n\nThen, the roles are inferred from the groups of the authenticated user.\n - SUBJECT_TYPE_MANAGED_IDENTITY: The subject has a managed identity.\n\nManaged identities are used by the API clients to access services.\n - SUBJECT_TYPE_SERVICE: The subject represents a [service].",
+        "default": "SUBJECT_TYPE_UNSPECIFIED",
+        "enum": [
+          "SUBJECT_TYPE_UNSPECIFIED",
+          "SUBJECT_TYPE_USER",
+          "SUBJECT_TYPE_DEVICE",
+          "SUBJECT_TYPE_USER_GROUP",
+          "SUBJECT_TYPE_MANAGED_IDENTITY",
+          "SUBJECT_TYPE_SERVICE"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Type \"Bearer \" and then your API Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

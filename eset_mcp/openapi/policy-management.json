@@ -1,0 +1,2283 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - Policy Management",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a>",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://eu.policy-management.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Policies"
+    },
+    {
+      "name": "PolicyAssignments"
+    }
+  ],
+  "paths": {
+    "/v2/policies": {
+      "get": {
+        "tags": [
+          "Policies"
+        ],
+        "summary": "List policies",
+        "description": "List all the policies accessible to the caller (based on the token).",
+        "operationId": "Policies_ListPolicies",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2ListPoliciesResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Policies"
+        ],
+        "summary": "Create policy",
+        "description": "Create a policy.\n\nAll the included feature policies must be valid. Otherwise, INVALID_ARGUMENT (gRPC) or 400 BAD Request (REST) is returned.",
+        "operationId": "Policies_CreatePolicy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2CreatePolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2CreatePolicyResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v2/policies/{policyUuid}": {
+      "get": {
+        "tags": [
+          "Policies"
+        ],
+        "summary": "Get policy",
+        "description": "Get policy details.",
+        "operationId": "Policies_GetPolicy",
+        "parameters": [
+          {
+            "name": "policyUuid",
+            "in": "path",
+            "description": "Reference to the requested policy.\n\ntype: Policy",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2GetPolicyResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Policies"
+        ],
+        "summary": "Delete policy",
+        "description": "Delete the given policy.",
+        "operationId": "Policies_DeletePolicy",
+        "parameters": [
+          {
+            "name": "policyUuid",
+            "in": "path",
+            "description": "Reference to the policy to be deleted.\n\ntype: Policy",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2DeletePolicyResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/policy-assignments": {
+      "get": {
+        "tags": [
+          "PolicyAssignments"
+        ],
+        "summary": "List policy assignments",
+        "description": "List all the policy assignments available to the caller.",
+        "operationId": "PolicyAssignments_ListPolicyAssignments",
+        "parameters": [
+          {
+            "name": "policyUuids",
+            "in": "query",
+            "description": "If filled, only assignments of any of the given policies will be included in the response.\n\nIf also `policy uuid` is filled, it is added to this list.\n\ntype: Policy",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "policyUuid",
+            "in": "query",
+            "description": "If filled, only assignments of the given policy will be included in the response.\n\nThis filter is merged with `policy uuids` if those are filled.\n\ntype: Policy",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "target.deviceUuid",
+            "in": "query",
+            "description": "Policy is assigned to [device].\n\ntype: device_management.v1.Device",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "target.deviceGroupUuid",
+            "in": "query",
+            "description": "Policy is assigned to [device group].\n\ntype: device_management.v1.DeviceGroup",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "target.subscriptionUuid",
+            "in": "query",
+            "description": "Policy is assigned to [subscription].\n\ntype: subscription_provisioning.v2.Subscription",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2ListPolicyAssignmentsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "PolicyAssignments"
+        ],
+        "summary": "Assign policy",
+        "description": "Create a policy assignment.\n\nAssignments to the same targets are ordered and prioritized.\n\nEvery new assignment to the target is put at the end of the stack. The assignment ranking will be equal to the number of target's assignments.\n\nRanking 1 is the highest, and policies are merged from rank 1 towards lower ranks.\n\n> **Info:** \n> A similar concept is described in [Group assignment ranking](https://learn.microsoft.com/en-us/microsoftteams/assign-policies-users-and-groups#group-assignment-ranking)",
+        "operationId": "PolicyAssignments_AssignPolicy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v2AssignPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2AssignPolicyResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v2/policy-assignments/{assignmentUuid}": {
+      "get": {
+        "tags": [
+          "PolicyAssignments"
+        ],
+        "summary": "Get policy assignment",
+        "description": "Get details of the given policy assignment.",
+        "operationId": "PolicyAssignments_GetPolicyAssignment",
+        "parameters": [
+          {
+            "name": "assignmentUuid",
+            "in": "path",
+            "description": "Reference to the policy assignment to retrieve.\n\ntype: PolicyAssignment",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2GetPolicyAssignmentResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "PolicyAssignments"
+        ],
+        "summary": "Unassign policy",
+        "description": "Delete the policy assignment. \n\nThe remaining assignments to the target are reordered.",
+        "operationId": "PolicyAssignments_UnassignPolicy",
+        "parameters": [
+          {
+            "name": "assignmentUuid",
+            "in": "path",
+            "description": "Reference to the policy assignment to be updated.\n\ntype: PolicyAssignment",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2UnassignPolicyResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v2/policy-assignments/{assignmentUuid}:updateRanking": {
+      "post": {
+        "tags": [
+          "PolicyAssignments"
+        ],
+        "summary": "Update policy assignment ranking",
+        "description": "Move the policy assignment within ranks.",
+        "operationId": "PolicyAssignments_UpdatePolicyAssignmentRanking",
+        "parameters": [
+          {
+            "name": "assignmentUuid",
+            "in": "path",
+            "description": "Reference to the policy assignment to be updated.\n\ntype: PolicyAssignment",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyAssignmentsUpdatePolicyAssignmentRankingBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v2UpdatePolicyAssignmentRankingResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PolicyAssignmentsUpdatePolicyAssignmentRankingBody": {
+        "type": "object",
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "description": "The new ranking of the policy assignment. \n\nCannot be 0; otherwise, 400 BAD REQUEST is thrown.\nCannot be higher than the number of target's assignments; otherwise, 412 PRECONDITION-FAILED is thrown.\n\nAfter the successful update, all the other assignments are reordered with the given policy being ranked as desired.",
+            "format": "int64"
+          }
+        }
+      },
+      "protobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string",
+            "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+          }
+        },
+        "additionalProperties": {
+          "type": "object"
+        },
+        "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      },
+      "rpcStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        }
+      },
+      "v2AssignPolicyRequest": {
+        "type": "object",
+        "properties": {
+          "assignment": {
+            "$ref": "#/components/schemas/v2PolicyAssignment"
+          }
+        }
+      },
+      "v2AssignPolicyResponse": {
+        "type": "object",
+        "properties": {
+          "assignment": {
+            "$ref": "#/components/schemas/v2PolicyAssignment"
+          }
+        }
+      },
+      "v2CreatePolicyRequest": {
+        "type": "object",
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/v2Policy"
+          }
+        }
+      },
+      "v2CreatePolicyResponse": {
+        "type": "object",
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/v2Policy"
+          }
+        }
+      },
+      "v2DeletePolicyResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v2FeaturePolicy": {
+        "type": "object",
+        "properties": {
+          "configuration": {
+            "$ref": "#/components/schemas/protobufAny"
+          },
+          "featureId": {
+            "type": "integer",
+            "description": "Reference to the feature whose configuration is proposed.\n\nSome IDs are reserved for legacy software. For ERA/ESMC/EP(C) legacy policy, use 0xFFFFFFFF value for `feature_id`.\n\ntype: feature_catalog.v1.Feature",
+            "format": "int64"
+          },
+          "flags": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/v2SettingFlags"
+            },
+            "description": "Map selector to set of flags.\n\nThe selector is of the same format as the paths of the [field mask](https://protobuf.dev/reference/protobuf/google.protobuf/#field-mask). \n\nThat also implies flags cannot be given to array members, only whole arrays."
+          }
+        },
+        "description": "Policy for individual feature.\n\nThe type of the proposed configuration must match the feature. If the feature does not understand the configuration, the configuration is considered to be empty."
+      },
+      "v2GetPolicyAssignmentResponse": {
+        "type": "object",
+        "properties": {
+          "assignment": {
+            "$ref": "#/components/schemas/v2PolicyAssignment"
+          }
+        }
+      },
+      "v2GetPolicyResponse": {
+        "type": "object",
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/v2Policy"
+          }
+        }
+      },
+      "v2ListPoliciesResponse": {
+        "type": "object",
+        "properties": {
+          "policies": {
+            "type": "array",
+            "description": "List of the policies.",
+            "items": {
+              "$ref": "#/components/schemas/v2Policy"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          }
+        }
+      },
+      "v2ListPolicyAssignmentsResponse": {
+        "type": "object",
+        "properties": {
+          "assignments": {
+            "type": "array",
+            "description": "List of policy assignments matching criteria from the request.",
+            "items": {
+              "$ref": "#/components/schemas/v2PolicyAssignment"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          }
+        }
+      },
+      "v2Policy": {
+        "type": "object",
+        "properties": {
+          "builtIn": {
+            "type": "boolean",
+            "description": "True if the policy is built-in.\n\nBuilt-in policies cannot be created, modified or deleted.",
+            "readOnly": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the policy."
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Human-readable name of the policy."
+          },
+          "features": {
+            "type": "array",
+            "description": "Policies for individual features.",
+            "items": {
+              "$ref": "#/components/schemas/v2FeaturePolicy"
+            }
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 4122: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc4122), do not rely on it being a RFC UUID. Treat it as an opaque identifier.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\"",
+            "readOnly": true
+          }
+        },
+        "description": "Policy carries all the feature configurations that should be set.\n\nPolicy encodes the proposed configuration, not the applied configuration.\n\nOn the target, the policy is combined with other target's policies and creates the final configuration."
+      },
+      "v2PolicyAssignment": {
+        "type": "object",
+        "properties": {
+          "policyUuid": {
+            "type": "string",
+            "description": "Assigned policy.\n\ntype: Policy"
+          },
+          "rank": {
+            "type": "integer",
+            "description": "Ranking within multiple assignments to the `target`. \n\nRank 1 is the highest rank, that is, the rank of the highest priority. Policies are applied in order from the highest rank to the lowest.",
+            "format": "int64",
+            "readOnly": true
+          },
+          "target": {
+            "$ref": "#/components/schemas/v2PolicyTarget"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 4122: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc4122), do not rely on it being a RFC UUID. Treat it as an opaque identifier.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\"",
+            "readOnly": true
+          }
+        },
+        "description": "Relation between policy and target.\n\nOne target can have multiple policies assigned. Those policies are combined according to their ranking."
+      },
+      "v2PolicyTarget": {
+        "type": "object",
+        "properties": {
+          "deviceUuid": {
+            "type": "string",
+            "description": "Policy is assigned to [device].\n\ntype: device_management.v1.Device"
+          },
+          "deviceGroupUuid": {
+            "type": "string",
+            "description": "Policy is assigned to [device group].\n\ntype: device_management.v1.DeviceGroup"
+          },
+          "subscriptionUuid": {
+            "type": "string",
+            "description": "Policy is assigned to [subscription].\n\ntype: subscription_provisioning.v2.Subscription"
+          }
+        },
+        "description": "Identifies the entity to which the policy is assigned."
+      },
+      "v2SettingFlags": {
+        "type": "object",
+        "properties": {
+          "applyForcefully": {
+            "type": "boolean",
+            "description": "Will win merging, if merged before other policies."
+          },
+          "readOnly": {
+            "type": "boolean",
+            "description": "Cannot be overridden by client."
+          }
+        },
+        "description": "Flag of the individual setting."
+      },
+      "v2UnassignPolicyResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v2UpdatePolicyAssignmentRankingResponse": {
+        "title": "empty",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Type \"Bearer \" and then your API Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

@@ -1,0 +1,1359 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - Installer Management",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a>",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://eu.installer-management.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Installers"
+    }
+  ],
+  "paths": {
+    "/v1/gpo-sccm-files:generate": {
+      "post": {
+        "tags": [
+          "Installers"
+        ],
+        "summary": "Generate gpo sccm file",
+        "description": "Generates a GPO/SCCM-compatible configuration file for deploying the security product via centralized IT management systems (such as Group Policy or System Center Configuration Manager). \n\n\nThe configuration is generated ad-hoc and not stored in the system.",
+        "operationId": "Installers_GenerateGpoSccmFile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1GenerateGpoSccmFileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1GenerateGpoSccmFileResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/installers": {
+      "get": {
+        "tags": [
+          "Installers"
+        ],
+        "summary": "List installers",
+        "description": "List all installers available to the caller.",
+        "operationId": "Installers_ListInstallers",
+        "parameters": [
+          {
+            "name": "usable",
+            "in": "query",
+            "description": "If true, only usable installers will be included in the response. If false, only unusable installers will be returned.\n\nIf empty, all installers will be included.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1ListInstallersResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Installers"
+        ],
+        "summary": "Create installer",
+        "description": "Create [installer].",
+        "operationId": "Installers_CreateInstaller",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1CreateInstallerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1CreateInstallerResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/installers/{installerUuid}": {
+      "get": {
+        "tags": [
+          "Installers"
+        ],
+        "summary": "Get installer",
+        "description": "Get details of the requested [installer].",
+        "operationId": "Installers_GetInstaller",
+        "parameters": [
+          {
+            "name": "installerUuid",
+            "in": "path",
+            "description": "Reference to the requested [installer].\n\ntype: Installer",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1GetInstallerResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Installers"
+        ],
+        "summary": "Delete installer",
+        "description": "Delete [installer].",
+        "operationId": "Installers_DeleteInstaller",
+        "parameters": [
+          {
+            "name": "installerUuid",
+            "in": "path",
+            "description": "Reference to the [installer] to be deleted.\n\ntype: Installer",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1DeleteInstallerResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "protobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": {
+          "type": "object"
+        }
+      },
+      "rpcStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        }
+      },
+      "v1ActivatedProduct": {
+        "type": "object",
+        "properties": {
+          "poolUuid": {
+            "type": "string",
+            "description": "Reference to [unit pool].\n\ntype: unit_management.v1.UnitPool"
+          },
+          "poolDisplayName": {
+            "type": "string",
+            "description": "Human-readable name of [unit pool]."
+          },
+          "productId": {
+            "type": "integer",
+            "description": "Reference to [activated product].\n\ntype: product_catalog.v1.Product",
+            "format": "int64"
+          },
+          "productDisplayName": {
+            "type": "string",
+            "description": "Display name of [activated product]."
+          },
+          "subscriptionUuid": {
+            "type": "string",
+            "description": "Reference to a [subscription] from where the units will be used.\n\ntype: subscription_management.v1.Subscription"
+          },
+          "subscriptionSupportCode": {
+            "type": "string",
+            "description": "User-friendly code used in support-related situations. Generated by the system at subscription creation, cannot be updated."
+          }
+        },
+        "description": "Describes product activated (enabled) after installation."
+      },
+      "v1CreateInstallerRequest": {
+        "type": "object",
+        "properties": {
+          "installer": {
+            "$ref": "#/components/schemas/v1Installer"
+          },
+          "requestedComponentIds": {
+            "type": "array",
+            "description": "List of component IDs to be explicitly included in the installer. Each ID represents a platform component that provides specific security functionality. If not provided, components will be automatically selected based on the license.\n\n\nOnly the following component IDs are currently supported:\n\n13 \u2013 ESET Remote Administrator Agent\n\nEndpoint Security components:\n19 - \tESET Endpoint Antivirus for Windows\n20 -  ESET File Security for Microsoft Windows Server\n27 - \tESET Endpoint Security for Windows\n\n209 - ESET File Security for Linux\n215 - ESET Endpoint Antivirus for Linux (new codebase, v7+)\n\n29 - \tESET Endpoint Antivirus for macOS\n30 - \tESET Endpoint Security for macOS\n230 - ESET Endpoint Antivirus for macOS (new codebase, v7+)\n231 - ESET Endpoint Security for macOS (new codebase, v7+)\n\n\n\n167 \u2013 ESET Inspect Agent\n\n\nFull Disk Encryption (EFDE) components:\n210 - ESET Full Disk Encryption for Windows\n\nAny unsupported or incompatible component ID will be rejected with a validation error.\n\ntype: PlatformComponent",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        }
+      },
+      "v1CreateInstallerResponse": {
+        "type": "object",
+        "properties": {
+          "installer": {
+            "$ref": "#/components/schemas/v1Installer"
+          }
+        }
+      },
+      "v1DeleteInstallerResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v1DeviceEnrollmentSettings": {
+        "type": "object",
+        "properties": {
+          "groupDisplayName": {
+            "type": "string",
+            "description": "Display name of the future parent device group.",
+            "readOnly": true
+          },
+          "securityGroupUuid": {
+            "type": "string",
+            "description": "Security group to become a member of. \n\nIf not specified:\n1. If the device name matches an existing device, the device is enrolled in the group of the matching device.\n2. If the device name does not match any existing device, the device is enrolled in the `Lost & found` group.\n\ntype: asset_management.v1.Group"
+          }
+        },
+        "description": "Describes how device enrolls into device management after installation."
+      },
+      "v1GenerateGpoSccmFileRequest": {
+        "type": "object",
+        "properties": {
+          "sendAnonymousDiagnosticData": {
+            "type": "boolean",
+            "description": "If true, the installed endpoint product will take part in improvement program by sending anonymous diagnostic data, such as crash reports and crash dumps."
+          },
+          "deviceEnrollmentSettings": {
+            "$ref": "#/components/schemas/v1DeviceEnrollmentSettings"
+          }
+        }
+      },
+      "v1GenerateGpoSccmFileResponse": {
+        "type": "object",
+        "properties": {
+          "gpoSccmFile": {
+            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+            "type": "string",
+            "description": "Base64-encoded contents of the generated file, ready for download or use.",
+            "format": "byte"
+          }
+        }
+      },
+      "v1GetInstallerResponse": {
+        "type": "object",
+        "properties": {
+          "installer": {
+            "$ref": "#/components/schemas/v1Installer"
+          }
+        }
+      },
+      "v1Installer": {
+        "type": "object",
+        "properties": {
+          "activatedProducts": {
+            "type": "array",
+            "description": "List of automatically determined [business products] to be activated (enabled) when the installation finishes.",
+            "readOnly": true,
+            "items": {
+              "$ref": "#/components/schemas/v1ActivatedProduct"
+            }
+          },
+          "createTime": {
+            "type": "string",
+            "description": "When the installer was created.\n\n> **Info:**\n> For details, see\n> [GitHub: timestamp.proto](https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/timestamp.proto).",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "deviceEnrollment": {
+            "$ref": "#/components/schemas/v1DeviceEnrollmentSettings"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Human-readable name of the installer."
+          },
+          "downloadUrl": {
+            "type": "string",
+            "description": "The installer can be downloaded at this URL.",
+            "readOnly": true
+          },
+          "enableCloudScannerFeedback": {
+            "type": "boolean",
+            "description": "If true, the installed endpoint product will use ESET cloud scanning."
+          },
+          "enablePuaDetection": {
+            "type": "boolean",
+            "description": "If true, the detection of potentially unwanted applications will be enabled in the installed endpoint product."
+          },
+          "expireTime": {
+            "type": "string",
+            "description": "Installers are created with automatically determined lifespan. After expire_time, they become unusable.\n\n> **Info:**\n> For details, see\n> [GitHub: timestamp.proto](https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/timestamp.proto).",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "installedComponents": {
+            "type": "array",
+            "description": "List of automatically determined [ESET platform component]s to be installed.\n\nEvery component can host one or more [business products] or feature sets (or capabilities or features). Activated (enabled) products are listed in the respective attribute.",
+            "readOnly": true,
+            "items": {
+              "$ref": "#/components/schemas/v1PlatformComponent"
+            }
+          },
+          "operatingSystemFamilyId": {
+            "type": "integer",
+            "description": "Which operating system family the installer supports. Currently, only 1 - Windows and 3 - MacOS are supported.\n\n0 = Unspecified\n1 = Windows\n2 = Linux\n3 = Mac OS\n\ntype: os_catalog.v2.OsFamily",
+            "format": "int64"
+          },
+          "preferredLanguageCode": {
+            "type": "string",
+            "description": "Code of the preferred GUI language in [BCP-47 format](https://en.wikipedia.org/wiki/IETF_language_tag).\n\nA default \"en-us\" is used if the preferred language is not available."
+          },
+          "sendAnonymousDiagnosticData": {
+            "type": "boolean",
+            "description": "If true, the installed endpoint product will take part in improvement program by sending anonymous diagnostic data, such as crash reports and crash dumps."
+          },
+          "usable": {
+            "type": "boolean",
+            "description": "If true, the installer can be used. If false, the installer cannot be used for various reasons (for example, expiration).",
+            "readOnly": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 4122: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc4122), do not rely on it being a RFC UUID. Treat it as an opaque identifier.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\"",
+            "readOnly": true
+          }
+        },
+        "description": "Describes the installer entity.\n\nInstaller:\n1. drops one or more components on the target device(s)\n2. activates one or more products on the target device(s)\n3. enrolls the target device into device management under some security group."
+      },
+      "v1ListInstallersResponse": {
+        "type": "object",
+        "properties": {
+          "installers": {
+            "type": "array",
+            "description": "List of [installer]s matching criteria from the request.",
+            "items": {
+              "$ref": "#/components/schemas/v1Installer"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          },
+          "totalSize": {
+            "type": "integer",
+            "description": "The total count of items in the list irrespective of pagination.\n\n> **Info:**\n> One of the [standard fields](https://cloud.google.com/apis/design/standard_fields)\n\n`Page_size` might differ for every call (it is an input parameter) so the calculation of how many pages there is in total is caller's responsibility.",
+            "format": "int64"
+          }
+        }
+      },
+      "v1PlatformComponent": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Human-readable name of the component. Derived from package display_name.",
+            "readOnly": true
+          },
+          "id": {
+            "type": "integer",
+            "description": "Identifier of the governed resource. Can be seen as a [value of item in enumerated type](https://protobuf.dev/programming-guides/proto3/#enum).\n\nIt can be derived from the name by some algorithm, such as CRC32.",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the governed item. Can be seen as a name of an enumeration item, with `id` being its numerical value.\n\n> **Note:**\n> Not to be confused with `display_name`, which is [purposed for UI](https://google.aip.dev/148)."
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Type \"Bearer \" and then your API Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

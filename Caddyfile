@@ -1,0 +1,38 @@
+# Caddy config for production deployment of ESET-MCP.
+#
+# Used only by the `prod` profile of docker-compose:
+#   docker compose --profile prod up -d
+#
+# Caddy fetches a Let's Encrypt cert for {$ESET_PUBLIC_DOMAIN} on first start
+# (HTTP-01 challenge on port 80) and serves the MCP server on HTTPS/443.
+# The MCP container itself only listens on the internal docker network — it
+# is never exposed to the outside world directly.
+
+{$ESET_PUBLIC_DOMAIN} {
+    # Let's Encrypt cert auto-provisioning.
+    tls {$ESET_ACME_EMAIL}
+
+    # Hard cap on request body — MCP messages are small.
+    request_body {
+        max_size 4MB
+    }
+
+    # Pass everything through to the MCP server (Streamable HTTP transport).
+    # The /mcp prefix is fixed by our Starlette Mount in eset_mcp/__main__.py.
+    reverse_proxy eset-mcp-http:8765 {
+        # Stream large/long-running responses (202-polled jobs etc).
+        flush_interval -1
+        # Forward client IP — used by ESET-MCP logs and (downstream) by ESET
+        # rate-limit accounting.
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    encode gzip zstd
+
+    # Modest access log to stdout — let docker collect it.
+    log {
+        output stdout
+        format json
+    }
+}

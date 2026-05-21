@@ -1,0 +1,1894 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - Automation",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a><h4>Task examples:</h4><a href=https://help.eset.com/eset_connect/en-US/automation.html>https://help.eset.com/eset_connect/en-US/automation.html</a>",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://eu.automation.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "DeviceTasks"
+    }
+  ],
+  "paths": {
+    "/v1/device_tasks": {
+      "get": {
+        "tags": [
+          "DeviceTasks"
+        ],
+        "summary": "List tasks",
+        "description": "List all device tasks matching criteria.",
+        "operationId": "DeviceTasks_ListTasks",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1ListTasksResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "DeviceTasks"
+        ],
+        "summary": "Create task",
+        "description": "Create a [device task].\n\nThere is one [device task template] for every unique `display_name`, description, and `action` combination.\nThis template inherits `display_name`, `description` and `action` from the `task` in the request.\n\nThe created task requires to have at least one trigger set. Otherwise, the call fails.",
+        "operationId": "DeviceTasks_CreateTask",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1CreateTaskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1CreateTaskResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/device_tasks/{taskUuid}": {
+      "get": {
+        "tags": [
+          "DeviceTasks"
+        ],
+        "summary": "Get task",
+        "description": "Get the task entity.\n\nFor a complete history, call `ListTaskRuns()`.",
+        "operationId": "DeviceTasks_GetTask",
+        "parameters": [
+          {
+            "name": "taskUuid",
+            "in": "path",
+            "description": "Reference to task.\n\ntype: DeviceTask",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1GetTaskResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "DeviceTasks"
+        ],
+        "summary": "Delete task",
+        "description": "Delete the specified task.\n\nDeletion of the template leads to deletion of all templated tasks.",
+        "operationId": "DeviceTasks_DeleteTask",
+        "parameters": [
+          {
+            "name": "taskUuid",
+            "in": "path",
+            "description": "Reference to deleted task.\n\ntype: DeviceTask",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1DeleteTaskResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/device_tasks/{taskUuid}/runs": {
+      "get": {
+        "tags": [
+          "DeviceTasks"
+        ],
+        "summary": "List task runs",
+        "description": "List task history - all the runs of the task.\n\nFor the sake of forensics, the [task run]s are listed collectively, not as children of their parent task. Information about task runs might easily survive their parent task.\n\n> **Info:**\n> Modeled based on [Jobs: Executions and results](https://google.aip.dev/152#executions-and-results) with ESET specific vocabulary.",
+        "operationId": "DeviceTasks_ListTaskRuns",
+        "parameters": [
+          {
+            "name": "taskUuid",
+            "in": "path",
+            "description": "Include only runs of specific task. Mandatory.\n\ntype: DeviceTask",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "deviceUuid",
+            "in": "query",
+            "description": "Include only runs on specific device (if filled).\n\ntype: device_management/v1/Device",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "listOnlyLastRuns",
+            "in": "query",
+            "description": "If true, the result will only contain the latest runs per device.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1ListTaskRunsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/device_tasks/{taskUuid}:updateTaskTargets": {
+      "post": {
+        "tags": [
+          "DeviceTasks"
+        ],
+        "summary": "Update task targets",
+        "description": "Update task targets.",
+        "operationId": "DeviceTasks_UpdateTaskTargets",
+        "parameters": [
+          {
+            "name": "taskUuid",
+            "in": "path",
+            "description": "Descriptor of the task to update\n\ntype: DeviceTask",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceTasksUpdateTaskTargetsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1UpdateTaskTargetsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/device_tasks/{taskUuid}:updateTaskTriggers": {
+      "post": {
+        "tags": [
+          "DeviceTasks"
+        ],
+        "summary": "Update task triggers",
+        "description": "Update the list of task triggers.",
+        "operationId": "DeviceTasks_UpdateTaskTriggers",
+        "parameters": [
+          {
+            "name": "taskUuid",
+            "in": "path",
+            "description": "Descriptor of the task to update\n\ntype: DeviceTask",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceTasksUpdateTaskTriggersBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1UpdateTaskTriggersResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DeviceTasksUpdateTaskTargetsBody": {
+        "type": "object",
+        "properties": {
+          "targets": {
+            "$ref": "#/components/schemas/v1DeviceTaskTargets"
+          }
+        }
+      },
+      "DeviceTasksUpdateTaskTriggersBody": {
+        "type": "object",
+        "properties": {
+          "triggers": {
+            "type": "array",
+            "description": "List of triggers that replace current triggers.\n\nCannot be empty.",
+            "items": {
+              "$ref": "#/components/schemas/v1Trigger"
+            }
+          }
+        }
+      },
+      "protobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string",
+            "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+          }
+        },
+        "additionalProperties": {
+          "type": "object"
+        },
+        "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      },
+      "rpcStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        }
+      },
+      "v1Action": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the function to execute.\n\nGRPC/ERPC function names in the form of package.ServiceName/RpcName\n\nFor example:\n- `eset.dotnod.scan_management.v1.ScanManager/CreateScan`\n- `eset.dotnod.power_management.v1.PowerManager/RegisterAction`\n- `eset.dotnod.network_access_protection.v1.NetworkAccessProtection/StartNetworkIsolation`\n\nActions outside .NOD are available as documented at [ESET Connect Online Help](https://help.eset.com/eset_connect/en-US/automation.html)."
+          },
+          "params": {
+            "$ref": "#/components/schemas/protobufAny"
+          }
+        },
+        "description": "Descriptor of the call to make."
+      },
+      "v1CreateTaskRequest": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "$ref": "#/components/schemas/v1DeviceTask"
+          }
+        }
+      },
+      "v1CreateTaskResponse": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "$ref": "#/components/schemas/v1DeviceTask"
+          }
+        }
+      },
+      "v1DeleteTaskResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v1DeviceTask": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/v1Action"
+          },
+          "assetGroupUuid": {
+            "type": "string",
+            "description": "Specifies in which asset group the task should be created.\n\nIf empty or null, the asset group will be assigned automatically.\n\ntype: asset_management.v1.Group"
+          },
+          "description": {
+            "type": "string",
+            "description": "User's description. Free text."
+          },
+          "displayName": {
+            "type": "string",
+            "description": "User-friendly name of the task."
+          },
+          "source": {
+            "$ref": "#/components/schemas/v1DeviceTaskSource"
+          },
+          "targets": {
+            "$ref": "#/components/schemas/v1DeviceTaskTargets"
+          },
+          "triggers": {
+            "type": "array",
+            "description": "Specifies *when* to run. What causes the task to be executed.\n\nCannot be empty.",
+            "items": {
+              "$ref": "#/components/schemas/v1Trigger"
+            }
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within the entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 4122: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc4122), do not rely on it being a RFC UUID. Treat it as an opaque identifier.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\""
+          },
+          "createTime": {
+            "type": "string",
+            "description": "The creation timestamp of an entity.",
+            "format": "date-time"
+          },
+          "versionId": {
+            "type": "string",
+            "description": "Identifier of entity version. Every change to internal state of the entity leads to increase of this number. Every time this number changes, `update_time` must change as well.\n\n[Version id] also determines whether one version is more recent than another. More recent versions have higher numbers.\n\n> **Info:**\n> Similar concepts are \n> - change sequence number (CSN)\n> - version_id\n\n> **Info:**\n> Modeled after: https://google.aip.dev/162\n>\n> `revision_create_time` is delivered by `update_time` of https://google.aip.dev/148#timestamps",
+            "format": "uint64"
+          },
+          "updateTime": {
+            "type": "string",
+            "description": "Represents the timestamp when the resource was most recently updated.  Any change to the resource made by users (create/update/delete) must update this value; changes to a resource made internally by the service should refresh this value unless specified otherwise on entity level.\n\n> **Info:**\n> Modeled after: https://google.aip.dev/148#timestamps",
+            "format": "date-time"
+          }
+        },
+        "description": "Describes a device task - a task to be executed on the device where some endpoint protection platform runs. It can also be executed indirectly if the actual device uses some device hub (for example, IoT scenarios).\n\nDevice tasks are abstract containers for scheduled `actions`. If the scheduling information is absent, actions are scheduled for ASAP execution.\n\nEvery execution of a [device task] instantiates `DeviceTaskRun`. Device tasks can be scheduled to be executed repeatedly, which creates many `DeviceTaskRun` entities."
+      },
+      "v1DeviceTaskRun": {
+        "type": "object",
+        "properties": {
+          "deviceUuid": {
+            "type": "string",
+            "description": "Device where the task is executed. For tasks assigned to a device group, there can be multiple task runs from each member of the group.\n\ntype: device_management.v1.Device"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "Timestamp of run end.\n\nMeaningful for finished and failed task runs.",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "result": {
+            "$ref": "#/components/schemas/protobufAny"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "Timestamp of run start.",
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/v1TaskRunStatus"
+          },
+          "taskUuid": {
+            "type": "string",
+            "description": "Reference to [Device task]. Required.\n\ntype: DeviceTask"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within the entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 4122: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc4122), do not rely on it being a RFC UUID. Treat it as an opaque identifier.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\""
+          }
+        },
+        "description": "One run (an execution) of the [device task].\n\n[Task run] inherits all of its properties from the corresponding [device task].\n\n> **Info:**\n> Identity of the [task run] is kept for one task + device combination + start_time combination."
+      },
+      "v1DeviceTaskSource": {
+        "type": "string",
+        "description": "Possible sources of a task.\n\n - DEVICE_TASK_SOURCE_UNSPECIFIED: fallback\n - DEVICE_TASK_SOURCE_INTERNAL_AUTOMATION: The task was created by automation internal to the tenant. For example, some internal rule system.\n - DEVICE_TASK_SOURCE_EXTERNAL_AUTOMATION: The task was created by automation external to the tenant/company. For example, a rule system of a company hired to provide managed detection and response services.\n - DEVICE_TASK_SOURCE_INTERNAL_USER: The task was created by the user from within the tenant/company. For example, an internal security officer.\n - DEVICE_TASK_SOURCE_EXTERNAL_USER: The task was created by the user external to the tenant/company. For example, a security manager of a company hired to provide managed detection and response services.",
+        "default": "DEVICE_TASK_SOURCE_UNSPECIFIED",
+        "enum": [
+          "DEVICE_TASK_SOURCE_UNSPECIFIED",
+          "DEVICE_TASK_SOURCE_INTERNAL_AUTOMATION",
+          "DEVICE_TASK_SOURCE_EXTERNAL_AUTOMATION",
+          "DEVICE_TASK_SOURCE_INTERNAL_USER",
+          "DEVICE_TASK_SOURCE_EXTERNAL_USER"
+        ]
+      },
+      "v1DeviceTaskTargets": {
+        "type": "object",
+        "properties": {
+          "deviceGroupsUuids": {
+            "type": "array",
+            "description": "Task can be assigned to groups of devices.\n\ntype: device_management.v1.DeviceGroup",
+            "items": {
+              "type": "string"
+            }
+          },
+          "devicesUuids": {
+            "type": "array",
+            "description": "Task can be assigned to individual devices, for example, if the task run failed on these devices.\n\ntype: device_management.v1.Device",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Specifies *where* the task should run."
+      },
+      "v1GetTaskResponse": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "$ref": "#/components/schemas/v1DeviceTask"
+          }
+        }
+      },
+      "v1ListTaskRunsResponse": {
+        "type": "object",
+        "properties": {
+          "taskRuns": {
+            "type": "array",
+            "description": "List of [task run]s matching criteria from the request.",
+            "items": {
+              "$ref": "#/components/schemas/v1DeviceTaskRun"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          }
+        }
+      },
+      "v1ListTasksResponse": {
+        "type": "object",
+        "properties": {
+          "tasks": {
+            "title": "List of [device task]s",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/v1DeviceTask"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          }
+        }
+      },
+      "v1ManualTrigger": {
+        "type": "object",
+        "properties": {
+          "createTime": {
+            "type": "string",
+            "description": "When the manual trigger has been created. The task can only be triggered after this time.\n\nRead-only.",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "expireTime": {
+            "type": "string",
+            "description": "Task is not triggered after this time. \n\nThis is useful for the task to not be triggered on stale targets (for example, those turned on after long time of vacation).",
+            "format": "date-time"
+          }
+        },
+        "description": "For manually triggered tasks, this trigger causes immediate execution in `as soon as possible` fashion.\n\n> **Info:**\n> Examples:\n- [Triggers: Manual Trigger](https://tray.io/documentation/connectors/triggers/manual-trigger/)\n- [Windows Services: Trigger Start](https://www.coretechnologies.com/blog/windows-services/trigger-start/)\n- [Manual Trigger](https://www.nocrm.io/help/manual-trigger-101)"
+      },
+      "v1TaskRunStatus": {
+        "title": "Possible TaskRun states",
+        "type": "string",
+        "description": "- TASK_RUN_STATUS_UNSPECIFIED: fallback\n - TASK_RUN_STATUS_QUEUED: The task run has been processed but it is not yet running on the target.\n - TASK_RUN_STATUS_RUNNING: The task is being executed on the target.\n - TASK_RUN_STATUS_FINISHED: The task execution finished successfully.\n - TASK_RUN_STATUS_FAILED: The task execution failed.\n - TASK_RUN_STATUS_SUPPRESSED: The task was not executed due to suppression policies.\n\nSuppression might occur for certain task sources to prevent damaging results. For example, a rule system that would wipe the device as a response to threat detection.",
+        "default": "TASK_RUN_STATUS_UNSPECIFIED",
+        "enum": [
+          "TASK_RUN_STATUS_UNSPECIFIED",
+          "TASK_RUN_STATUS_QUEUED",
+          "TASK_RUN_STATUS_RUNNING",
+          "TASK_RUN_STATUS_FINISHED",
+          "TASK_RUN_STATUS_FAILED",
+          "TASK_RUN_STATUS_SUPPRESSED"
+        ]
+      },
+      "v1Trigger": {
+        "type": "object",
+        "properties": {
+          "manual": {
+            "$ref": "#/components/schemas/v1ManualTrigger"
+          }
+        },
+        "description": "Encodes information about when to run the task."
+      },
+      "v1UpdateTaskTargetsResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v1UpdateTaskTriggersResponse": {
+        "title": "empty",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Type \"Bearer \" and then your API Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

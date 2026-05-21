@@ -1,0 +1,2971 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - Quarantine Management",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a>",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://eu.quarantine-management.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "QuarantinedObjects"
+    }
+  ],
+  "paths": {
+    "/v1/quarantined-objects": {
+      "get": {
+        "tags": [
+          "QuarantinedObjects"
+        ],
+        "summary": "List quarantined objects",
+        "description": "List all quarantined objects matching the criteria in the filter.",
+        "operationId": "QuarantinedObjects_ListQuarantinedObjects",
+        "parameters": [
+          {
+            "name": "filter.cloudOfficeTenantUuid",
+            "in": "query",
+            "description": "Reference to [cloud office tenant].\n\nIf filled, only objects of the referred tenant are returned. If empty or null, objects of any tenant are returned.\n\ntype: cloud_office_protection.v1.CloudOfficeTenant",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "filter.emailInternetMessageId",
+            "in": "query",
+            "description": "If filled, only messages with this Message-ID are returned.\n\nIf empty or \"\", messages with any Message-ID are returned.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.emailRecipient",
+            "in": "query",
+            "description": "If given, only emails with the given email address in recipients are returned.\n\nIf empty or \"\", emails for all the recipients are included in the response.\n\n0 - 100 characters",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.emailSender",
+            "in": "query",
+            "description": "If given, only emails from the given email address are returned.\n\nIf empty or \"\", emails from all the senders are included in the response.\n\n0 - 100 characters",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.emailSubject",
+            "in": "query",
+            "description": "If given, only emails whose subject contains this string are returned.\n\nIf empty or \"\", emails with any subject are included in the response.\n\n0 - 100 characters",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.fileName",
+            "in": "query",
+            "description": "If given, only quarantined files with the path terminated with this string are returned.\n\nIf empty or \"\", all files are returned.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.msSharepointRootSiteUuid",
+            "in": "query",
+            "description": "Reference to [Microsoft Sharepoint root site].\n\nIf filled, only objects belonging to the given site or its child sites are returned.\nIf empty or \"\", objects of all sites are returned.\n\ntype: eset.dotnod.quarantine_management.v1-alpha.MicrosoftSharepointSite",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "filter.msTeamsTeamUuid",
+            "in": "query",
+            "description": "Reference to [Microsoft Teams team].\n\ntype: eset.dotnod.quarantine_management.v1-alpha.MicrosoftTeamsTeam",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "filter.objectOrigin",
+            "in": "query",
+            "description": "Origin of the quarantined object.\n\nIf filled, only objects with the given origin are returned. Objects with any origin are returned otherwise.\n\n - OBJECT_ORIGIN_UNSPECIFIED: fallback\n - OBJECT_ORIGIN_MS_OFFICE365: Object originates in Microsoft Office 365.\n - OBJECT_ORIGIN_GOOGLE_WORKSPACE: Object originates in Google Workspace.\n - OBJECT_ORIGIN_DEVICE: Object originates from a device.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "default": "OBJECT_ORIGIN_UNSPECIFIED",
+              "enum": [
+                "OBJECT_ORIGIN_UNSPECIFIED",
+                "OBJECT_ORIGIN_MS_OFFICE365",
+                "OBJECT_ORIGIN_GOOGLE_WORKSPACE",
+                "OBJECT_ORIGIN_DEVICE"
+              ]
+            }
+          },
+          {
+            "name": "filter.objectType",
+            "in": "query",
+            "description": "Type of quarantined object to be returned in the response.\n\nIf 0 or empty, all types of quarantined objects are returned.\n\n - QUARANTINED_OBJECT_TYPE_UNSPECIFIED: fallback\n - QUARANTINED_OBJECT_TYPE_EMAIL_MESSAGE: The object is an email message.\n - QUARANTINED_OBJECT_TYPE_EMAIL_ATTACHMENT: The object is an email attachment.\n - QUARANTINED_OBJECT_TYPE_FILE_ON_DRIVE: The object is a file on the drive.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "default": "QUARANTINED_OBJECT_TYPE_UNSPECIFIED",
+              "enum": [
+                "QUARANTINED_OBJECT_TYPE_UNSPECIFIED",
+                "QUARANTINED_OBJECT_TYPE_EMAIL_MESSAGE",
+                "QUARANTINED_OBJECT_TYPE_EMAIL_ATTACHMENT",
+                "QUARANTINED_OBJECT_TYPE_FILE_ON_DRIVE"
+              ]
+            }
+          },
+          {
+            "name": "filter.quarantineReason",
+            "in": "query",
+            "description": "If given, only objects quarantined for this reason are returned.\n\nIf 0 or empty, objects quarantined for all possible reasons are returned.\n\n - QUARANTINE_REASON_UNSPECIFIED: fallback\n - QUARANTINE_REASON_MALWARE: The object was identified as malware or as containing malware.\n - QUARANTINE_REASON_GRAYWARE: The object was identified as grayware or as containing grayware. Grayware refers to potentially unwanted programs or files that, while not explicitly malicious, can negatively impact system performance or user experience.\n - QUARANTINE_REASON_PHISHING: The object (mostly email) was identified as phishing.\n - QUARANTINE_REASON_SPAM: The object (mostly email) was identified as unsolicited or spam.\n - QUARANTINE_REASON_SENDER_SPOOFING: The email's sender was identified as spoofed.\n - QUARANTINE_REASON_RULE: The object was quarantined by a rule (for example, `mail transfer protection rule`).",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "default": "QUARANTINE_REASON_UNSPECIFIED",
+              "enum": [
+                "QUARANTINE_REASON_UNSPECIFIED",
+                "QUARANTINE_REASON_MALWARE",
+                "QUARANTINE_REASON_GRAYWARE",
+                "QUARANTINE_REASON_PHISHING",
+                "QUARANTINE_REASON_SPAM",
+                "QUARANTINE_REASON_SENDER_SPOOFING",
+                "QUARANTINE_REASON_RULE"
+              ]
+            }
+          },
+          {
+            "name": "filter.quarantineTime.startTime",
+            "in": "query",
+            "description": "Optional. Inclusive start of the interval.\n\nIf specified, a Timestamp matching this interval will have to be the same\nor after the start.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "filter.quarantineTime.endTime",
+            "in": "query",
+            "description": "Optional. Exclusive end of the interval.\n\nIf specified, a Timestamp matching this interval will have to be before the\nend.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "filter.userUuid",
+            "in": "query",
+            "description": "This is a reference to the user associated with the quarantined object through ownership of its storage.\n\nIf filled for a file, only the files on a cloud drive owned by the given user are included in the response.\n\nIf filled for mail, only the files in a mailbox owned by the given user are included in the response.\n\nIf null or empty, quarantined objects associated with any user and accessible to the caller will be included in the response.\n\ntype: user_management.v1.User",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "description": "Comma-separated list of fields (from the request resource).\n\nAllowed formats are:\n- [snake_case version of the field name](https://developers.google.com/protocol-buffers/docs/style#message_and_field_names) as used by protocol buffers.\n- [JSON version of the field name](https://protobuf.dev/programming-guides/proto3/#json)\n\nThe syntax is described at [Standard Methods: List Ordering](https://google.aip.dev/132#ordering)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1ListQuarantinedObjectsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/quarantined-objects/count": {
+      "get": {
+        "tags": [
+          "QuarantinedObjects"
+        ],
+        "summary": "Get quarantined objects count",
+        "description": "Get the count of quarantined objects matching the criteria.",
+        "operationId": "QuarantinedObjects_GetQuarantinedObjectsCount",
+        "parameters": [
+          {
+            "name": "filter.cloudOfficeTenantUuid",
+            "in": "query",
+            "description": "Reference to [cloud office tenant].\n\nIf filled, only objects of the referred tenant are returned. If empty or null, objects of any tenant are returned.\n\ntype: cloud_office_protection.v1.CloudOfficeTenant",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "filter.emailInternetMessageId",
+            "in": "query",
+            "description": "If filled, only messages with this Message-ID are returned.\n\nIf empty or \"\", messages with any Message-ID are returned.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.emailRecipient",
+            "in": "query",
+            "description": "If given, only emails with the given email address in recipients are returned.\n\nIf empty or \"\", emails for all the recipients are included in the response.\n\n0 - 100 characters",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.emailSender",
+            "in": "query",
+            "description": "If given, only emails from the given email address are returned.\n\nIf empty or \"\", emails from all the senders are included in the response.\n\n0 - 100 characters",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.emailSubject",
+            "in": "query",
+            "description": "If given, only emails whose subject contains this string are returned.\n\nIf empty or \"\", emails with any subject are included in the response.\n\n0 - 100 characters",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.fileName",
+            "in": "query",
+            "description": "If given, only quarantined files with the path terminated with this string are returned.\n\nIf empty or \"\", all files are returned.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter.msSharepointRootSiteUuid",
+            "in": "query",
+            "description": "Reference to [Microsoft Sharepoint root site].\n\nIf filled, only objects belonging to the given site or its child sites are returned.\nIf empty or \"\", objects of all sites are returned.\n\ntype: eset.dotnod.quarantine_management.v1-alpha.MicrosoftSharepointSite",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "filter.msTeamsTeamUuid",
+            "in": "query",
+            "description": "Reference to [Microsoft Teams team].\n\ntype: eset.dotnod.quarantine_management.v1-alpha.MicrosoftTeamsTeam",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "filter.objectOrigin",
+            "in": "query",
+            "description": "Origin of the quarantined object.\n\nIf filled, only objects with the given origin are returned. Objects with any origin are returned otherwise.\n\n - OBJECT_ORIGIN_UNSPECIFIED: fallback\n - OBJECT_ORIGIN_MS_OFFICE365: Object originates in Microsoft Office 365.\n - OBJECT_ORIGIN_GOOGLE_WORKSPACE: Object originates in Google Workspace.\n - OBJECT_ORIGIN_DEVICE: Object originates from a device.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "default": "OBJECT_ORIGIN_UNSPECIFIED",
+              "enum": [
+                "OBJECT_ORIGIN_UNSPECIFIED",
+                "OBJECT_ORIGIN_MS_OFFICE365",
+                "OBJECT_ORIGIN_GOOGLE_WORKSPACE",
+                "OBJECT_ORIGIN_DEVICE"
+              ]
+            }
+          },
+          {
+            "name": "filter.objectType",
+            "in": "query",
+            "description": "Type of quarantined object to be returned in the response.\n\nIf 0 or empty, all types of quarantined objects are returned.\n\n - QUARANTINED_OBJECT_TYPE_UNSPECIFIED: fallback\n - QUARANTINED_OBJECT_TYPE_EMAIL_MESSAGE: The object is an email message.\n - QUARANTINED_OBJECT_TYPE_EMAIL_ATTACHMENT: The object is an email attachment.\n - QUARANTINED_OBJECT_TYPE_FILE_ON_DRIVE: The object is a file on the drive.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "default": "QUARANTINED_OBJECT_TYPE_UNSPECIFIED",
+              "enum": [
+                "QUARANTINED_OBJECT_TYPE_UNSPECIFIED",
+                "QUARANTINED_OBJECT_TYPE_EMAIL_MESSAGE",
+                "QUARANTINED_OBJECT_TYPE_EMAIL_ATTACHMENT",
+                "QUARANTINED_OBJECT_TYPE_FILE_ON_DRIVE"
+              ]
+            }
+          },
+          {
+            "name": "filter.quarantineReason",
+            "in": "query",
+            "description": "If given, only objects quarantined for this reason are returned.\n\nIf 0 or empty, objects quarantined for all possible reasons are returned.\n\n - QUARANTINE_REASON_UNSPECIFIED: fallback\n - QUARANTINE_REASON_MALWARE: The object was identified as malware or as containing malware.\n - QUARANTINE_REASON_GRAYWARE: The object was identified as grayware or as containing grayware. Grayware refers to potentially unwanted programs or files that, while not explicitly malicious, can negatively impact system performance or user experience.\n - QUARANTINE_REASON_PHISHING: The object (mostly email) was identified as phishing.\n - QUARANTINE_REASON_SPAM: The object (mostly email) was identified as unsolicited or spam.\n - QUARANTINE_REASON_SENDER_SPOOFING: The email's sender was identified as spoofed.\n - QUARANTINE_REASON_RULE: The object was quarantined by a rule (for example, `mail transfer protection rule`).",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "default": "QUARANTINE_REASON_UNSPECIFIED",
+              "enum": [
+                "QUARANTINE_REASON_UNSPECIFIED",
+                "QUARANTINE_REASON_MALWARE",
+                "QUARANTINE_REASON_GRAYWARE",
+                "QUARANTINE_REASON_PHISHING",
+                "QUARANTINE_REASON_SPAM",
+                "QUARANTINE_REASON_SENDER_SPOOFING",
+                "QUARANTINE_REASON_RULE"
+              ]
+            }
+          },
+          {
+            "name": "filter.quarantineTime.startTime",
+            "in": "query",
+            "description": "Optional. Inclusive start of the interval.\n\nIf specified, a Timestamp matching this interval will have to be the same\nor after the start.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "filter.quarantineTime.endTime",
+            "in": "query",
+            "description": "Optional. Exclusive end of the interval.\n\nIf specified, a Timestamp matching this interval will have to be before the\nend.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "filter.userUuid",
+            "in": "query",
+            "description": "This is a reference to the user associated with the quarantined object through ownership of its storage.\n\nIf filled for a file, only the files on a cloud drive owned by the given user are included in the response.\n\nIf filled for mail, only the files in a mailbox owned by the given user are included in the response.\n\nIf null or empty, quarantined objects associated with any user and accessible to the caller will be included in the response.\n\ntype: user_management.v1.User",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1GetQuarantinedObjectsCountResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/quarantined-objects/{objectUuid}": {
+      "get": {
+        "tags": [
+          "QuarantinedObjects"
+        ],
+        "summary": "Get quarantined object",
+        "description": "Get a quarantined object.",
+        "operationId": "QuarantinedObjects_GetQuarantinedObject",
+        "parameters": [
+          {
+            "name": "objectUuid",
+            "in": "path",
+            "description": "Reference to [quarantined object].\n\ntype: QuarantinedObject",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1GetQuarantinedObjectResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/quarantined-objects:batchDelete": {
+      "post": {
+        "tags": [
+          "QuarantinedObjects"
+        ],
+        "summary": "Batch delete quarantined objects",
+        "description": "Delete a batch of quarantined objects. The objects will be deleted permanently.",
+        "operationId": "QuarantinedObjects_BatchDeleteQuarantinedObjects",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1BatchDeleteQuarantinedObjectsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1BatchDeleteQuarantinedObjectsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/quarantined-objects:batchDownload": {
+      "post": {
+        "tags": [
+          "QuarantinedObjects"
+        ],
+        "summary": "Batch download quarantined objects",
+        "description": "Download a batch of quarantined objects.\n\nThe response is a ZIP archive of quarantined objects.\n\n> **Info:**\n> Modeled after [gRPC-JSON transcoder: Sending arbitrary content](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/grpc_json_transcoder_filter#sending-arbitrary-content)\n> and\n> [GitHub: Google APIs](https://github.com/googleapis/googleapis/blob/master/google/api/httpbody.proto)",
+        "operationId": "QuarantinedObjects_BatchDownloadQuarantinedObjects",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1BatchDownloadQuarantinedObjectsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Free form byte stream",
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/quarantined-objects:batchRestore": {
+      "post": {
+        "tags": [
+          "QuarantinedObjects"
+        ],
+        "summary": "Batch restore quarantined objects",
+        "description": "Restore a batch of quarantined objects to their original location.\n\nObjects might be scanned anytime later; if the reasons for being quarantined persist, they will be quarantined again.",
+        "operationId": "QuarantinedObjects_BatchRestoreQuarantinedObjects",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1BatchRestoreQuarantinedObjectsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1BatchRestoreQuarantinedObjectsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/quarantined-objects:download": {
+      "post": {
+        "tags": [
+          "QuarantinedObjects"
+        ],
+        "summary": "Download quarantined objects",
+        "description": "Download quarantined objects matching the criteria in the filter.\n\nThe response is a ZIP archive of quarantined objects.\n\n> **Info:**\n> Modeled after [gRPC-JSON transcoder: Sending arbitrary content](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/grpc_json_transcoder_filter#sending-arbitrary-content)\n> and\n> [GitHub: Google APIs](https://github.com/googleapis/googleapis/blob/master/google/api/httpbody.proto)",
+        "operationId": "QuarantinedObjects_DownloadQuarantinedObjects",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1DownloadQuarantinedObjectsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Free form byte stream",
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/quarantined-objects:purge": {
+      "post": {
+        "tags": [
+          "QuarantinedObjects"
+        ],
+        "summary": "Purge quarantined objects",
+        "description": "Delete quarantined objects matching criteria in the filter. The objects will be deleted permanently.\n\n> **Info:**\n> Name `Purge` is chosen to comply with [Criteria-based delete](https://google.aip.dev/165)",
+        "operationId": "QuarantinedObjects_PurgeQuarantinedObjects",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1PurgeQuarantinedObjectsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1PurgeQuarantinedObjectsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/quarantined-objects:restore": {
+      "post": {
+        "tags": [
+          "QuarantinedObjects"
+        ],
+        "summary": "Restore quarantined objects",
+        "description": "Restore quarantined objects matching the criteria in the filter to their original location.\n\nObjects might be scanned anytime later; if the reasons for being quarantined persist, they will be quarantined again.",
+        "operationId": "QuarantinedObjects_RestoreQuarantinedObjects",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1RestoreQuarantinedObjectsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1RestoreQuarantinedObjectsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "apiHttpBody": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "description": "The HTTP Content-Type header value specifying the content type of the body."
+          },
+          "data": {
+            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+            "type": "string",
+            "description": "The HTTP request/response body as raw binary.",
+            "format": "byte"
+          },
+          "extensions": {
+            "type": "array",
+            "description": "Application specific response metadata. Must be set in the first response\nfor streaming APIs.",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        },
+        "description": "Message that represents an arbitrary HTTP body. It should only be used for\npayload formats that can't be represented as JSON, such as raw binary or\nan HTML page.\n\n\nThis message can be used both in streaming and non-streaming API methods in\nthe request as well as the response.\n\nIt can be used as a top-level request field, which is convenient if one\nwants to extract parameters from either the URL or HTTP template into the\nrequest fields and also want access to the raw HTTP body.\n\nExample:\n\n    message GetResourceRequest {\n      // A unique request id.\n      string request_id = 1;\n\n      // The raw HTTP body is bound to this field.\n      google.api.HttpBody http_body = 2;\n\n    }\n\n    service ResourceService {\n      rpc GetResource(GetResourceRequest)\n        returns (google.api.HttpBody);\n      rpc UpdateResource(google.api.HttpBody)\n        returns (google.protobuf.Empty);\n\n    }\n\nExample with streaming methods:\n\n    service CaldavService {\n      rpc GetCalendar(stream google.api.HttpBody)\n        returns (stream google.api.HttpBody);\n      rpc UpdateCalendar(stream google.api.HttpBody)\n        returns (stream google.api.HttpBody);\n\n    }\n\nUse of this type only changes how the request and response bodies are\nhandled, all other features will continue to work unchanged."
+      },
+      "protobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string",
+            "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+          }
+        },
+        "additionalProperties": {
+          "type": "object"
+        },
+        "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      },
+      "rpcStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        }
+      },
+      "typeInterval": {
+        "type": "object",
+        "properties": {
+          "startTime": {
+            "type": "string",
+            "description": "Optional. Inclusive start of the interval.\n\nIf specified, a Timestamp matching this interval will have to be the same\nor after the start.",
+            "format": "date-time"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "Optional. Exclusive end of the interval.\n\nIf specified, a Timestamp matching this interval will have to be before the\nend.",
+            "format": "date-time"
+          }
+        },
+        "description": "Represents a time interval, encoded as a Timestamp start (inclusive) and a\nTimestamp end (exclusive).\n\nThe start must be less than or equal to the end.\nWhen the start equals the end, the interval is empty (matches no time).\nWhen both start and end are unspecified, the interval matches any time."
+      },
+      "v1BatchDeleteQuarantinedObjectsRequest": {
+        "type": "object",
+        "properties": {
+          "objectUuids": {
+            "type": "array",
+            "description": "Reference to [quarantined object]s to be deleted.\n\ntype: QuarantinedObject",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "v1BatchDeleteQuarantinedObjectsResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v1BatchDownloadQuarantinedObjectsRequest": {
+        "type": "object",
+        "properties": {
+          "objectUuids": {
+            "type": "array",
+            "description": "Reference to [quarantined object]s to be downloaded.\n\ntype: QuarantinedObject",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "v1BatchRestoreQuarantinedObjectsRequest": {
+        "type": "object",
+        "properties": {
+          "addToExclusions": {
+            "type": "boolean",
+            "description": "If true, objects will be excluded from scanning and will not end up in the quarantine again."
+          },
+          "objectUuids": {
+            "type": "array",
+            "description": "Reference to [quarantined object]s to be restored.\n\ntype: QuarantinedObject",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "v1BatchRestoreQuarantinedObjectsResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v1DownloadQuarantinedObjectsRequest": {
+        "type": "object",
+        "properties": {
+          "excludedObjectUuids": {
+            "type": "array",
+            "description": "Reference to [quarantined object]s excluded from the result.\n\ntype: QuarantinedObject",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filter": {
+            "$ref": "#/components/schemas/v1QuarantineFilter"
+          }
+        }
+      },
+      "v1Email": {
+        "type": "object",
+        "properties": {
+          "attachments": {
+            "type": "array",
+            "description": "Files attached to the email.",
+            "items": {
+              "$ref": "#/components/schemas/v1File"
+            }
+          },
+          "bodyParts": {
+            "type": "array",
+            "description": "Body of the email is composed from parts (Content-Type: `multipart/*`), each of which can be treated as a file.",
+            "items": {
+              "$ref": "#/components/schemas/v1File"
+            }
+          },
+          "cc": {
+            "type": "string",
+            "description": "Carbon copy recipient(s) of the email."
+          },
+          "containedUrls": {
+            "type": "array",
+            "description": "URLs contained in the email.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "from": {
+            "type": "string",
+            "description": "Sender(s) of the email."
+          },
+          "headers": {
+            "type": "array",
+            "description": "Header of the email.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "internetMessageId": {
+            "title": "Unique identifier of the message according to https://en.wikipedia.org/wiki/Message-ID",
+            "type": "string"
+          },
+          "isReadOnly": {
+            "type": "boolean",
+            "description": "True if the scanned object was read-only and cannot be modified/cleaned/deleted."
+          },
+          "mailboxUuid": {
+            "type": "string",
+            "description": "Reference to [mailbox].\n\ntype: Mailbox"
+          },
+          "mailboxUserUuid": {
+            "type": "string",
+            "description": "Reference to the user who owns the mailbox, if the email can be associated with a mailbox.\n\nIf the email cannot be associated with a mailbox, this will be empty.\n\ntype: user_management.v1.User"
+          },
+          "mtaSmtpDetails": {
+            "$ref": "#/components/schemas/v1MailTransferAgentSmtpDetails"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/v1ObjectOrigin"
+          },
+          "reference": {
+            "type": "string",
+            "description": "How the email is referred to. Emails can be sourced in various systems with different types of indexing (e.g. URI, UUID, etc.).\n\nFor referencing this email within this API the `uuid` is used.\n\nObject reference must be unique within one parent object (e,g, email or archive) to ensure referential integrity or the scope of protection (e.g. one account).\n\nThis value is not required to be URL-safe.\n\nFor example:\n- Outlook email can be referenced by EntryID (or SearchKey)\n- Exchange email can be referenced by combination of `Timestamp` | `Subject` | `Sender` fields.\n\n> **Info:**\n> Optimally, the reference should be universally unique identifier. That prevents from ambiguities during pairing of the object with scan results with actions. \n> \n> This might, however, be substantially difficult to achieve in distributed email-system, where the id-issuing authority is out of our reach and might be spoofed by e.g. spammers."
+          },
+          "senderIpAddress": {
+            "type": "string",
+            "description": "IP address of the sender. Might be IPv4 or IPv6."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Subject of the email."
+          },
+          "to": {
+            "type": "string",
+            "description": "Recipient(s) of the email."
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within the entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 9562: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc9562), do not rely on it being a RFC UUID. Treat it as an opaque identifier, albeit of predictable length and alphabet.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\""
+          }
+        }
+      },
+      "v1File": {
+        "type": "object",
+        "properties": {
+          "containedFiles": {
+            "type": "array",
+            "description": "List of files contained within this file, in case this file has internal structure (e.g. it is an archive).\n\nFiles contained in archive can have their `storages` empty, as they implicitly follow from the parent's storage.",
+            "items": {
+              "$ref": "#/components/schemas/v1File"
+            }
+          },
+          "hashSha1": {
+            "type": "string",
+            "description": "[SHA-1 (Secure Hash Algorithm 1)](https://en.wikipedia.org/wiki/SHA-1) digest of file's content."
+          },
+          "hashSha2256": {
+            "type": "string",
+            "description": "[SHA-2 256 (Secure Hash Algorithm 2)](https://en.wikipedia.org/wiki/SHA-2) 256 digest of file's content."
+          },
+          "isReadOnly": {
+            "type": "boolean",
+            "description": "True if the scanned object was read-only and cannot be modified/cleaned/deleted."
+          },
+          "lastEditor": {
+            "$ref": "#/components/schemas/v1ObjectEditor"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/v1ObjectOrigin"
+          },
+          "path": {
+            "type": "string",
+            "description": "File path. Absolute path is absolute within storage.\n\nFor example:\n`/documents/trip.xml` might be absolute within Microsoft Sharepoint Site."
+          },
+          "reference": {
+            "type": "string",
+            "description": "How the file is referred to. Files can be hosted in various systems with different types of indexing (e.g. URI, UUID, etc.).\n\nObject reference must be unique within one parent object (e,g, email or archive) to ensure referential integrity.\n\nOptimally, the reference should be universally unique identifier. That prevents from ambiguities during pairing of the object with scan results with actions."
+          },
+          "sizeBytes": {
+            "type": "string",
+            "description": "File size in bytes.",
+            "format": "uint64"
+          },
+          "storages": {
+            "type": "array",
+            "description": "An array that represents the various storage locations associated with a file.\n\nEach element in the array is an object that represents a different storage location. This could include email, archive, Microsoft Sharepoint site, Hyper-V Volume, etc. \n\nThe order of the elements in the array represents the hierarchy of storage locations. For example, a storages array of [\"email\", \"archive\"] indicates that the file is first associated with an email, and within that email, it\u2019s stored in an archive.",
+            "items": {
+              "$ref": "#/components/schemas/v1FileStorage"
+            }
+          }
+        },
+        "description": "Describes file.\n\nFile can be contained within other structures, such as email (attachment), archive or Miscrosoft Sharepoint Site. Those structures form `parents` of the file."
+      },
+      "v1FileStorage": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Human readable name of the storage.\n\nFor example, a name of Microsoft Teams Team or name the archive file."
+          },
+          "msSharepointRootSiteUuid": {
+            "type": "string",
+            "description": "Reference to [Microsoft Sharepoint root site].\n\nOnly valid if the object originates in Sharepoint site.\n\ntype: quarantine_management.v1.MicrosoftSharepointSite"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the file storage instance where the file resides. Represents the connected cloud or on-premises storage system (e.g., a specific OneDrive, Google Drive, or enterprise file share)."
+          },
+          "archiveReference": {
+            "type": "string",
+            "description": "Reference to the archive containing the file. Can be an URL or path to the parent archive."
+          },
+          "cloudDriveUserUuid": {
+            "type": "string",
+            "description": "If the file resides in the cloud on a cloud drive (for example, Google Drive or Microsoft OneDrive), this attribute references the user who owns that drive.\n\ntype: user_management.v1.User"
+          },
+          "emailReference": {
+            "type": "string",
+            "description": "Reference to the email containing the file.\n\nThe file itself can be part of the email body, an email attachment, or part of an attached archive."
+          },
+          "msSharepointSiteUuid": {
+            "type": "string",
+            "description": "Reference to [Microsoft Sharepoint site].\n\ntype: quarantine_management.v1.MicrosoftSharepointSite"
+          },
+          "msTeamsTeamUuid": {
+            "type": "string",
+            "description": "Reference to [Microsoft Teams team].\n\ntype: quarantine_management.v1.MicrosoftTeamsTeam"
+          }
+        },
+        "description": "File storage represents a different storage location. This could include email, archive, Microsoft Sharepoint Site, Hyper-V Volume, etc.\n\nFile path is relative to this storage."
+      },
+      "v1GetQuarantinedObjectResponse": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "$ref": "#/components/schemas/v1QuarantinedObject"
+          }
+        }
+      },
+      "v1GetQuarantinedObjectsCountResponse": {
+        "type": "object",
+        "properties": {
+          "objectCount": {
+            "type": "integer",
+            "description": "Count of quarantined objects matching the criteria in the filter.",
+            "format": "int64"
+          }
+        }
+      },
+      "v1ListQuarantinedObjectsResponse": {
+        "type": "object",
+        "properties": {
+          "objects": {
+            "type": "array",
+            "description": "List of quarantined objects matching the filter.",
+            "items": {
+              "$ref": "#/components/schemas/v1QuarantinedObject"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          }
+        }
+      },
+      "v1MailTransferAgentSmtpDetails": {
+        "type": "object",
+        "properties": {
+          "hello": {
+            "type": "string",
+            "description": "Parameter of extended HELLO (`EHLO`) or HELLO (`HELO`) command.\n\n> **Info:**\n> For details of the command see: https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.1.1"
+          },
+          "recipients": {
+            "type": "array",
+            "description": "Parameter of RECIPIENT (`RCPT`) command or multiple commands for multiple recipients. Every `RCPT` command is listed separately.\n\n> **Info:**\n> For details of the command see: https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.1.3 .",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sender": {
+            "type": "string",
+            "description": "Parameter (reverse-path) of MAIL (`MAIL FROM`) command. A sender of the email.\n\n> **Info:**\n> For details of the command see: https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.1.2"
+          },
+          "senderIpAddress": {
+            "type": "string",
+            "description": "IP address of the sender. Might be IPv4 or IPv6."
+          }
+        },
+        "description": "Details of SMTP activity at Mail Transfer Agent (MTA).\n\n> **Info:**\n> For MTA specification see: https://datatracker.ietf.org/doc/html/rfc5321#section-2.3.3"
+      },
+      "v1ObjectEditor": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email of the user."
+          },
+          "userUuid": {
+            "type": "string",
+            "description": "Reference to [user].\n\ntype: _draft.User"
+          },
+          "userName": {
+            "type": "string",
+            "description": "Name of the user (e.g. login)."
+          }
+        },
+        "description": "Details of user who edited an object."
+      },
+      "v1ObjectOrigin": {
+        "type": "string",
+        "description": "Object origin denotes a system managing object's life-cycle.\n\nThis is necessary to be known for actions that manipulate with object, such as delete, quarantine, move and so on.\n\n - OBJECT_ORIGIN_UNSPECIFIED: fallback\n - OBJECT_ORIGIN_MS_OFFICE365: Object originates in Microsoft Office 365.\n - OBJECT_ORIGIN_GOOGLE_WORKSPACE: Object originates in Google Workspace.\n - OBJECT_ORIGIN_DEVICE: Object originates from a device.",
+        "default": "OBJECT_ORIGIN_UNSPECIFIED",
+        "enum": [
+          "OBJECT_ORIGIN_UNSPECIFIED",
+          "OBJECT_ORIGIN_MS_OFFICE365",
+          "OBJECT_ORIGIN_GOOGLE_WORKSPACE",
+          "OBJECT_ORIGIN_DEVICE"
+        ]
+      },
+      "v1ObjectScanStatus": {
+        "type": "string",
+        "description": "Defines possible statuses of object scan.\n\n - OBJECT_SCAN_STATUS_UNSPECIFIED: fallback\n - OBJECT_SCAN_STATUS_NOT_SCANNED: The object was not scanned for various reasons.\n\n- some objects are not suitable for certain scans (for example, file is not suitable for spam scan)\n- scan was not performed due to a failure\n- the object was excluded from the classification explicitly by exclusions.\n - OBJECT_SCAN_STATUS_POSITIVE_RESULT: The object was scanned with a positive result.\n\nThis means:\n- the spam was detected in an email scan.\n- phishing was detected in a phishing scan.\n- malware was detected in a malware scan, and so on.\n - OBJECT_SCAN_STATUS_NEGATIVE_RESULT: The object was scanned with a negative result, which means the object is clean.",
+        "default": "OBJECT_SCAN_STATUS_UNSPECIFIED",
+        "enum": [
+          "OBJECT_SCAN_STATUS_UNSPECIFIED",
+          "OBJECT_SCAN_STATUS_NOT_SCANNED",
+          "OBJECT_SCAN_STATUS_POSITIVE_RESULT",
+          "OBJECT_SCAN_STATUS_NEGATIVE_RESULT"
+        ]
+      },
+      "v1PurgeQuarantinedObjectsRequest": {
+        "type": "object",
+        "properties": {
+          "excludedObjectUuids": {
+            "type": "array",
+            "description": "Reference to [quarantined object]s excluded from the result.\n\ntype: QuarantinedObject",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filter": {
+            "$ref": "#/components/schemas/v1QuarantineFilter"
+          }
+        }
+      },
+      "v1PurgeQuarantinedObjectsResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v1QuarantineFilter": {
+        "type": "object",
+        "properties": {
+          "cloudOfficeTenantUuid": {
+            "type": "string",
+            "description": "Reference to [cloud office tenant].\n\nIf filled, only objects of the referred tenant are returned. If empty or null, objects of any tenant are returned.\n\ntype: cloud_office_protection.v1.CloudOfficeTenant"
+          },
+          "emailInternetMessageId": {
+            "type": "string",
+            "description": "If filled, only messages with this Message-ID are returned.\n\nIf empty or \"\", messages with any Message-ID are returned."
+          },
+          "emailRecipient": {
+            "type": "string",
+            "description": "If given, only emails with the given email address in recipients are returned.\n\nIf empty or \"\", emails for all the recipients are included in the response.\n\n0 - 100 characters"
+          },
+          "emailSender": {
+            "type": "string",
+            "description": "If given, only emails from the given email address are returned.\n\nIf empty or \"\", emails from all the senders are included in the response.\n\n0 - 100 characters"
+          },
+          "emailSubject": {
+            "type": "string",
+            "description": "If given, only emails whose subject contains this string are returned.\n\nIf empty or \"\", emails with any subject are included in the response.\n\n0 - 100 characters"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "If given, only quarantined files with the path terminated with this string are returned.\n\nIf empty or \"\", all files are returned."
+          },
+          "msSharepointRootSiteUuid": {
+            "type": "string",
+            "description": "Reference to [Microsoft Sharepoint root site].\n\nIf filled, only objects belonging to the given site or its child sites are returned.\nIf empty or \"\", objects of all sites are returned.\n\ntype: eset.dotnod.quarantine_management.v1-alpha.MicrosoftSharepointSite"
+          },
+          "msTeamsTeamUuid": {
+            "type": "string",
+            "description": "Reference to [Microsoft Teams team].\n\ntype: eset.dotnod.quarantine_management.v1-alpha.MicrosoftTeamsTeam"
+          },
+          "objectOrigin": {
+            "$ref": "#/components/schemas/v1ObjectOrigin"
+          },
+          "objectType": {
+            "$ref": "#/components/schemas/v1QuarantinedObjectType"
+          },
+          "quarantineReason": {
+            "$ref": "#/components/schemas/v1QuarantineReason"
+          },
+          "quarantineTime": {
+            "$ref": "#/components/schemas/typeInterval"
+          },
+          "userUuid": {
+            "type": "string",
+            "description": "This is a reference to the user associated with the quarantined object through ownership of its storage.\n\nIf filled for a file, only the files on a cloud drive owned by the given user are included in the response.\n\nIf filled for mail, only the files in a mailbox owned by the given user are included in the response.\n\nIf null or empty, quarantined objects associated with any user and accessible to the caller will be included in the response.\n\ntype: user_management.v1.User"
+          }
+        },
+        "description": "Quarantine filter.\n\nEvery entry can be seen as a condition.\n\nIf multiple conditions are filled, they are used in a filtering expression with the AND operator (that is, they must be fulfilled simultaneously)."
+      },
+      "v1QuarantineReason": {
+        "type": "string",
+        "description": "Reasons for the object being quarantined.\n\n - QUARANTINE_REASON_UNSPECIFIED: fallback\n - QUARANTINE_REASON_MALWARE: The object was identified as malware or as containing malware.\n - QUARANTINE_REASON_GRAYWARE: The object was identified as grayware or as containing grayware. Grayware refers to potentially unwanted programs or files that, while not explicitly malicious, can negatively impact system performance or user experience.\n - QUARANTINE_REASON_PHISHING: The object (mostly email) was identified as phishing.\n - QUARANTINE_REASON_SPAM: The object (mostly email) was identified as unsolicited or spam.\n - QUARANTINE_REASON_SENDER_SPOOFING: The email's sender was identified as spoofed.\n - QUARANTINE_REASON_RULE: The object was quarantined by a rule (for example, `mail transfer protection rule`).",
+        "default": "QUARANTINE_REASON_UNSPECIFIED",
+        "enum": [
+          "QUARANTINE_REASON_UNSPECIFIED",
+          "QUARANTINE_REASON_MALWARE",
+          "QUARANTINE_REASON_GRAYWARE",
+          "QUARANTINE_REASON_PHISHING",
+          "QUARANTINE_REASON_SPAM",
+          "QUARANTINE_REASON_SENDER_SPOOFING",
+          "QUARANTINE_REASON_RULE"
+        ]
+      },
+      "v1QuarantinedObject": {
+        "type": "object",
+        "properties": {
+          "cloudOfficeTenantUuid": {
+            "type": "string",
+            "description": "Reference to [cloud office tenant].\n\ntype: cloud_office_protection.v1.CloudOfficeTenant"
+          },
+          "cloudSandboxingStatus": {
+            "$ref": "#/components/schemas/v1ObjectScanStatus"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Human-readable name of the quarantined object."
+          },
+          "email": {
+            "$ref": "#/components/schemas/v1Email"
+          },
+          "file": {
+            "$ref": "#/components/schemas/v1File"
+          },
+          "graywareScanStatus": {
+            "$ref": "#/components/schemas/v1ObjectScanStatus"
+          },
+          "isExcludable": {
+            "type": "boolean",
+            "description": "True if the object can be excluded from further scanning."
+          },
+          "isRestorable": {
+            "type": "boolean",
+            "description": "True if the object can be restored to its original location."
+          },
+          "malwareScanStatus": {
+            "$ref": "#/components/schemas/v1ObjectScanStatus"
+          },
+          "objectOrigin": {
+            "$ref": "#/components/schemas/v1ObjectOrigin"
+          },
+          "phishingScanStatus": {
+            "$ref": "#/components/schemas/v1ObjectScanStatus"
+          },
+          "quarantineReason": {
+            "$ref": "#/components/schemas/v1QuarantineReason"
+          },
+          "quarantineTime": {
+            "type": "string",
+            "description": "Time when the object was quarantined.",
+            "format": "date-time"
+          },
+          "quarantiningRule": {
+            "$ref": "#/components/schemas/v1QuarantiningRule"
+          },
+          "scanResults": {
+            "type": "array",
+            "description": "Results of various scans of the quarantined object or objects contained within the quarantined object.\n\nThere is no limit to the number or types of scan results.\n\nPossible scan result types for files:\n- scan_management.v1.FileScanStatus\n- threat_detection.v1.FileScanResult\n\nPossible scan result types for emails:\n- scan_management.v1.EmailScanStatus\n- threat_detection.v1.SpamEmailScanResult\n- threat_detection.v1.PhishingEmailScanResult",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          },
+          "sizeBytes": {
+            "type": "string",
+            "description": "Size of the quarantined object in bytes.",
+            "format": "uint64"
+          },
+          "spamScanStatus": {
+            "$ref": "#/components/schemas/v1ObjectScanStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/v1QuarantinedObjectType"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 4122: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc4122), do not rely on it being a RFC UUID. Treat it as an opaque identifier.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\""
+          }
+        },
+        "description": "Descriptor of quarantined object."
+      },
+      "v1QuarantinedObjectType": {
+        "type": "string",
+        "description": "Possible types of an object.\n\n - QUARANTINED_OBJECT_TYPE_UNSPECIFIED: fallback\n - QUARANTINED_OBJECT_TYPE_EMAIL_MESSAGE: The object is an email message.\n - QUARANTINED_OBJECT_TYPE_EMAIL_ATTACHMENT: The object is an email attachment.\n - QUARANTINED_OBJECT_TYPE_FILE_ON_DRIVE: The object is a file on the drive.",
+        "default": "QUARANTINED_OBJECT_TYPE_UNSPECIFIED",
+        "enum": [
+          "QUARANTINED_OBJECT_TYPE_UNSPECIFIED",
+          "QUARANTINED_OBJECT_TYPE_EMAIL_MESSAGE",
+          "QUARANTINED_OBJECT_TYPE_EMAIL_ATTACHMENT",
+          "QUARANTINED_OBJECT_TYPE_FILE_ON_DRIVE"
+        ]
+      },
+      "v1QuarantiningRule": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Human readable name of the rule.\n\n> **Note:**\n> Rule display names are not unique.\n>\n> This value is only a hint and might be ambiguous in some cases \n> (for example, two adminstrators unaware of each other set up two policies with equal rule names)."
+          }
+        },
+        "description": "Rule that caused quarantining of the object in case the reason == RULE."
+      },
+      "v1RestoreQuarantinedObjectsRequest": {
+        "type": "object",
+        "properties": {
+          "addToExclusions": {
+            "type": "boolean",
+            "description": "If true, objects will be excluded from scanning and will not end up in the quarantine again."
+          },
+          "excludedObjectUuids": {
+            "type": "array",
+            "description": "Reference to [quarantined object]s excluded from the result.\n\ntype: QuarantinedObject",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filter": {
+            "$ref": "#/components/schemas/v1QuarantineFilter"
+          }
+        }
+      },
+      "v1RestoreQuarantinedObjectsResponse": {
+        "title": "empty",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Type \"Bearer \" and then your API Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

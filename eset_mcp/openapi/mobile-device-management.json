@@ -1,0 +1,538 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - Mobile Device Management",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a>",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://eu.mobile-device-management.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "MobileDevices"
+    }
+  ],
+  "paths": {
+    "/v1/mobile-devices:batchActivateProduct": {
+      "post": {
+        "tags": [
+          "MobileDevices"
+        ],
+        "summary": "Batch activate product",
+        "description": "Create a product activation task with mobile devices as its targets.\n\nThe product is picked automatically based on the parent group of a particular device.\n\nThe method can fail atomically with:\n- PERMISSION_DENIED (gRPC) | 403 Forbidden (HTTP) if the caller cannot does not have rights to relevant resources (devices, device tasks and triggers).\n- FAILED_PRECONDITION (gRPC) | 400 Bad Request (HTTP) if \n- the devices on input do not share the same parent [device group] or\n- if there is no such subscription with available product on the parent [device group].\n- NOT_FOUND (gRPC) | 404 Not Found (HTTP) if some of the devices on the input does not exist.",
+        "operationId": "MobileDevices_BatchActivateProduct",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1BatchActivateProductRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1BatchActivateProductResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/mobile-devices:batchGetEnrollmentLinks": {
+      "post": {
+        "tags": [
+          "MobileDevices"
+        ],
+        "summary": "Batch get enrollment links",
+        "description": "Get enrollment links for a batch of **mobile** devices in device management. The mobile devices must have `is mobile` flag set to `true`.\n\n>**Warning:**\n> A link only works on Android and iOS operating systems.\n\nThere is no limit on number of enrollment links issued for one device. All of them can be valid at the same time (within limits of their own expiration) until the device gets enrolled.\n\nThe size of the batch is limited to 1000 devices. If this limit is exceeded, INVALID_ARGUMENT (gRPC) | 400 Bad Request (HTTP) is returned.\n\nThe operation fails atomically. If any error occurs, it is returned for the whole batch. The devices are processed in an undetermined order.\n- If some device is already enrolled, the link is not generated, and the error FAILED_PRECONDITION (gRPC) | 400 Bad Request (HTTP) is returned.\n- For a device not marked as `mobile` in the device management (effectively not an iOS or Android device), the link is not generated, and error FAILED_PRECONDITION (gRPC) | 400 Bad Request (HTTP) is returned.\n- For non-existing devices, the error NOT_FOUND (gRPC) | 404 Not Found (HTTP) is returned.",
+        "operationId": "MobileDevices_BatchGetEnrollmentLinks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1BatchGetEnrollmentLinksRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1BatchGetEnrollmentLinksResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "protobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": {
+          "type": "object"
+        }
+      },
+      "rpcStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        }
+      },
+      "v1BatchActivateProductRequest": {
+        "type": "object",
+        "properties": {
+          "deviceUuids": {
+            "type": "array",
+            "description": "Reference to [mobile devices] on which the endpoint protection product should be activated.\n\nAll the devices must be from the same device group.\n\ntype: device_management.v1.Device",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "v1BatchActivateProductResponse": {
+        "type": "object",
+        "properties": {
+          "activationTaskTriggerUuid": {
+            "type": "string",
+            "description": "Reference to [device task] trigger.\n\n> **Note:**\n> For more details about product activation tasks, see https://help.eset.com/protect_cloud/en-US/client_tasks_product_activation.html\n\ntype: automation.v1.Trigger"
+          }
+        }
+      },
+      "v1BatchGetEnrollmentLinksRequest": {
+        "type": "object",
+        "properties": {
+          "deviceUuids": {
+            "type": "array",
+            "description": "Reference to [mobile devices] for which the enrollment links should be generated.\n\ntype: device_management.v1.Device",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "v1BatchGetEnrollmentLinksResponse": {
+        "type": "object",
+        "properties": {
+          "enrollmentLinks": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/v1DeviceEnrollmentLink"
+            },
+            "description": "The list of enrollment links for devices from the request. Devices are identified by their universally unique identifiers provided in the request.\n\nThe enrollment link serves to finalize the enrollment process on a device. Every link can only be used once.\nThe link can be used in different channels, sent by email, rendered on screen, scanned as a QR code.\n\n>**Warning:**\n> A link only works on Android and iOS operating systems."
+          }
+        }
+      },
+      "v1DeviceEnrollmentLink": {
+        "type": "object",
+        "properties": {
+          "expireTime": {
+            "type": "string",
+            "description": "The time when the enrollment link expires.",
+            "format": "date-time"
+          },
+          "uri": {
+            "type": "string",
+            "description": "URI to be used to finalize the enrollment of the device.\n\nThe hyperlink points to the (mobile) device management backend, where all the data related to the enrollment are stored."
+          }
+        },
+        "description": "The enrollment link serves to finalize the enrollment process on a device. Every link can only be used once.\n\nThe link can be used in different channels, sent by email, rendered on screen, scanned as a QR code."
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Type \"Bearer \" and then your API Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

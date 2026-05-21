@@ -1,0 +1,165 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - OAuth",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a>",
+    "version": ""
+  },
+  "servers": [
+    {
+      "url": "https://eu.business-account.iam.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "OAuth"
+    }
+  ],
+  "paths": {
+    "/oauth/token": {
+      "post": {
+        "tags": [
+          "OAuth"
+        ],
+        "operationId": "OAuth_Token",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/oauth_token_body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Authorisation token (Bearer)",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                },
+                "example": {
+                  "access_token": "2YotnFZFEjr1zCsicMWpAA",
+                  "refresh_token": "qiMDgJGIpS2Yxr36FgVkHg",
+                  "token_type": "Bearer",
+                  "expires_in": 3600
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "202": {
+            "description": "Response took too long and the request was cached.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Token": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token value"
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "The refresh token value"
+          },
+          "token_type": {
+            "type": "string",
+            "description": "Type of the token is set to \"Bearer\"",
+            "enum": [
+              "Bearer"
+            ]
+          },
+          "expires_in": {
+            "type": "integer",
+            "description": "The lifetime in seconds of the access token",
+            "format": "int32"
+          }
+        }
+      },
+      "oauth_token_body": {
+        "required": [
+          "grant_type"
+        ],
+        "type": "object",
+        "properties": {
+          "grant_type": {
+            "type": "string",
+            "description": "Value MUST be set to password or refresh_token as per RFC.",
+            "enum": [
+              "password",
+              "refresh_token"
+            ]
+          },
+          "username": {
+            "type": "string",
+            "description": "Value MUST be set when granting **password**"
+          },
+          "password": {
+            "type": "string",
+            "description": "Value MUST be set when granting **password**",
+            "format": "password"
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "Value MUST be set when granting **refresh_token**"
+          }
+        }
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

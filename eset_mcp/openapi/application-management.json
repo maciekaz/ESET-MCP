@@ -1,0 +1,1236 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - Application Management",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a>",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://eu.application-management.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Executables"
+    }
+  ],
+  "paths": {
+    "/v1/executables": {
+      "get": {
+        "tags": [
+          "Executables"
+        ],
+        "summary": "List executables",
+        "description": "List all the executables.",
+        "operationId": "Executables_ListExecutables",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1ListExecutablesResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/executables/{executableUuid}": {
+      "get": {
+        "tags": [
+          "Executables"
+        ],
+        "summary": "Get executable",
+        "description": "Get details of a specific executable.",
+        "operationId": "Executables_GetExecutable",
+        "parameters": [
+          {
+            "name": "executableUuid",
+            "in": "path",
+            "description": "Reference to the executable whose details are requested.\n\ntype: Executable",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1GetExecutableResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/executables/{executableUuid}:block": {
+      "post": {
+        "tags": [
+          "Executables"
+        ],
+        "summary": "Block executable",
+        "description": "Blocked executables will not be executed.\n\nIdempotent",
+        "operationId": "Executables_BlockExecutable",
+        "parameters": [
+          {
+            "name": "executableUuid",
+            "in": "path",
+            "description": "Reference to the executable to be blocked.\n\ntype: Executable",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutablesBlockExecutableBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1BlockExecutableResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/executables/{executableUuid}:unblock": {
+      "post": {
+        "tags": [
+          "Executables"
+        ],
+        "summary": "Unblock executable",
+        "description": "Unblock a file to be executable again.\n\nIdempotent",
+        "operationId": "Executables_UnblockExecutable",
+        "parameters": [
+          {
+            "name": "executableUuid",
+            "in": "path",
+            "description": "Reference to the executable to be unblocked.\n\ntype: Executable",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutablesUnblockExecutableBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1UnblockExecutableResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ExecutablesBlockExecutableBody": {
+        "type": "object"
+      },
+      "ExecutablesUnblockExecutableBody": {
+        "type": "object"
+      },
+      "protobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": {
+          "type": "object"
+        }
+      },
+      "rpcStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        }
+      },
+      "v1BlockExecutableResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v1Certificate": {
+        "type": "object",
+        "properties": {
+          "issuerCommonName": {
+            "title": "CN part of the distinguished Issuer Name (OID 2.5.4.3)",
+            "type": "string",
+            "description": "The Issuer is the entity (Certificate Authority) that issues the certificate. The Issuer's identity is typically specified in the certificate."
+          },
+          "subjectCommonName": {
+            "title": "CN part of the distinguished Subject Name (OID 2.5.4.3)",
+            "type": "string",
+            "description": "The Subject is the entity whose public key is bound to the certificate. The Subject's identity is also specified in the certificate."
+          }
+        },
+        "description": "Represents cryptographic certificate."
+      },
+      "v1CodeSignature": {
+        "type": "object",
+        "properties": {
+          "certificateChain": {
+            "type": "array",
+            "description": "Certificate chain used for code signing.\n\nThe first element is the root certificate.\n\nIn the case of a self-signed certificate, it includes the self-signed certificate itself (acting as the root certificate).",
+            "items": {
+              "$ref": "#/components/schemas/v1Certificate"
+            }
+          },
+          "signatureTrustLevel": {
+            "$ref": "#/components/schemas/v1SignatureTrustLevel"
+          },
+          "signerName": {
+            "type": "string",
+            "description": "The Signer name extracted from the signature by heuristics."
+          }
+        },
+        "description": "Code signature details."
+      },
+      "v1Executable": {
+        "type": "object",
+        "properties": {
+          "applicationDisplayName": {
+            "type": "string",
+            "description": "The name of the application with which the file is distributed.\n\n> **Info:**\n> Corresponds to \"Product name\" in ESET Inspect."
+          },
+          "applicationVersionName": {
+            "type": "string",
+            "description": "The version of the application with which the file is distributed.\n\n> **Info:**\n> Corresponds to \"Product version\" in ESET Inspect."
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the file, for example, \"Keyboard Driver for AT-Style Keyboards\".\n\n> **Info:**\n> Corresponds to \"File description\" in ESET Inspect.\n> [ESET Inspect On-Prem: Executable details](https://help.eset.com/ei_navigate/latest/en-US/executable_details.html)"
+          },
+          "developerDisplayName": {
+            "type": "string",
+            "description": "A human-readable version of the executable developer. For example, Microsoft Corporation or Standard Micro-systems Corporation, Inc.\n\n> **Info:**\n> Corresponds to \"Company name\" in ESET Inspect."
+          },
+          "devicesCount": {
+            "type": "integer",
+            "description": "The number of computers on which the file was discovered. After clicking on it, you are redirected to the Computers view with a filtered computers list.\n\n> **Info:**\n> Corresponds to \"Seen on\" in ESET Inspect.",
+            "format": "int64"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The name of the executable or DLL.\n\n> **Info:**\n> Corresponds to \"Name\" in ESET Inspect.\n> [ESET Inspect On-Prem: Executable details](https://help.eset.com/ei_navigate/latest/en-US/executable_details.html)"
+          },
+          "fileFormat": {
+            "$ref": "#/components/schemas/v1ExecutableFileFormat"
+          },
+          "fileSize": {
+            "type": "string",
+            "description": "The size of the file on the disk.",
+            "format": "uint64"
+          },
+          "firstOccurTime": {
+            "type": "string",
+            "description": "When an executable was first seen on any computer in a monitored network.\n\n> **Info:**\n> Corresponds to \"First Seen\" in ESET Inspect.\n> [ESET Inspect On-Prem: Executable details](https://help.eset.com/ei_navigate/latest/en-US/executable_details.html)",
+            "format": "date-time"
+          },
+          "hashMd5": {
+            "type": "string",
+            "description": "MD5 hash of the executable. Might be empty.\n\n> **Info:**\n> Corresponds to \"MD5\" in ESET Inspect.\n> [ESET Inspect On-Prem: Executable details](https://help.eset.com/ei_navigate/latest/en-US/executable_details.html)"
+          },
+          "hashSha1": {
+            "type": "string",
+            "description": "SHA1 hash of the executable.\n\n> **Info:**\n> Corresponds to \"SHA-1\" in ESET Inspect.\n> [ESET Inspect On-Prem: Executable details](https://help.eset.com/ei_navigate/latest/en-US/executable_details.html)"
+          },
+          "hashSha2256": {
+            "type": "string",
+            "description": "SHA2-256 hash of the executable. Might be empty.\n\n> **Info:**\n> Corresponds to \"SHA-256\" in ESET Inspect.\n> [ESET Inspect On-Prem: Executable details](https://help.eset.com/ei_navigate/latest/en-US/executable_details.html)"
+          },
+          "isBlocked": {
+            "type": "boolean",
+            "description": "If true, the executable is blocked from being executed (globally)."
+          },
+          "isDynamicallyLinkedLibrary": {
+            "title": "If true, the executable represents a dynamically linked library (dynamic-link library, or DLL, under Windows and OS/2; shareable image under OpenVMS;[18] dynamic shared object, or DSO, under Unix-like systems)",
+            "type": "boolean"
+          },
+          "lastExecuteTime": {
+            "type": "string",
+            "description": "When an executable was last executed on any computer in a monitored network.\n\n> **Info:**\n> Corresponds to \"Last Executed\" in ESET Inspect.\n> [ESET Inspect On-Prem: Executable details](https://help.eset.com/ei_navigate/latest/en-US/executable_details.html)",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "libraryId": {
+            "title": "`Internal name` for PE DLLs\n`Shared object name` in ELF dynamic libraries \n`Library ID` in MACHO dynamic libraries",
+            "type": "string",
+            "description": "Examples:\nLibrary ID for a MACHO dylib: \u201eSystem/Library/Frameworks/OpenCL.framework/Versions/A/Libraries/ImageFormats/snorm16_rgba.dylib\"\n\nAnd ELF shared object name (for a file called \u201elibhgfs.so.0.0.0\u201c): \u201elibhgfs.so.0\""
+          },
+          "liveGridFindings": {
+            "$ref": "#/components/schemas/v1LiveGridFindings"
+          },
+          "machoSignature": {
+            "$ref": "#/components/schemas/v1MachoSignature"
+          },
+          "packerName": {
+            "type": "string",
+            "description": "The name of a packer if an executable is packed.\n\n> **Info:**\n> Corresponds to \"Packer name\" in ESET Inspect."
+          },
+          "peVersionInfo": {
+            "$ref": "#/components/schemas/v1PeVersionInfo"
+          },
+          "sfxTypeName": {
+            "type": "string",
+            "description": "The self-extracting archive type if an executable is packed.\n\n> **Info:**\n> Corresponds to \"SFX name\" in ESET Inspect."
+          },
+          "signatures": {
+            "type": "array",
+            "description": "Collection of signatures. Might be empty if the file is not signed.\n\nMACH-O files can only have one signature.\nPE files can have multiple signatures.",
+            "items": {
+              "$ref": "#/components/schemas/v1CodeSignature"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "List of tags, short arbitrary labels.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "versionName": {
+            "type": "string",
+            "description": "Version number of the file, for example, \"3.10\" or \"5.00.RC2\".\n\n> **Info:**\n> Corresponds to \"File version\" in ESET Inspect."
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 4122: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc4122), do not rely on it being a RFC UUID. Treat it as an opaque identifier.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\""
+          }
+        },
+        "description": "Executables are artifacts of applications.\n\nThey can be standalone (for example, .exe) or libraries (for example, .dll or .so) that are linked to standalone executables."
+      },
+      "v1ExecutableFileFormat": {
+        "type": "string",
+        "description": "Format of an executable. A subset of a more [complete list](https://en.wikipedia.org/wiki/Comparison_of_executable_file_formats).\n\n - EXECUTABLE_FILE_FORMAT_UNSPECIFIED: fallback\n - EXECUTABLE_FILE_FORMAT_ELF: Unix-like, OpenVMS, BeOS from R4 onwards, Haiku, SerenityOS\n - EXECUTABLE_FILE_FORMAT_PE: Windows, ReactOS, HX DOS Extender, BeOS (R3 only)\n - EXECUTABLE_FILE_FORMAT_MACHO: NeXTSTEP, macOS, iOS, watchOS, tvOS",
+        "default": "EXECUTABLE_FILE_FORMAT_UNSPECIFIED",
+        "enum": [
+          "EXECUTABLE_FILE_FORMAT_UNSPECIFIED",
+          "EXECUTABLE_FILE_FORMAT_ELF",
+          "EXECUTABLE_FILE_FORMAT_PE",
+          "EXECUTABLE_FILE_FORMAT_MACHO"
+        ]
+      },
+      "v1GetExecutableResponse": {
+        "type": "object",
+        "properties": {
+          "executable": {
+            "$ref": "#/components/schemas/v1Executable"
+          }
+        }
+      },
+      "v1ListExecutablesResponse": {
+        "type": "object",
+        "properties": {
+          "executables": {
+            "type": "array",
+            "description": "List of executables.",
+            "items": {
+              "$ref": "#/components/schemas/v1Executable"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          }
+        }
+      },
+      "v1LiveGridFindings": {
+        "type": "object",
+        "properties": {
+          "ageDays": {
+            "type": "integer",
+            "description": "Age of the finding in days.",
+            "format": "int64"
+          },
+          "firstOccurTime": {
+            "type": "string",
+            "description": "When an executable was first seen on any computer connected to LiveGrid\u00ae.",
+            "format": "date-time"
+          },
+          "popularity": {
+            "type": "number",
+            "description": "How many computers reported an executable to LiveGrid\u00ae. Normalized to a value between 0 and 1.\n\nThis value is frequently shown in UI as a severity bar.",
+            "format": "double"
+          },
+          "reputation": {
+            "type": "number",
+            "description": "Is a number from 0 to 1, indicating how safe the file is. \n\nReputation > 0.0 && < 0.3 -> malicious\nReputation > 0.3 && < 0.8 -> suspicious\nReputation > 0.8 -> safe.",
+            "format": "double"
+          }
+        },
+        "description": "Findings of LiveGrid."
+      },
+      "v1MachoSignature": {
+        "type": "object",
+        "properties": {
+          "codeIdentifier": {
+            "type": "string",
+            "description": "The \"identifier\" field is used to uniquely identify a specific version of the code or a code directory within the code signing process. \n\nExamples are: com.microsoft.edgemac.helper.renderer, com.eset.remoteadministrator.agent\n\n`code identifier` can be present also for unsigned files.\n\n> **Info:**\n> More details can be found at \n> [Apple Developer Documentation: Inside Code Signing](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements#Basics)\n> and [GitHub Apple Open Source: libsecurity_codesigning](https://github.com/apple-opensource/libsecurity_codesigning/blob/master/lib/codedirectory.h)"
+          },
+          "teamIdentifier": {
+            "type": "string",
+            "description": "The Team ID is a unique 10-character string generated by Apple that is assigned to your team.\n\nWhen Apple issues a Team ID to a team, we will not issue that same Team ID to any other team. Also, only appropriately authorized members of that team can ship the code signed with that Team ID.\n\nMore information can be found at [Apple Developer Documentation: Locate your Team ID](https://developer.apple.com/help/account/manage-your-team/locate-your-team-id/)"
+          }
+        },
+        "description": "Details of Mach-O signature."
+      },
+      "v1PeVersionInfo": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "description": "A company that produced the file, for example, Microsoft Corporation or Standard Microsystems Corporation, Inc."
+          },
+          "fileDescription": {
+            "type": "string",
+            "description": "File description to be presented to users. This string may be displayed in a list box when the user is choosing files to install, for example, Keyboard Driver for AT-Style Keyboards."
+          },
+          "fileVersion": {
+            "type": "string",
+            "description": "Version number of the file, for example, 3.10 or 5.00.RC2."
+          },
+          "internalName": {
+            "type": "string",
+            "description": "The internal name of the file, if one exists, for example, a module name if the file is a dynamic-link library. If the file has no internal name, this string should be the original filename without extension."
+          },
+          "originalFileName": {
+            "type": "string",
+            "description": "The original name of the file, not including a path. This information enables an application to determine whether a file has been renamed by a user. The format of the name depends on the file system for which the file was created."
+          },
+          "productName": {
+            "type": "string",
+            "description": "The name of the product with which the file is distributed."
+          },
+          "productVersion": {
+            "type": "string",
+            "description": "Version of the product with which the file is distributed, for example, 3.10 or 5.00.RC2."
+          }
+        },
+        "description": "Windows `VersionInfo` about [portable executable](https://en.wikipedia.org/wiki/Portable_Executable)."
+      },
+      "v1SignatureTrustLevel": {
+        "type": "string",
+        "description": "Level of signature trust.\n\nItems are sorted by their trustworthiness from the least trustworthy case of ad-hoc signature to the signature trusted by ESET.\n\nBasically, 0\u201379 means `untrusted` and 80+ means `trusted`.\n\n - SIGNATURE_TRUST_LEVEL_UNSPECIFIED: fallback\n - SIGNATURE_TRUST_LEVEL_AD_HOC: A signature that is created without a certificate from a Certificate Authority (CA) is the least trustworthy because it cannot be traced back to a known entity.\n\nFor example, [Apple Developer Documentation: Code Signature Flags - adhoc](https://developer.apple.com/documentation/security/seccodesignatureflags/1397793-adhoc)\n - SIGNATURE_TRUST_LEVEL_INVALID: The signature does not match the content it is supposed to be signing, or it has been signed with a certificate that is expired or revoked. It is not trustworthy.\n - SIGNATURE_TRUST_LEVEL_NO_SIGNATURE: There is no signature at all. It is not trustworthy because there is no way to verify the source or integrity of the content.\n - SIGNATURE_TRUST_LEVEL_SELF_SIGNED: The signature was created with a self-signed certificate. It is somewhat trustworthy but less so than a signature from a CA because it cannot be traced back to a known entity.\n - SIGNATURE_TRUST_LEVEL_OS_TRUSTED: This means the signature was created with a certificate from a CA that is trusted by the operating system. It is generally trustworthy.\n - SIGNATURE_TRUST_LEVEL_ESET_TRUSTED: This means the signature was created with a certificate from a CA that is trusted by ESET. It is generally trustworthy.",
+        "default": "SIGNATURE_TRUST_LEVEL_UNSPECIFIED",
+        "enum": [
+          "SIGNATURE_TRUST_LEVEL_UNSPECIFIED",
+          "SIGNATURE_TRUST_LEVEL_AD_HOC",
+          "SIGNATURE_TRUST_LEVEL_INVALID",
+          "SIGNATURE_TRUST_LEVEL_NO_SIGNATURE",
+          "SIGNATURE_TRUST_LEVEL_SELF_SIGNED",
+          "SIGNATURE_TRUST_LEVEL_OS_TRUSTED",
+          "SIGNATURE_TRUST_LEVEL_ESET_TRUSTED"
+        ]
+      },
+      "v1UnblockExecutableResponse": {
+        "title": "empty",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Type \"Bearer \" and then your API Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

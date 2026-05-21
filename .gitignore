@@ -1,0 +1,38 @@
+# ───────── Secrets ─────────
+.env
+.env.local
+.env.*.local
+
+# ───────── Python ─────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ───────── Editors / OS ─────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ───────── Local-only docs (large / ESET copyright) ─────────
+eset_connect_enu.pdf
+eset_docs.txt
+
+# ───────── Logs ─────────
+*.log
+logs/
+
+# ───────── Claude Code per-session worktrees (out of scope for the repo) ─────
+.claude/

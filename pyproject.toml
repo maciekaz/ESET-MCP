@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eset-mcp"
+version = "0.1.0"
+description = "MCP server for the ESET Connect API (RO/RW modes, multi-region, full ~100-endpoint coverage)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Maciej" }]
+dependencies = [
+    # MCP SDK (Python) — spec 2025-11-25 compatible.
+    "mcp>=1.2.0",
+    # HTTP client — async, with retries / streaming / connection pooling.
+    "httpx>=0.27",
+    # Pydantic for input validation and auto-generating inputSchema for tools.
+    "pydantic>=2.7",
+    # .env loader (better than a hand-rolled parser — e.g. correct quoting).
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",          # httpx mocking for unit tests
+    "ruff>=0.6",
+]
+
+[project.scripts]
+# After `pip install .` we get `eset-mcp` on PATH.
+eset-mcp = "eset_mcp.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["eset_mcp*"]
+exclude = ["tests*", "scripts*"]
+
+[tool.setuptools.package-data]
+eset_mcp = ["openapi/*.json"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "ro: read-only smoke tests (always on)",
+    "rw: read-write tests (skipped by default — needs an RW-capable account)",
+]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "RUF"]
+ignore = ["E501"]  # line length — readability over strictness

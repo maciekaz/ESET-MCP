@@ -1,0 +1,1368 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - Patch Management",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a>",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://eu.patch-management.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "PatchManagement"
+    },
+    {
+      "name": "UnpatchedDevices"
+    }
+  ],
+  "paths": {
+    "/v1/application-patching-processes/recent/details": {
+      "get": {
+        "tags": [
+          "PatchManagement"
+        ],
+        "summary": "List recent application patching details",
+        "description": "List the patching details of all application patching attempts performed recently (within the last few days).\n\nThe list might be empty if no application patching has been performed recently.\nStale data (that is, not recent) is removed from the list over the course of several days.",
+        "operationId": "PatchManagement_ListRecentApplicationPatchingDetails",
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1ListRecentApplicationPatchingDetailsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/device-patches": {
+      "get": {
+        "tags": [
+          "UnpatchedDevices"
+        ],
+        "summary": "List device patches",
+        "description": "If the same application, package or operating system is unpatched on multiple devices, the collection would contain entities for each device and patch individually.\n\nThe list may be empty if no patches for any device are found.",
+        "operationId": "UnpatchedDevices_ListDevicePatches",
+        "parameters": [
+          {
+            "name": "deviceUuid",
+            "in": "query",
+            "description": "Reference to the device whose vulnerabilities should be listed.\n\nIf empty or null, vulnerabilities of any device accessible to the caller will be included in the response.\n\ntype: vulnerability_management.v1.VulnerableDevice",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "deviceGroupUuid",
+            "in": "query",
+            "description": "Reference to the [device group] for which the vulnerable devices should be listed. Devices of the nested groups are listed recursively as well.\n\nIf empty or null, any device accessible to the caller will be included in the response.\n\ntype: device_management.v1.DeviceGroup",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "patchType",
+            "in": "query",
+            "description": "Possible categories of vulnerabilities.\n\n - PATCH_TYPE_UNSPECIFIED: fallback\n - PATCH_TYPE_APPLICATION: Application patch.\n - PATCH_TYPE_OPERATING_SYSTEM: Operating system patch.\n - PATCH_TYPE_PACKAGE: Package patch.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "default": "PATCH_TYPE_UNSPECIFIED",
+              "enum": [
+                "PATCH_TYPE_UNSPECIFIED",
+                "PATCH_TYPE_APPLICATION",
+                "PATCH_TYPE_OPERATING_SYSTEM",
+                "PATCH_TYPE_PACKAGE"
+              ]
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1ListDevicePatchesResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/patching-process-details": {
+      "get": {
+        "tags": [
+          "PatchManagement"
+        ],
+        "summary": "List patching details",
+        "description": "History is pruned repeatedly to prevent database flooding. Entries from at least the previous 30 days should be available at any time.",
+        "operationId": "PatchManagement_ListDevicePatchingDetails",
+        "parameters": [
+          {
+            "name": "deviceUuid",
+            "in": "query",
+            "description": "Reference to the device whose patching details should be listed.\n\nIf empty or null, patching details of all devices accessible to the caller will be included in the response.\n\ntype: device_management.v1.Device",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "deviceGroupUuid",
+            "in": "query",
+            "description": "Reference to the [device group].\n\nIf filled, only the patching details of devices within the group will be included in the response. If empty or null, scan details of any device accessible to the caller will be included in the response.\n\ntype: device_management.v1.DeviceGroup",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "timePeriod.startTime",
+            "in": "query",
+            "description": "Optional. Inclusive start of the interval.\n\nIf specified, a Timestamp matching this interval will have to be the same\nor after the start.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "timePeriod.endTime",
+            "in": "query",
+            "description": "Optional. Exclusive end of the interval.\n\nIf specified, a Timestamp matching this interval will have to be before the\nend.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1ListDevicePatchingDetailsResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "protobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": {
+          "type": "object"
+        }
+      },
+      "rpcStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        }
+      },
+      "typeDate": {
+        "title": "Represents a whole or partial calendar date, such as a birthday. The time of\nday and time zone are either specified elsewhere or are insignificant. The\ndate is relative to the Gregorian Calendar. This can represent one of the\nfollowing:",
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "description": "Year of the date. Must be from 1 to 9999, or 0 to specify a date without\na year.",
+            "format": "int32"
+          },
+          "month": {
+            "type": "integer",
+            "description": "Month of a year. Must be from 1 to 12, or 0 to specify a year without a\nmonth and day.",
+            "format": "int32"
+          },
+          "day": {
+            "type": "integer",
+            "description": "Day of a month. Must be from 1 to 31 and valid for the year and month, or 0\nto specify a year by itself or a year and month where the day isn't\nsignificant.",
+            "format": "int32"
+          }
+        },
+        "description": "* A full date, with non-zero year, month, and day values\n* A month and day value, with a zero year, such as an anniversary\n* A year on its own, with zero month and day values\n* A year and month value, with a zero day, such as a credit card expiration\ndate\n\nRelated types are [google.type.TimeOfDay][google.type.TimeOfDay] and\n`google.protobuf.Timestamp`."
+      },
+      "typeInterval": {
+        "type": "object",
+        "properties": {
+          "startTime": {
+            "type": "string",
+            "description": "Optional. Inclusive start of the interval.\n\nIf specified, a Timestamp matching this interval will have to be the same\nor after the start.",
+            "format": "date-time"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "Optional. Exclusive end of the interval.\n\nIf specified, a Timestamp matching this interval will have to be before the\nend.",
+            "format": "date-time"
+          }
+        },
+        "description": "Represents a time interval, encoded as a Timestamp start (inclusive) and a\nTimestamp end (exclusive).\n\nThe start must be less than or equal to the end.\nWhen the start equals the end, the interval is empty (matches no time).\nWhen both start and end are unspecified, the interval matches any time."
+      },
+      "v1ApplicationPatch": {
+        "type": "object",
+        "properties": {
+          "catalogId": {
+            "type": "integer",
+            "description": "Identifier of an item in the package catalog. Some patches (especially third-party, such as package patches) might not have an entry in the package catalog.",
+            "format": "int64"
+          },
+          "category": {
+            "$ref": "#/components/schemas/v1PatchCategory"
+          },
+          "developerDisplayName": {
+            "type": "string",
+            "description": "A human-readable name of a developer (vendor) of the patch."
+          },
+          "fixedCves": {
+            "type": "array",
+            "description": "List of vulnerabilities in the format of \"CVE-*\" fixed by this patch.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "releaseDate": {
+            "$ref": "#/components/schemas/typeDate"
+          },
+          "releaseNotesUrl": {
+            "type": "string",
+            "description": "Link to information attached to this patch, for example, changelog or release notes in general."
+          },
+          "restartRequired": {
+            "$ref": "#/components/schemas/v1RestartRequirement"
+          },
+          "resultVersionName": {
+            "type": "string",
+            "description": "Result version reached after the patch is applied.\n\n> **Info:**\n> If the patch is not from the catalog, the version is informative. For example, Chrome does not publish the patch to a certain version; it always patches to the latest version. If the patching is requested after a longer time, the actual version might be later than reported."
+          },
+          "severity": {
+            "$ref": "#/components/schemas/v1SeverityLevel"
+          },
+          "termsUrl": {
+            "type": "string",
+            "description": "Link to terms (EULA, Terms of Use, Terms of Service, etc.)."
+          }
+        },
+        "description": "Describes an application patch.\n\nThe same patch is applicable to multiple versions of an application.\n\n//// Inherited from Patch /////"
+      },
+      "v1ApplicationPatchingDetails": {
+        "type": "object",
+        "properties": {
+          "applicationUuid": {
+            "type": "string",
+            "description": "Reference to the patched [application].\n\ntype: application_management.v1.Application"
+          },
+          "developerDisplayName": {
+            "type": "string",
+            "description": "Developer of the application."
+          },
+          "displayName": {
+            "type": "string",
+            "description": "A human-friendly name of the application."
+          },
+          "patchedVersion": {
+            "$ref": "#/components/schemas/v1Version"
+          },
+          "status": {
+            "$ref": "#/components/schemas/v1ApplicationPatchingStatus"
+          },
+          "timePeriod": {
+            "$ref": "#/components/schemas/typeInterval"
+          },
+          "unpatchedVersion": {
+            "$ref": "#/components/schemas/v1Version"
+          }
+        },
+        "description": "Details of patching of a single application."
+      },
+      "v1ApplicationPatchingStatus": {
+        "type": "string",
+        "description": "Possible statuses of application patching.\n\nDEPRECATED: Use `PatchingStatus` instead.\n\n - APPLICATION_PATCHING_STATUS_UNSPECIFIED: fallback\n - APPLICATION_PATCHING_STATUS_OK_INSTALLED: Patching was successful and complete.\n - APPLICATION_PATCHING_STATUS_OK_RESTART_REQUIRED: Patching was successful, but system restart is required.\n - APPLICATION_PATCHING_STATUS_FAILED_TERMINATION_REQUIRED: Patching was unsuccessful, application must be terminated before patching.\n - APPLICATION_PATCHING_STATUS_FAILED_UNINSTALL_REQUIRED: Patching was unsuccessful, application must be uninstalled before patching.\n - APPLICATION_PATCHING_STATUS_FAILED_DOWNLOAD_ERROR: Patching was unsuccessful, patch downloading failed.\n - APPLICATION_PATCHING_STATUS_FAILED_INSTALLER_CORRUPTED: Patching was unsuccessful, downloaded patch installer was corrupted.\n - APPLICATION_PATCHING_STATUS_FAILED_PREPARE_ERROR: Patching was unsuccessful, failed to prepare downloaded patch installer.\n - APPLICATION_PATCHING_STATUS_NOT_APPLICABLE: Patching was unsuccessful, patch is not applicable - already patched/uninstalled.",
+        "default": "APPLICATION_PATCHING_STATUS_UNSPECIFIED",
+        "enum": [
+          "APPLICATION_PATCHING_STATUS_UNSPECIFIED",
+          "APPLICATION_PATCHING_STATUS_OK_INSTALLED",
+          "APPLICATION_PATCHING_STATUS_OK_RESTART_REQUIRED",
+          "APPLICATION_PATCHING_STATUS_FAILED_TERMINATION_REQUIRED",
+          "APPLICATION_PATCHING_STATUS_FAILED_UNINSTALL_REQUIRED",
+          "APPLICATION_PATCHING_STATUS_FAILED_DOWNLOAD_ERROR",
+          "APPLICATION_PATCHING_STATUS_FAILED_INSTALLER_CORRUPTED",
+          "APPLICATION_PATCHING_STATUS_FAILED_PREPARE_ERROR",
+          "APPLICATION_PATCHING_STATUS_NOT_APPLICABLE"
+        ]
+      },
+      "v1DependencyPatchingDetails": {
+        "type": "object",
+        "properties": {
+          "actionType": {
+            "$ref": "#/components/schemas/v1PatchActionType"
+          },
+          "package": {
+            "$ref": "#/components/schemas/v1Package"
+          }
+        },
+        "description": "Details of dependency patching.\n\nPatching process, to be finished, might have dependencies."
+      },
+      "v1DevicePatch": {
+        "type": "object",
+        "properties": {
+          "deviceUuid": {
+            "type": "string",
+            "description": "Reference to the unpatched [device].\n\ntype: device_management.v1.Device"
+          },
+          "deviceGroupUuid": {
+            "type": "string",
+            "description": "Reference to the parent group of the device.\n\ntype: device_management.v1.DeviceGroup"
+          },
+          "applicationPatch": {
+            "$ref": "#/components/schemas/v1ApplicationPatch"
+          },
+          "osPatch": {
+            "$ref": "#/components/schemas/v1OsPatch"
+          },
+          "packagePatch": {
+            "$ref": "#/components/schemas/v1PackagePatch"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within the entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 9562: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc9562), do not rely on it being a RFC UUID. Treat it as an opaque identifier, albeit of predictable length and alphabet.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\""
+          }
+        },
+        "description": "Descriptor of a patch for a device.\n\nTwo device patches from two different devices might point to the same patch in the patch catalog, even though they are two distinct cases with unique identifiers.\n\nThere are as many `device patch` entries as there are patches ready for the same device. For example, a device with two unpatched applications and an outdated operating system will be represented as three `device patch` entities. \n\nIf there is another device with the same unpatched applications and operating system, it will be represented by three more `device patch` entities.\n\nEach patch can be applied individually."
+      },
+      "v1DevicePatchingDetails": {
+        "type": "object",
+        "properties": {
+          "dependencies": {
+            "type": "array",
+            "description": "List of dependencies and respective actions.",
+            "items": {
+              "$ref": "#/components/schemas/v1DependencyPatchingDetails"
+            }
+          },
+          "deviceUuid": {
+            "type": "string",
+            "description": "Reference to the [device] where patching occurred.\n\ntype: device_management.v1.Device"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "A human-friendly name of the application or package."
+          },
+          "application": {
+            "$ref": "#/components/schemas/v1ApplicationPatchingDetails"
+          },
+          "operatingSystem": {
+            "$ref": "#/components/schemas/v1OsPatchingDetails"
+          },
+          "package": {
+            "$ref": "#/components/schemas/v1PackagePatchingDetails"
+          }
+        },
+        "description": "Details of patching of a single application or package."
+      },
+      "v1ListDevicePatchesResponse": {
+        "type": "object",
+        "properties": {
+          "devices": {
+            "type": "array",
+            "description": "List of unpatched devices.\n\nThe list may be empty if no devices are found.",
+            "items": {
+              "$ref": "#/components/schemas/v1DevicePatch"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          }
+        }
+      },
+      "v1ListDevicePatchingDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "patchingDetails": {
+            "type": "array",
+            "description": "Details of patching of a single application.",
+            "items": {
+              "$ref": "#/components/schemas/v1DevicePatchingDetails"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          }
+        }
+      },
+      "v1ListRecentApplicationPatchingDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "patchingDetails": {
+            "type": "array",
+            "description": "Details of patching for every patched application.\n\nApplications are listed regardless of patching success or failure.",
+            "items": {
+              "$ref": "#/components/schemas/v1ApplicationPatchingDetails"
+            }
+          }
+        }
+      },
+      "v1OsPatch": {
+        "type": "object",
+        "properties": {
+          "osFamilyId": {
+            "type": "integer",
+            "description": "Family of the operating system.\n\nThe family comprises the whole series of related operating systems.\nSome families feature multiple editions, for example, MacOS versus MacOS Server.\n\nUse a value from the following list:\n\n| Value | Description |\n|-------|-------------|\n| 1     | Windows     |\n| 2     | Linux       |\n| 3     | Mac OS      |\n| 7     | Unix        |\n\ntype: os_catalog.v2.OsFamily",
+            "format": "int64"
+          },
+          "catalogId": {
+            "type": "integer",
+            "description": "Identifier of an item in the package catalog. Some patches (especially third-party, such as package patches) might not have an entry in the package catalog.",
+            "format": "int64"
+          },
+          "category": {
+            "$ref": "#/components/schemas/v1PatchCategory"
+          },
+          "developerDisplayName": {
+            "type": "string",
+            "description": "A human-readable name of a developer (vendor) of the patch."
+          },
+          "fixedCves": {
+            "type": "array",
+            "description": "List of vulnerabilities in the format of \"CVE-*\" fixed by this patch.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "releaseDate": {
+            "$ref": "#/components/schemas/typeDate"
+          },
+          "releaseNotesUrl": {
+            "type": "string",
+            "description": "Link to information attached to this patch, for example, changelog or release notes in general."
+          },
+          "restartRequired": {
+            "$ref": "#/components/schemas/v1RestartRequirement"
+          },
+          "resultVersionName": {
+            "type": "string",
+            "description": "Result version reached after the patch is applied.\n\n> **Info:**\n> If the patch is not from the catalog, the version is informative. For example, Chrome does not publish the patch to a certain version; it always patches to the latest version. If the patching is requested after a longer time, the actual version might be later than reported."
+          },
+          "severity": {
+            "$ref": "#/components/schemas/v1SeverityLevel"
+          },
+          "termsUrl": {
+            "type": "string",
+            "description": "Link to terms (EULA, Terms of Use, Terms of Service, etc.)."
+          }
+        },
+        "description": "Describes an operating system patch.\n\nThe same patch is applicable to multiple versions of an operating system."
+      },
+      "v1OsPatchingDetails": {
+        "type": "object",
+        "properties": {
+          "actionType": {
+            "$ref": "#/components/schemas/v1PatchActionType"
+          },
+          "osFamilyId": {
+            "title": "Operating system family where patching occurred. Use a value from the following list:",
+            "type": "integer",
+            "description": "| Value | Description |\n|-------|-------------|\n| 1     | Windows     |\n| 2     | Linux       |\n| 3     | Mac OS      |\n| 7     | Unix        |\n\ntype: os_catalog.v2.OsFamily",
+            "format": "int64"
+          },
+          "patchedVersion": {
+            "$ref": "#/components/schemas/v1Version"
+          },
+          "status": {
+            "$ref": "#/components/schemas/v1PatchingStatus"
+          },
+          "timePeriod": {
+            "$ref": "#/components/schemas/typeInterval"
+          },
+          "unpatchedVersion": {
+            "$ref": "#/components/schemas/v1Version"
+          }
+        },
+        "description": "Details of patching of an operating system."
+      },
+      "v1Package": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "A human-friendly name of the package.\n\nFor example: \"Firefox\""
+          },
+          "name": {
+            "type": "string",
+            "description": "Package name as indexed within the package manager.\n\nPackage name identifies a package only in the context of one package manager.\nThe name is not globally unique.\n\nFor example: \"com.example.app123\""
+          },
+          "packageManagerType": {
+            "$ref": "#/components/schemas/v1PackageManagerType"
+          },
+          "reference": {
+            "type": "string",
+            "description": "Reference to the package.\n\nReference is an opaque string that identifies the package."
+          },
+          "versionName": {
+            "type": "string",
+            "description": "A human-readable name of the package version.\n\nFor example:\n- 2.12\n- 1.1.2j\n- 1:4.8.1-2ubuntu2.2\n- 2:1.02.175-2.1ubuntu4\n- 2:1.02.175-2.1ubuntu5\n- 21H2 1233.223"
+          }
+        },
+        "description": "Package descriptor.\n\nPackages are referenced by their name and provider."
+      },
+      "v1PackageManagerType": {
+        "type": "string",
+        "description": "Possible types of package managers.\n\nPackage managers are used to install and manage packages on the system.\n\n - PACKAGE_MANAGER_TYPE_UNSPECIFIED: fallback\n - PACKAGE_MANAGER_TYPE_APT: Advanced Packaging Type\n\nFor details, refer to [APT](https://en.wikipedia.org/wiki/APT_(software))\n - PACKAGE_MANAGER_TYPE_SNAP: Package Manager for Snap\n\nFor details, refer to [Snap](https://en.wikipedia.org/wiki/Snap_(software))\n - PACKAGE_MANAGER_TYPE_DNF: Dandified YUM\n\nFor details, refer to [DNF](https://en.wikipedia.org/wiki/DNF_(software))",
+        "default": "PACKAGE_MANAGER_TYPE_UNSPECIFIED",
+        "enum": [
+          "PACKAGE_MANAGER_TYPE_UNSPECIFIED",
+          "PACKAGE_MANAGER_TYPE_APT",
+          "PACKAGE_MANAGER_TYPE_SNAP",
+          "PACKAGE_MANAGER_TYPE_DNF"
+        ]
+      },
+      "v1PackagePatch": {
+        "type": "object",
+        "properties": {
+          "dependencies": {
+            "type": "array",
+            "description": "List of package dependencies (other package descriptors).",
+            "items": {
+              "$ref": "#/components/schemas/v1Package"
+            }
+          },
+          "package": {
+            "$ref": "#/components/schemas/v1Package"
+          },
+          "catalogId": {
+            "type": "integer",
+            "description": "Identifier of an item in the package catalog. Some patches (especially third-party, such as package patches) might not have an entry in the package catalog.",
+            "format": "int64"
+          },
+          "category": {
+            "$ref": "#/components/schemas/v1PatchCategory"
+          },
+          "developerDisplayName": {
+            "type": "string",
+            "description": "A human-readable name of a developer (vendor) of the patch."
+          },
+          "fixedCves": {
+            "type": "array",
+            "description": "List of vulnerabilities in the format of \"CVE-*\" fixed by this patch.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "releaseDate": {
+            "$ref": "#/components/schemas/typeDate"
+          },
+          "releaseNotesUrl": {
+            "type": "string",
+            "description": "Link to information attached to this patch, for example, changelog or release notes in general."
+          },
+          "restartRequired": {
+            "$ref": "#/components/schemas/v1RestartRequirement"
+          },
+          "resultVersionName": {
+            "type": "string",
+            "description": "Result version reached after the patch is applied.\n\n> **Info:**\n> If the patch is not from the catalog, the version is informative. For example, Chrome does not publish the patch to certain version; it always patches to the latest version. If patching is requested after a longer time, the actual version might be later than reported."
+          },
+          "severity": {
+            "$ref": "#/components/schemas/v1SeverityLevel"
+          },
+          "termsUrl": {
+            "type": "string",
+            "description": "Link to terms (EULA, Terms of Use, Terms of Service, etc.)."
+          }
+        },
+        "description": "Describes a package patch.\n\nThe same patch is applicable to multiple versions of a package."
+      },
+      "v1PackagePatchingDetails": {
+        "type": "object",
+        "properties": {
+          "dependencies": {
+            "type": "array",
+            "description": "List of dependencies of the patched application or package.",
+            "items": {
+              "$ref": "#/components/schemas/v1DevicePatchingDetails"
+            }
+          },
+          "packageReference": {
+            "type": "string",
+            "description": "Reference to the patched package."
+          },
+          "patchedVersion": {
+            "$ref": "#/components/schemas/v1Version"
+          },
+          "status": {
+            "$ref": "#/components/schemas/v1PatchingStatus"
+          },
+          "timePeriod": {
+            "$ref": "#/components/schemas/typeInterval"
+          },
+          "unpatchedVersion": {
+            "$ref": "#/components/schemas/v1Version"
+          }
+        },
+        "description": "Details of patching of a single package."
+      },
+      "v1PatchActionType": {
+        "type": "string",
+        "description": "Possible outcomes of patching in terms of the application or package lifecycle.\n\n - PATCH_ACTION_TYPE_UNSPECIFIED: fallback\n - PATCH_ACTION_TYPE_ADDED: Application or package was added (installed) to the system.\n - PATCH_ACTION_TYPE_UPGRADED: Application or package was upgraded.\n - PATCH_ACTION_TYPE_DOWNGRADED: Application or package was downgraded.\n - PATCH_ACTION_TYPE_REMOVED: Application or package was removed (uninstalled) from the system.",
+        "default": "PATCH_ACTION_TYPE_UNSPECIFIED",
+        "enum": [
+          "PATCH_ACTION_TYPE_UNSPECIFIED",
+          "PATCH_ACTION_TYPE_ADDED",
+          "PATCH_ACTION_TYPE_UPGRADED",
+          "PATCH_ACTION_TYPE_DOWNGRADED",
+          "PATCH_ACTION_TYPE_REMOVED"
+        ]
+      },
+      "v1PatchCategory": {
+        "type": "string",
+        "description": "Describes what gets fixed by applying the patch to the application. Whether security-related issues or something else.\n\n - PATCH_CATEGORY_UNSPECIFIED: fallback\n - PATCH_CATEGORY_SECURITY_UPDATE: This patch fixes a security-related issue of the application.\n - PATCH_CATEGORY_REGULAR_UPDATE: Patch updates the application without any security-related fixes.",
+        "default": "PATCH_CATEGORY_UNSPECIFIED",
+        "enum": [
+          "PATCH_CATEGORY_UNSPECIFIED",
+          "PATCH_CATEGORY_SECURITY_UPDATE",
+          "PATCH_CATEGORY_REGULAR_UPDATE"
+        ]
+      },
+      "v1PatchType": {
+        "type": "string",
+        "description": "Possible categories of vulnerabilities.\n\n - PATCH_TYPE_UNSPECIFIED: fallback\n - PATCH_TYPE_APPLICATION: Application patch.\n - PATCH_TYPE_OPERATING_SYSTEM: Operating system patch.\n - PATCH_TYPE_PACKAGE: Package patch.",
+        "default": "PATCH_TYPE_UNSPECIFIED",
+        "enum": [
+          "PATCH_TYPE_UNSPECIFIED",
+          "PATCH_TYPE_APPLICATION",
+          "PATCH_TYPE_OPERATING_SYSTEM",
+          "PATCH_TYPE_PACKAGE"
+        ]
+      },
+      "v1PatchingStatus": {
+        "type": "string",
+        "description": "Possible statuses of patching.\n\n - PATCHING_STATUS_UNSPECIFIED: fallback\n - PATCHING_STATUS_OK_INSTALLED: Patching was successful and complete.\n - PATCHING_STATUS_OK_RESTART_REQUIRED: Patching was successful, but system restart is required.\n - PATCHING_STATUS_FAILED_TERMINATION_REQUIRED: Patching was unsuccessful, application must be terminated before patching.\n - PATCHING_STATUS_FAILED_UNINSTALL_REQUIRED: Patching was unsuccessful, application must be uninstalled before patching.\n - PATCHING_STATUS_FAILED_DOWNLOAD_ERROR: Patching was unsuccessful, patch downloading failed.\n - PATCHING_STATUS_FAILED_INSTALLER_CORRUPTED: Patching was unsuccessful, downloaded patch installer was corrupted.\n - PATCHING_STATUS_FAILED_PREPARE_ERROR: Patching was unsuccessful, failed to prepare downloaded patch installer.\n - PATCHING_STATUS_NOT_APPLICABLE: Patching was unsuccessful, patch is not applicable - already patched/uninstalled.\n - PATCHING_STATUS_AVAILABLE: Patching is possible, not yet scheduled nor executed.\n - PATCHING_STATUS_SCHEDULED: Patching is scheduled, not yet executed.",
+        "default": "PATCHING_STATUS_UNSPECIFIED",
+        "enum": [
+          "PATCHING_STATUS_UNSPECIFIED",
+          "PATCHING_STATUS_OK_INSTALLED",
+          "PATCHING_STATUS_OK_RESTART_REQUIRED",
+          "PATCHING_STATUS_FAILED_TERMINATION_REQUIRED",
+          "PATCHING_STATUS_FAILED_UNINSTALL_REQUIRED",
+          "PATCHING_STATUS_FAILED_DOWNLOAD_ERROR",
+          "PATCHING_STATUS_FAILED_INSTALLER_CORRUPTED",
+          "PATCHING_STATUS_FAILED_PREPARE_ERROR",
+          "PATCHING_STATUS_NOT_APPLICABLE",
+          "PATCHING_STATUS_AVAILABLE",
+          "PATCHING_STATUS_SCHEDULED"
+        ]
+      },
+      "v1RestartRequirement": {
+        "title": "Possible answers to the question: `Is restart required?`",
+        "type": "string",
+        "description": "- RESTART_REQUIREMENT_UNSPECIFIED: Maybe it is required, maybe it is not. A fallback.\n - RESTART_REQUIREMENT_YES: Yes, restart is required.\n - RESTART_REQUIREMENT_NO: No restart is required.",
+        "default": "RESTART_REQUIREMENT_UNSPECIFIED",
+        "enum": [
+          "RESTART_REQUIREMENT_UNSPECIFIED",
+          "RESTART_REQUIREMENT_YES",
+          "RESTART_REQUIREMENT_NO"
+        ]
+      },
+      "v1SeverityLevel": {
+        "type": "string",
+        "description": "Severity levels abstracted to cover all the possible GUIs. Vocabulary is leaving interpretation of severity level completely to API client.\n\n```info:\nThis approach is inevitable on SIEM level as there are many contributing sources. Keeping the local names for severity levels never fits all the GUIs. \n```\n\n - SEVERITY_LEVEL_UNSPECIFIED: fallback\n - SEVERITY_LEVEL_DIAGNOSTIC: In some GUIs known `Debug`\n - SEVERITY_LEVEL_INFORMATIONAL: In some GUIs known as `Info` or `Information`\n - SEVERITY_LEVEL_LOW: In some GUIs known `Warning`\n - SEVERITY_LEVEL_MEDIUM: In some GUIs known as `Error` or `Threat`\n - SEVERITY_LEVEL_HIGH: In some GUIs known as `Critical`",
+        "default": "SEVERITY_LEVEL_UNSPECIFIED",
+        "enum": [
+          "SEVERITY_LEVEL_UNSPECIFIED",
+          "SEVERITY_LEVEL_DIAGNOSTIC",
+          "SEVERITY_LEVEL_INFORMATIONAL",
+          "SEVERITY_LEVEL_LOW",
+          "SEVERITY_LEVEL_MEDIUM",
+          "SEVERITY_LEVEL_HIGH"
+        ]
+      },
+      "v1Version": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "[Version id] determines whether one version is more recent than another. More recent versions have higher numbers.\n\nCan be processed by machine.\n\nIf human readable `version_name` meets certain criteria, it can be converted to `version_id` automatically. The cases are:\n`Windows => VersionId = MajorVersion << 48 | MinorVersion << 32 | ServicePackMajor << 24 | ServicePackMinor << 16 | CurrentBuildNumber`\n`Android => VersionId = API level`\n`YYYYMMDD => VersionId = (YYYY & 0xffff ) << 48 | (MM & 0xffff) << 32 | (DD & 0xffff) <<16`\n`YYYY.MM => VersionId = (YYYY & 0xffff ) << 48 | (MM & 0xffff) << 32`\n`YY.MM => VersionId = (YY & 0xffff ) << 48 | (MM & 0xffff) << 32`\n`YYYY => VersionId = (YYYY & 0xffff ) << 48`\n`Major.Minor.Patch => VersionId = (Major & 0xffff ) << 48 | (Minor & 0xffff) << 32 | (Patch & 0xffff) <<16`\n`EULA | Terms of Use => VersionId = MajorVersion << 48 | MinorVersion << 32 | Patch << 16`\n`A.B.C.D => VersionId = (A & 0xffff) << 48 | (B & 0xffff) << 32 | (C & 0xffff) << 16 | (D & 0xffff)`\n`A.B.C => VersionId = (A & 0xffff ) << 48 | (B & 0xffff) << 32 | (C & 0xffff) <<16`\n`A.B => VersionId = (A & 0xffff ) << 48 | (B & 0xffff) << 32`\n`A => VersionId = (A & 0xffff ) << 48`",
+            "format": "uint64"
+          },
+          "major": {
+            "type": "integer",
+            "description": "Major version if and only if `version name` adheres to [semantic versioning](https://semver.org).\n\n`0` or null otherwise.",
+            "format": "int64",
+            "readOnly": true
+          },
+          "minor": {
+            "type": "integer",
+            "description": "Minor version if and only if `version name` adheres to [semantic versioning](https://semver.org).\n\n`0` or null otherwise.",
+            "format": "int64",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Human readable name of the version.\n\nE.g. \"10.2.3.145\""
+          },
+          "patch": {
+            "type": "integer",
+            "description": "Patch if and only if `version name` adheres to [semantic versioning](https://semver.org).\n\n`0` or null otherwise.",
+            "format": "int64",
+            "readOnly": true
+          }
+        },
+        "description": "Version descriptor.\n\nBoth values are required to completely reconstruct version information."
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Type \"Bearer \" and then your API Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

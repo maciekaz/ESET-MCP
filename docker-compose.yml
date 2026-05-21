@@ -1,0 +1,110 @@
+services:
+  # ─── Development / single-host HTTP server ───────────────────────────────
+  # HTTP mode (Streamable HTTP, MCP spec 2025-11-25) on 0.0.0.0:8765/mcp.
+  # Default for local development. Use --profile prod for the Caddy stack.
+  eset-mcp-http:
+    build: .
+    container_name: eset-mcp-http
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ESET_MCP_TRANSPORT: http
+      ESET_MCP_HTTP_HOST: 0.0.0.0
+      ESET_MCP_HTTP_PORT: "8765"
+    # Publishes the port for local dev. The prod profile uses a separate
+    # service (`eset-mcp-http-prod`) that does NOT publish; Caddy proxies it.
+    ports:
+      - "8765:8765"
+    networks: [eset-mcp]
+
+  # ─── stdio one-shot (Claude Desktop / Claude Code locally) ───────────────
+  # Run on demand: `docker compose run --rm eset-mcp-stdio`
+  eset-mcp-stdio:
+    build: .
+    profiles: ["stdio"]
+    env_file: .env
+    environment:
+      ESET_MCP_TRANSPORT: stdio
+    stdin_open: true
+    tty: false
+
+  # ─── Production (prod profile): Caddy + auto-HTTPS in front of MCP ───────
+  # docker compose --profile prod up -d
+  # Requires ESET_PUBLIC_DOMAIN and ESET_ACME_EMAIL in .env, plus the host
+  # being reachable from the public internet on ports 80 and 443.
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["prod"]
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [eset-mcp]
+    depends_on: [eset-mcp-http-prod]
+
+  # Same image as eset-mcp-http but only bound to the internal docker network
+  # in prod (no published port) and joined to the same network as Caddy.
+  eset-mcp-http-prod:
+    build: .
+    profiles: ["prod"]
+    container_name: eset-mcp-http-prod
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ESET_MCP_TRANSPORT: http
+      ESET_MCP_HTTP_HOST: 0.0.0.0
+      ESET_MCP_HTTP_PORT: "8765"
+      # Strongly recommended in production — basic auth is meaningless without
+      # TLS, which Caddy supplies in front of us.
+      ESET_AUTH_MODE: basic
+    expose:
+      - "8765"
+    networks:
+      eset-mcp:
+        aliases:
+          - eset-mcp-http   # Caddyfile reverse_proxy points here
+
+  # ─── OpenWebUI — chat UI podłączone do ContextForge przez MCP ───────────
+  # docker compose up -d open-webui
+  # UI dostępne na http://localhost:3000
+  # Po uruchomieniu: Admin → Settings → Tools → Add Tool Server
+  #   Type: MCP  URL: http://mcpforge-gateway:4444/mcp
+  #   Header: Authorization: Bearer <JWT z ContextForge>
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      # LLM backend — ustaw jeden z poniższych:
+      # OpenAI API:
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      # Anthropic przez litellm proxy albo bezpośrednie OpenAI-compatible:
+      # OPENAI_API_BASE_URL: "https://api.anthropic.com/v1"
+      # Wyłącz Ollama jeśli nie używasz:
+      ENABLE_OLLAMA_API: "false"
+      WEBUI_AUTH: "true"
+    volumes:
+      - open_webui_data:/app/backend/data
+    networks:
+      - eset-mcp
+      - mcpnet
+
+networks:
+  eset-mcp:
+    driver: bridge
+  # ContextForge i jego zależności działają na tej sieci (zarządzane zewnętrznie).
+  mcpnet:
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:
+  open_webui_data:

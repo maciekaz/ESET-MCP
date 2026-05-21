@@ -1,0 +1,1071 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - Asset Management",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a>",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://eu.asset-management.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Groups"
+    }
+  ],
+  "paths": {
+    "/v1/groups": {
+      "post": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Create group",
+        "description": "Create a [Group] in the hierarchy and assign a UUID to it.",
+        "operationId": "Groups_CreateGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1CreateGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1CreateGroupResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/groups/{groupUuid}": {
+      "delete": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Delete group",
+        "description": "Delete the group referenced by the uuid and any groups under it. If there are objects under the deleted groups, all of them will be deleted as well.\nIt is not possible to delete a group that has a linked entity (CUSTOMER, MSP, ...).",
+        "operationId": "Groups_DeleteGroup",
+        "parameters": [
+          {
+            "name": "groupUuid",
+            "in": "path",
+            "description": "Reference to the group that is the root of the deleted subtree.\n\ntype: Group",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "releaseConsumedUnits",
+            "in": "query",
+            "description": "For any deleted object within the group, all the associated units will be released. For devices, the seat of any active product on deleted devices will be released (and can be used again). If there were multiple active products on the deleted device, all of them are deactivated. Similarly, if there is a product consuming users (for example, mail server security), all the users will be released after the deletion of the device.\n\n> **Note:**\n> As of 2024H2 only seats are released.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1DeleteGroupResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/groups/{groupUuid}:move": {
+      "post": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Move group",
+        "description": "Move a [Group] under another [Group].\n\nIt is possible to move groups only in the scope of the same tenant.\nThe assignment of policies is updated according to the new hierarchy.",
+        "operationId": "Groups_MoveGroup",
+        "parameters": [
+          {
+            "name": "groupUuid",
+            "in": "path",
+            "description": "Reference to the group to be moved.\n\ntype: Group",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupsMoveGroupBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1MoveGroupResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/v1/groups/{groupUuid}:rename": {
+      "post": {
+        "tags": [
+          "Groups"
+        ],
+        "summary": "Rename group",
+        "description": "Update the group's display name.",
+        "operationId": "Groups_RenameGroup",
+        "parameters": [
+          {
+            "name": "groupUuid",
+            "in": "path",
+            "description": "Reference to the group for which the name is changed.\n\ntype: Group",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupsRenameGroupBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1RenameGroupResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "GroupsMoveGroupBody": {
+        "type": "object",
+        "properties": {
+          "newParentUuid": {
+            "type": "string",
+            "description": "Reference to the new parent [Group] for the [Group] being moved.\n\ntype: Group"
+          }
+        }
+      },
+      "GroupsRenameGroupBody": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "New display name for the group."
+          }
+        }
+      },
+      "protobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string",
+            "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+          }
+        },
+        "additionalProperties": {
+          "type": "object"
+        },
+        "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      },
+      "rpcStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        }
+      },
+      "v1CreateGroupRequest": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "$ref": "#/components/schemas/v1Group"
+          }
+        }
+      },
+      "v1CreateGroupResponse": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "$ref": "#/components/schemas/v1Group"
+          }
+        }
+      },
+      "v1DeleteGroupResponse": {
+        "title": "empty",
+        "type": "object"
+      },
+      "v1ExternalAssetType": {
+        "type": "string",
+        "description": "Defines the specific, technical type of an asset as identified in the source system.\nIt is intentionally granular and covers both structural containers and leaf resources.\n\n - EXTERNAL_ASSET_TYPE_UNSPECIFIED: Unspecified or default type.\n - EXTERNAL_ASSET_TYPE_AZURE_RESOURCE_GROUP: An Azure Resource Group. A container within an Azure Subscription that holds related resources for an application or a project.\n - EXTERNAL_ASSET_TYPE_AZURE_SUBSCRIPTION: An Azure Subscription, which serves as a primary billing and management container for all Azure resources. It is the top-level hierarchical entity in Azure.\n - EXTERNAL_ASSET_TYPE_AWS_ACCOUNT: An Amazon Web Services (AWS) Account. It is the fundamental container for all AWS resources and acts as a security, access, and billing boundary.\n - EXTERNAL_ASSET_TYPE_AWS_REGION: An Amazon Web Services (AWS) Region. A physical location containing one or more availability zones where AWS resources can be deployed.\n - EXTERNAL_ASSET_TYPE_GCP_PROJECT: A Google Cloud Project. It is the core organizational unit for creating and managing resources, and serves as a boundary for billing, enabling APIs, and managing IAM permissions for all contained resources.\n - EXTERNAL_ASSET_TYPE_AZURE_VIRTUAL_MACHINE: A Microsoft Azure Virtual Machine. A scalable, on-demand compute resource that functions as a virtual server.\n - EXTERNAL_ASSET_TYPE_AWS_EC2_INSTANCE: An Amazon Elastic Compute Cloud (EC2) Instance. A virtual server in the AWS cloud used for running applications.\n - EXTERNAL_ASSET_TYPE_GCP_COMPUTE_ENGINE_INSTANCE: A Google Compute Engine (GCE) instance. A virtual machine running in Google's infrastructure, used for a wide range of workloads.\n - EXTERNAL_ASSET_TYPE_ENTRA_ID_USER: A user identity managed by Microsoft Entra ID (formerly Azure AD), used for accessing Microsoft 365, Azure, and other federated cloud services.\n - EXTERNAL_ASSET_TYPE_MICROSOFT_ACTIVE_DIRECTORY_USER: A user account within a Microsoft Active Directory domain.\n - EXTERNAL_ASSET_TYPE_OBSERVED_USER: A user identity as observed from a device logon event, containing partial information.\n - EXTERNAL_ASSET_TYPE_MICROSOFT_ACTIVE_DIRECTORY_MANAGED_SERVICE_ACCOUNT: A Managed Service Account within a Microsoft Active Directory domain, used to provide automatic password management and simplified SPN management for services.\n - EXTERNAL_ASSET_TYPE_ENTRA_ID_APPLICATION: An application registration in Microsoft Entra ID (formerly Azure AD), representing a software application that can authenticate and request access to resources.\n - EXTERNAL_ASSET_TYPE_ENTRA_ID_SERVICE_PRINCIPAL: A service principal in Microsoft Entra ID (formerly Azure AD), representing the local instance of an application or managed identity within a tenant, used for authentication and authorization.\n - EXTERNAL_ASSET_TYPE_PALO_ALTO_FIREWALL: A Next-Generation Firewall (NGFW) appliance (physical or virtual) from Palo Alto Networks, used for network security policy enforcement.",
+        "default": "EXTERNAL_ASSET_TYPE_UNSPECIFIED",
+        "enum": [
+          "EXTERNAL_ASSET_TYPE_UNSPECIFIED",
+          "EXTERNAL_ASSET_TYPE_AZURE_RESOURCE_GROUP",
+          "EXTERNAL_ASSET_TYPE_AZURE_SUBSCRIPTION",
+          "EXTERNAL_ASSET_TYPE_AWS_ACCOUNT",
+          "EXTERNAL_ASSET_TYPE_AWS_REGION",
+          "EXTERNAL_ASSET_TYPE_GCP_PROJECT",
+          "EXTERNAL_ASSET_TYPE_AZURE_VIRTUAL_MACHINE",
+          "EXTERNAL_ASSET_TYPE_AWS_EC2_INSTANCE",
+          "EXTERNAL_ASSET_TYPE_GCP_COMPUTE_ENGINE_INSTANCE",
+          "EXTERNAL_ASSET_TYPE_ENTRA_ID_USER",
+          "EXTERNAL_ASSET_TYPE_MICROSOFT_ACTIVE_DIRECTORY_USER",
+          "EXTERNAL_ASSET_TYPE_OBSERVED_USER",
+          "EXTERNAL_ASSET_TYPE_MICROSOFT_ACTIVE_DIRECTORY_MANAGED_SERVICE_ACCOUNT",
+          "EXTERNAL_ASSET_TYPE_ENTRA_ID_APPLICATION",
+          "EXTERNAL_ASSET_TYPE_ENTRA_ID_SERVICE_PRINCIPAL",
+          "EXTERNAL_ASSET_TYPE_PALO_ALTO_FIREWALL"
+        ]
+      },
+      "v1Group": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Group description. Free text."
+          },
+          "displayName": {
+            "type": "string",
+            "description": "User-friendly name of the group."
+          },
+          "externalReference": {
+            "type": "string",
+            "description": "A unique reference from an external system used to associate this entity with its corresponding record in that system. \nThis value is typically received from an external source during integration or synchronization and remains unchanged for the lifetime of the association."
+          },
+          "externalType": {
+            "$ref": "#/components/schemas/v1ExternalAssetType"
+          },
+          "linkedEntityType": {
+            "$ref": "#/components/schemas/v1GroupEntityType"
+          },
+          "parentGroupUuid": {
+            "type": "string",
+            "description": "Reference to the parent group in the tree structure.\n\ntype: Group"
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within the entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 9562: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc9562), do not rely on it being a RFC UUID. Treat it as an opaque identifier, albeit of predictable length and alphabet.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\""
+          },
+          "ownerUuid": {
+            "type": "string",
+            "description": "Identifier of the tenant who owns this object.",
+            "readOnly": true
+          }
+        },
+        "description": "In fact, it is the node of the tree. It can represent a static group(folder) as well as a tenant(CUSTOMER, MSP, ...), which is part of the tree. \nJust as it is the case for other entities, the group is also owned by the tenant.\n\nGroups 'All' and 'Lost&Found' are 'special' groups and are not governed by this API; therefore, they cannot be created, deleted, renamed, or moved.\n\nAll groups that are linked to an entity cannot be created, deleted, renamed, or moved. The life cycle of these groups is governed by the life cycle of the entities they represent."
+      },
+      "v1GroupEntityType": {
+        "type": "string",
+        "description": "Possible entities that the Group represents.\n\n - GROUP_ENTITY_TYPE_UNSPECIFIED: fallback\n - GROUP_ENTITY_TYPE_CUSTOMER: Group representing [company]\n - GROUP_ENTITY_TYPE_MSP: Group representing [MSP]\n - GROUP_ENTITY_TYPE_SITE: Group representing [site]\n - GROUP_ENTITY_TYPE_HOUSEHOLD: Group representing [household]\n - GROUP_ENTITY_TYPE_EXTERNAL_CONTAINER: Group representing an external container (e.g., Azure Resource Group, AWS Account).\nSuch groups are managed by the integration connector.",
+        "default": "GROUP_ENTITY_TYPE_UNSPECIFIED",
+        "enum": [
+          "GROUP_ENTITY_TYPE_UNSPECIFIED",
+          "GROUP_ENTITY_TYPE_CUSTOMER",
+          "GROUP_ENTITY_TYPE_MSP",
+          "GROUP_ENTITY_TYPE_SITE",
+          "GROUP_ENTITY_TYPE_HOUSEHOLD",
+          "GROUP_ENTITY_TYPE_EXTERNAL_CONTAINER"
+        ]
+      },
+      "v1MoveGroupResponse": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "$ref": "#/components/schemas/v1Group"
+          }
+        }
+      },
+      "v1RenameGroupResponse": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "$ref": "#/components/schemas/v1Group"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Type \"Bearer \" and then your API Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

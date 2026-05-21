@@ -1,0 +1,1155 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ESET Connect - User Management",
+    "description": "<h3>ESET Connect help:</h3><a href=https://help.eset.com/eset_connect/en-US/>https://help.eset.com/eset_connect/en-US/</a>",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://eu.user-management.eset.systems/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Users"
+    }
+  ],
+  "paths": {
+    "/v1/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "List users",
+        "description": "Retrieves a list of users, optionally filtered by certain criteria defined in the user filter.",
+        "operationId": "Users_ListUsers",
+        "parameters": [
+          {
+            "name": "activeProduct.autoActivated",
+            "in": "query",
+            "description": "If `true`, the product was activated automatically. That is, the product was activated because it is automatically activated for all the users within some user's group or user's tenant.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "activeProduct.autoActivationDetails.base",
+            "in": "query",
+            "description": "Base, on which the product has been automatically activated for the user.\n\nFor example, some products are activated based on automation at the level of the user's tenant.\n\n - PRODUCT_AUTO_ACTIVATION_BASE_UNSPECIFIED: fallback\n - PRODUCT_AUTO_ACTIVATION_BASE_TENANT: The product is activated for this user because automatic activation was enabled on the user's tenant.\n - PRODUCT_AUTO_ACTIVATION_BASE_USER_GROUP: The product is activated for this user because automatic activation was enabled on some of the user's groups.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "default": "PRODUCT_AUTO_ACTIVATION_BASE_UNSPECIFIED",
+              "enum": [
+                "PRODUCT_AUTO_ACTIVATION_BASE_UNSPECIFIED",
+                "PRODUCT_AUTO_ACTIVATION_BASE_TENANT",
+                "PRODUCT_AUTO_ACTIVATION_BASE_USER_GROUP"
+              ]
+            }
+          },
+          {
+            "name": "activeProduct.autoActivationDetails.userGroupUuid",
+            "in": "query",
+            "description": "Reference to the [user group].\n\nIt is only meaningful if the base is equal to the USER GROUP.\n\ntype: UserGroup",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "activeProduct.subscriptionUuid",
+            "in": "query",
+            "description": "Reference to the [subscription] used for product activation.\n\ntype: subscription_management.v1.Subscription",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "activeProduct.unitPoolUuid",
+            "in": "query",
+            "description": "Reference to the [unit pool] used for product activation.\n\nUnit pools contain units available for product activation.\n\ntype: unit_management.v1.UnitPool",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "activeProduct.id",
+            "in": "query",
+            "description": "Identifier of the governed resource. It can be seen as the [value of the item in enumerated type](https://protobuf.dev/programming-guides/proto3/#enum).\n\nIt can be derived from the name by some algorithm, such as CRC32.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "activeProduct.name",
+            "in": "query",
+            "description": "Name of the governed item. It can be seen as the name of the enumeration item, with `id` being its numerical value.\n\n> **Note:**\n> Not to be confused with `display_name`, which is [purposed for UI](https://google.aip.dev/148).",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "cloudOfficeTenantReference",
+            "in": "query",
+            "description": "Filtering based on the user's cloud office tenant reference.\n\nIf filled, only the users of the given `cloud office tenant reference` will be included in the response. An exact match is required.\n\nIf `null` or empty, users of any or none `cloud office tenant` will be included in the response.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "displayName",
+            "in": "query",
+            "description": "Filtering based on the user's display name.\n\nIf filled, only the users containing the given `display name` (at least partially) will be included in the response.\n\nIf `null` or empty, users with any `display name` will be included in the response.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "Filtering based on the user's email.\n\nIf filled, only the users containing the given `email` (at least partially) within the `primary email address` or `proxy email addresses` will be included in the response.\n\nIf `null` or empty, users with any `email address` will be included in the response.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasCloudOfficeMsLicense",
+            "in": "query",
+            "description": "If `true`, include only users with an associated Microsoft (MS) cloud office license.\n\nIf `false`, include only users without associated Microsoft (MS) cloud office license.\n\nIf `null`, this filter does not apply at all.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "protectionStatus",
+            "in": "query",
+            "description": "Filtering based on the user's protection status. \n\nIf not-null or non-zero, only the users with the given `protection status` will be included in the response. Otherwise, users with any `protection status` will be returned.\n\n - PROTECTION_STATUS_UNSPECIFIED: fallback\n - PROTECTION_STATUS_UNPROTECTED: Status where selected asset is not protected by enabled ESET protection features.\n - PROTECTION_STATUS_PENDING: Status where asset is not protected by enabled protection features yet, the protection is in pending state. The protection features are setting up.\n - PROTECTION_STATUS_PARTIALLY_PROTECTED: Status where asset is protected by enabled protection features, with some complications, that require the attention.\n - PROTECTION_STATUS_FULLY_PROTECTED: Status where asset is fully protected by enabled ESET protection features.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "default": "PROTECTION_STATUS_UNSPECIFIED",
+              "enum": [
+                "PROTECTION_STATUS_UNSPECIFIED",
+                "PROTECTION_STATUS_UNPROTECTED",
+                "PROTECTION_STATUS_PENDING",
+                "PROTECTION_STATUS_PARTIALLY_PROTECTED",
+                "PROTECTION_STATUS_FULLY_PROTECTED"
+              ]
+            }
+          },
+          {
+            "name": "userGroupUuid",
+            "in": "query",
+            "description": "Filtering based on the user's group.\n\nIf `null` or empty, users from any user group will be included in the response.\n\ntype: UserGroup",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Limit for pagination purposes.\n\nIf unspecified or 0, the default value is 50. The maximum value is 1000; values above 1000 will be coerced to 1000.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 99999,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "Page token of the current page.\n\nIf not given or \"\", the first page is returned.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maxLength": 128,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1ListUsersResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/users/{userUuid}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user",
+        "description": "Retrieves the details of a specific user based on their unique identifier.",
+        "operationId": "Users_GetUser",
+        "parameters": [
+          {
+            "name": "userUuid",
+            "in": "path",
+            "description": "Reference to the [user] to be retrieved.\n\ntype: User",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1GetUserResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/users:batchGetUsers": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Batch get users",
+        "description": "Retrieves a specific set of [user]s at some point in time.\n\nThe size of the batch is limited to 1000 users. If this limit is exceeded, OUT_OF_RANGE (gRPC) | 400 Bad Request (HTTP) is returned.",
+        "operationId": "Users_BatchGetUsers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/v1BatchGetUsersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1BatchGetUsersResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Response took too long; request cached. Response can be retrieved later using the response-id header.",
+            "headers": {
+              "response-id": {
+                "description": "Unique ID of a pending request. Used to retrieve cached result.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "One of the errors: 1. Bad or missing authorization. 2. Validation error. Invalid argument provided.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "401": {
+            "description": "Token has expired or is invalid.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "403": {
+            "description": "Access denied. Check permissions.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "404": {
+            "description": "Requested resource not found.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "429": {
+            "description": "Rate limit reached. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "500": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "502": {
+            "description": "Internal server failure. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "503": {
+            "description": "Environment under maintenance. Try again later.",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          },
+          "504": {
+            "description": "Action took too long; timeout reached",
+            "headers": {
+              "request-id": {
+                "description": "Unique ID of the request. Include in support requests.",
+                "style": "simple",
+                "explode": false,
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "protobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": {
+          "type": "object"
+        }
+      },
+      "rpcStatus": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/protobufAny"
+            }
+          }
+        }
+      },
+      "v1ActiveUserProduct": {
+        "type": "object",
+        "properties": {
+          "autoActivated": {
+            "type": "boolean",
+            "description": "If `true`, the product was activated automatically. That is, the product was activated because it is automatically activated for all the users within some user's group or user's tenant."
+          },
+          "autoActivationDetails": {
+            "$ref": "#/components/schemas/v1ProductAutoActivationDetails"
+          },
+          "subscriptionUuid": {
+            "type": "string",
+            "description": "Reference to the [subscription] used for product activation.\n\ntype: subscription_management.v1.Subscription"
+          },
+          "unitPoolUuid": {
+            "type": "string",
+            "description": "Reference to the [unit pool] used for product activation.\n\nUnit pools contain units available for product activation.\n\ntype: unit_management.v1.UnitPool"
+          },
+          "id": {
+            "type": "integer",
+            "description": "Identifier of the governed resource. It can be seen as the [value of the item in enumerated type](https://protobuf.dev/programming-guides/proto3/#enum).\n\nIt can be derived from the name by some algorithm, such as CRC32.",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the governed item. It can be seen as the name of the enumeration item, with `id` being its numerical value.\n\n> **Note:**\n> Not to be confused with `display_name`, which is [purposed for UI](https://google.aip.dev/148)."
+          }
+        },
+        "description": "A product activated for the user.\n\nFor example, the user is protected by the Cloud Office Security product."
+      },
+      "v1BatchGetUsersRequest": {
+        "type": "object",
+        "properties": {
+          "usersUuids": {
+            "type": "array",
+            "description": "Identifiers of [user]s to retrieve.\n\nIf empty, INVALID_ARGUMENT is returned.\n\nThe operation is atomic, with no partial success. Either every requested [user] is returned or none.\n\ntype: User",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "v1BatchGetUsersResponse": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "description": "Requested [user]s.\n\nThe order of [user]s is the same as in the request.",
+            "items": {
+              "$ref": "#/components/schemas/v1User"
+            }
+          }
+        }
+      },
+      "v1CloudOfficeUser": {
+        "type": "object",
+        "properties": {
+          "hasMsLicense": {
+            "type": "boolean",
+            "description": "For a user imported from Microsoft Office 365, `true` if the user has assigned Microsoft licenses.\n\n> **Info:**\n> Projection of [assigned licenses from Graph API](https://learn.microsoft.com/en-us/graph/api/resources/assignedlicense?view=graph-rest-1.0)."
+          },
+          "tenantReference": {
+            "type": "string",
+            "description": "Reference to the cloud office tenant from where the user originates.\n\nThe format might differ depending on the origin (for example, Microsoft Office 365 uses predominantly UUID, whereas Google Workspace uses a random string)."
+          }
+        },
+        "description": "Details of the user related to their cloud office (for example, Microsoft Office 365 or Google Workspace) origin."
+      },
+      "v1GetUserResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/v1User"
+          }
+        }
+      },
+      "v1Identity": {
+        "type": "object",
+        "properties": {
+          "createTime": {
+            "type": "string",
+            "description": "Date and time when the identity was created. Empty if the timestamp is unknown.",
+            "format": "date-time"
+          },
+          "providerReference": {
+            "type": "string",
+            "description": "The identifier used by the identity provider for the user.\n\nExample: user123@company.com"
+          },
+          "providerReferenceFormat": {
+            "$ref": "#/components/schemas/v1IdentityReferenceFormat"
+          },
+          "providerType": {
+            "$ref": "#/components/schemas/v1IdentityProviderType"
+          },
+          "updateTime": {
+            "type": "string",
+            "description": "Date and time when the identity was last updated. Empty if the timestamp is unknown.",
+            "format": "date-time"
+          },
+          "userName": {
+            "type": "string",
+            "description": "`User name` as a form of identity reference. Derived from `provider reference` if the `provider reference format` is suitable.\n\nExamples:\n- system\\user\n- name.surname\n- login@somedomain.com\n\n> **Info:**\n> Inspired by: [Setting Username Formats](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/deployment_guide/sssd-user-ids)"
+          }
+        },
+        "description": "Represents an identity used to sign in to a user account.\n\nEach user can have multiple identities, such as Active Directory (AD), internet service provider (ISP) identity, or identities provided by Google, Facebook, Microsoft, and so on. These identities enable the user to sign in to the user accounts.\n\nIt helps manage and track these different identities, ensuring seamless authentication and authorization across various platforms and services.\n\nIdentity is managed by the Identity Provider, where the identity can also be verified (that is, authenticated)."
+      },
+      "v1IdentityProviderType": {
+        "title": "Identity providers that can be used for authentication",
+        "type": "string",
+        "description": "- IDENTITY_PROVIDER_TYPE_UNSPECIFIED: fallback\n - IDENTITY_PROVIDER_TYPE_MICROSOFT: Represents Microsoft Entra ID (former Azure Active Directory, or Azure AD) as an identity provider for enterprise authentication.\n - IDENTITY_PROVIDER_TYPE_GOOGLE: Represents Google as an identity provider for authentication via Google accounts.\n - IDENTITY_PROVIDER_TYPE_FACEBOOK: Represents Facebook as an identity provider for authentication via Facebook accounts.\n - IDENTITY_PROVIDER_TYPE_LOCAL: Represents a local provider that manages identities and authentication within the application's scope.",
+        "default": "IDENTITY_PROVIDER_TYPE_UNSPECIFIED",
+        "enum": [
+          "IDENTITY_PROVIDER_TYPE_UNSPECIFIED",
+          "IDENTITY_PROVIDER_TYPE_MICROSOFT",
+          "IDENTITY_PROVIDER_TYPE_GOOGLE",
+          "IDENTITY_PROVIDER_TYPE_FACEBOOK",
+          "IDENTITY_PROVIDER_TYPE_LOCAL"
+        ]
+      },
+      "v1IdentityReferenceFormat": {
+        "type": "string",
+        "description": "Possible formats of user references.\n\n - IDENTITY_REFERENCE_FORMAT_UNSPECIFIED: fallback\n - IDENTITY_REFERENCE_FORMAT_EMAIL_ADDRES: User identity reference (login) is an email address.\n - IDENTITY_REFERENCE_FORMAT_USER_NAME: User identity reference (login) is a username.\n - IDENTITY_REFERENCE_FORMAT_USER_PRINCIPAL_NAME: User identity reference (login) is in Universal principal name (UPN) format.\n - IDENTITY_REFERENCE_FORMAT_PHONE_NUMBER: User identity reference (login) is a telephone number.\n - IDENTITY_REFERENCE_FORMAT_FEDERATED: A unique identifier for a user from a provider that can be in any format chosen by the provider.",
+        "default": "IDENTITY_REFERENCE_FORMAT_UNSPECIFIED",
+        "enum": [
+          "IDENTITY_REFERENCE_FORMAT_UNSPECIFIED",
+          "IDENTITY_REFERENCE_FORMAT_EMAIL_ADDRES",
+          "IDENTITY_REFERENCE_FORMAT_USER_NAME",
+          "IDENTITY_REFERENCE_FORMAT_USER_PRINCIPAL_NAME",
+          "IDENTITY_REFERENCE_FORMAT_PHONE_NUMBER",
+          "IDENTITY_REFERENCE_FORMAT_FEDERATED"
+        ]
+      },
+      "v1ListUsersResponse": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "description": "The list of users matching the filtering criteria. If there are no any filtering criteria, all users are returned.",
+            "items": {
+              "$ref": "#/components/schemas/v1User"
+            }
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "Page token of the next page.\n\nEmpty or \"\" for the last page.\n\n> **Info:**\n> For more information, refer to [Paginating Requests in APIs](https://medium.com/@ignaciochiazzo/paginating-requests-in-apis-d4883d4c1c4c)\n>\n> or [Design Patterns: Pagination](https://google.aip.dev/158)"
+          },
+          "totalSize": {
+            "type": "integer",
+            "description": "The total count of items in the list irrespective of pagination.\n\n> **Info:**\n> One of the [standard fields](https://cloud.google.com/apis/design/standard_fields)\n\n`Page_size` might differ for every call (it is an input parameter), so the calculation of how many pages there are in total is the caller's responsibility.",
+            "format": "int64"
+          }
+        }
+      },
+      "v1ProductAutoActivationBase": {
+        "type": "string",
+        "description": "Base on which the auto-activation algorithm activated the product for the user.\n\n - PRODUCT_AUTO_ACTIVATION_BASE_UNSPECIFIED: fallback\n - PRODUCT_AUTO_ACTIVATION_BASE_TENANT: The product is activated for this user because automatic activation was enabled on the user's tenant.\n - PRODUCT_AUTO_ACTIVATION_BASE_USER_GROUP: The product is activated for this user because automatic activation was enabled on some of the user's groups.",
+        "default": "PRODUCT_AUTO_ACTIVATION_BASE_UNSPECIFIED",
+        "enum": [
+          "PRODUCT_AUTO_ACTIVATION_BASE_UNSPECIFIED",
+          "PRODUCT_AUTO_ACTIVATION_BASE_TENANT",
+          "PRODUCT_AUTO_ACTIVATION_BASE_USER_GROUP"
+        ]
+      },
+      "v1ProductAutoActivationDetails": {
+        "type": "object",
+        "properties": {
+          "base": {
+            "$ref": "#/components/schemas/v1ProductAutoActivationBase"
+          },
+          "userGroupUuid": {
+            "type": "string",
+            "description": "Reference to the [user group].\n\nIt is only meaningful if the base is equal to the USER GROUP.\n\ntype: UserGroup"
+          }
+        },
+        "description": "Details of automatic product activation.\n\nA product activated this way is automatically deactivated when the condition does not hold anymore (for example, when the user leaves a group)."
+      },
+      "v1ProtectionStatus": {
+        "type": "string",
+        "description": "Aggregated status of protection, per context of specific asset.\n\n - PROTECTION_STATUS_UNSPECIFIED: fallback\n - PROTECTION_STATUS_UNPROTECTED: Status where selected asset is not protected by enabled ESET protection features.\n - PROTECTION_STATUS_PENDING: Status where asset is not protected by enabled protection features yet, the protection is in pending state. The protection features are setting up.\n - PROTECTION_STATUS_PARTIALLY_PROTECTED: Status where asset is protected by enabled protection features, with some complications, that require the attention.\n - PROTECTION_STATUS_FULLY_PROTECTED: Status where asset is fully protected by enabled ESET protection features.",
+        "default": "PROTECTION_STATUS_UNSPECIFIED",
+        "enum": [
+          "PROTECTION_STATUS_UNSPECIFIED",
+          "PROTECTION_STATUS_UNPROTECTED",
+          "PROTECTION_STATUS_PENDING",
+          "PROTECTION_STATUS_PARTIALLY_PROTECTED",
+          "PROTECTION_STATUS_FULLY_PROTECTED"
+        ]
+      },
+      "v1User": {
+        "type": "object",
+        "properties": {
+          "activeProductIds": {
+            "type": "array",
+            "description": "Known active products for given users from inside and outside of the ESET portfolio.\n\nThese products are activated either manually or automatically in case of group or tenant members.\n\ntype: ActiveUserProduct",
+            "readOnly": true,
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "cloudOffice": {
+            "$ref": "#/components/schemas/v1CloudOfficeUser"
+          },
+          "department": {
+            "type": "string",
+            "description": "The department to which the user belongs. It can be used for organizational categorization and role-based access control."
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The name of the user displayed in address books. Usually, it is a full name, a combination of the first name, middle and last names.\n\nValidation: \n- required\n- max length 255\n\nExample: John Doe"
+          },
+          "identities": {
+            "type": "array",
+            "description": "List of user's identities. This list might contain Active Directory identity, Google identity, Facebook identity or others.\n\nTracking user identities is necessary for XDR scenarios, incident management and identity protection.",
+            "items": {
+              "$ref": "#/components/schemas/v1Identity"
+            }
+          },
+          "jobTitle": {
+            "type": "string",
+            "description": "The job title of a user representing their specific role or position within an organization or context. This attribute defines the user's job function and helps identify their responsibilities and role within the system."
+          },
+          "officeLocation": {
+            "type": "string",
+            "description": "The physical office location or workplace of a user representing the physical location or environment where the user is typically working or sitting while using the system.\n\nThis can include an office, remote work location, or any other place relevant to the user's work activities."
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "description": "User's phone number.\n\nValidation:\n- max length 15 (ITU standard)",
+            "items": {
+              "type": "string"
+            }
+          },
+          "primaryEmailAddress": {
+            "type": "string",
+            "description": "The SMTP address for the user, for example, jeff@contoso.com. Changes to this property update the user's proxyAddresses collection to include the value as an SMTP address. This property cannot contain accent characters.\n\nValidation: \n- valid email address format\n- max length 255\n\nExample: john.doe@example.com"
+          },
+          "protectionStatus": {
+            "$ref": "#/components/schemas/v1ProtectionStatus"
+          },
+          "proxyEmailAddresses": {
+            "type": "array",
+            "description": "A list of proxy email addresses associated with the user.\n\nProxy addresses, also known as alias email addresses or secondary email addresses, are alternative email addresses associated with a primary email account. They allow a user to receive emails sent to different addresses but have them all delivered to a single mailbox.\n\nValidation: \n- valid email address format\n- max length 255\n\nExample: [\"john.doe@company.com\", \"j.doe@company.com\"]",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userGroupUuids": {
+            "type": "array",
+            "description": "A collection of group references that the user is a member of.\n\nThis field is computed with eventual consistency. For more accurate membership data, use the `UserGroups` service.\n\ntype: UserGroup",
+            "readOnly": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier of the entity.\n\nMust be collision-free - two identifiers created anywhere in the world must not collide within entity parent scope. Unless a member of aggregate, the entity scope is always global.\n\nAlthough most of the times compliant with [RFC 4122: A Universally Unique IDentifier (UUID) URN Namespace](https://tools.ietf.org/html/rfc4122), do not rely on it being a RFC UUID. Treat it as an opaque identifier.\n\nRFC UUID can be recognized by being formatted according to the template xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx, as explained on [Wikipedia](https://en.wikipedia.org/wiki/Universally_unique_identifier#Format).\n\nUUID is used for referencing an entity, even across domains.\n\nExample: \"123e4567-e89b-12d3-a456-426614174000\""
+          }
+        },
+        "description": "Representation of a real physical person in the system.\n\nEach user can authenticate through one or more identities provided by various Identity Providers (for example, Active Directory, Google, Microsoft, ISP logins). These identities are linked to a single user.\n\nA user can:\n- Have multiple linked identities\n- Belong to one or more accounts\n- Access multiple systems through associated accounts\n\nExample:\nA user signs in using their corporate Microsoft account and their personal Gmail account. Both identities map to the same user, allowing seamless switching between organizational and personal contexts."
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "Type \"Bearer \" and then your API Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

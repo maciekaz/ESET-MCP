@@ -1,0 +1,44 @@
+name: Integration tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Daily run at 03:17 UTC — catches drift between the MCP server and the
+    # ESET API (e.g. a new v3 endpoint appearing in Swagger).
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check eset_mcp tests
+
+      - name: Run tests (RO only)
+        env:
+          ESET_USER: ${{ secrets.ESET_USER }}
+          ESET_PASSWORD: ${{ secrets.ESET_PASSWORD }}
+          ESET_REGION: ${{ secrets.ESET_REGION || 'eu' }}
+          ESET_MODE: RO
+        run: |
+          # -m "not rw" — skip RW-marked tests (CI's account is RO-only).
+          # Runs tests with the `ro` marker plus any unmarked tests.
+          pytest -v -m "not rw"
