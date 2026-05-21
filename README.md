@@ -7,8 +7,7 @@
 A [Model Context Protocol](https://modelcontextprotocol.io) server for the
 [ESET Connect API](https://help.eset.com/eset_connect/en-US/). Drive ESET
 PROTECT / ESET Inspect / ESET Cloud Office from any MCP host — Claude Desktop,
-Claude Code, OpenWebUI, or a custom agent — through tools, resources, and
-prompts.
+Claude Code, or a custom agent — through tools, resources, and prompts.
 
 ---
 

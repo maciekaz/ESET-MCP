@@ -74,9 +74,6 @@ services:
 networks:
   eset-mcp:
     driver: bridge
-  # ContextForge i jego zależności działają na tej sieci (zarządzane zewnętrznie).
-  mcpnet:
-    external: true
 
 volumes:
   caddy_data:
