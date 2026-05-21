@@ -81,4 +81,3 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
-  open_webui_data:
