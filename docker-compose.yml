@@ -70,32 +70,6 @@ services:
         aliases:
           - eset-mcp-http   # Caddyfile reverse_proxy points here
 
-  # ─── OpenWebUI — chat UI podłączone do ContextForge przez MCP ───────────
-  # docker compose up -d open-webui
-  # UI dostępne na http://localhost:3000
-  # Po uruchomieniu: Admin → Settings → Tools → Add Tool Server
-  #   Type: MCP  URL: http://mcpforge-gateway:4444/mcp
-  #   Header: Authorization: Bearer <JWT z ContextForge>
-  open-webui:
-    image: ghcr.io/open-webui/open-webui:main
-    container_name: open-webui
-    restart: unless-stopped
-    ports:
-      - "3000:8080"
-    environment:
-      # LLM backend — ustaw jeden z poniższych:
-      # OpenAI API:
-      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
-      # Anthropic przez litellm proxy albo bezpośrednie OpenAI-compatible:
-      # OPENAI_API_BASE_URL: "https://api.anthropic.com/v1"
-      # Wyłącz Ollama jeśli nie używasz:
-      ENABLE_OLLAMA_API: "false"
-      WEBUI_AUTH: "true"
-    volumes:
-      - open_webui_data:/app/backend/data
-    networks:
-      - eset-mcp
-      - mcpnet
 
 networks:
   eset-mcp:
