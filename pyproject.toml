@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eset-mcp"
-version = "0.1.0"
-description = "MCP server for the ESET Connect API (RO/RW modes, multi-region, full ~100-endpoint coverage)"
+version = "0.2.0"
+description = "MCP server for the ESET ecosystem (Connect cloud + PROTECT On-Prem, RO/RW, multi-tenant, Cloudflare Access, Prometheus metrics)"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }

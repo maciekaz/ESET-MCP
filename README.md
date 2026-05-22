@@ -150,6 +150,15 @@ back off; 5xx → retry shortly.
   substituted path parameters (which can leak UUIDs). A defensive
   deny-list in the logger strips known-sensitive keys before any
   formatter sees them.
+- **Failure isolation**: telemetry emission is wrapped in a try/except so
+  a broken metrics registry or formatter can never turn a successful
+  tool call into an error to the agent. `/metrics` returns 500 (not 503)
+  if exposition ever raises - the worker stays up.
+- **Quieting in production**: set `ESET_LOG_LEVEL=WARNING` to mute the
+  per-call INFO events but keep retries / errors visible; set
+  `ESET_LOG_LEVEL=ERROR` to silence everything but hard failures.
+  Disable metrics entirely with `ESET_MCP_METRICS_ENABLED=false`
+  (default). The three knobs are independent.
 
 ---
 
@@ -540,20 +549,21 @@ Each composite degrades gracefully when a sub-call returns 403/404
 ```
 eset_mcp/
 ├── __main__.py         # entrypoint - stdio or HTTP, wires resolver + pool
-├── server.py           # MCP server (tools / resources / prompts)
+├── server.py           # MCP server (tools / resources / prompts) + telemetry
 ├── credentials.py      # Credentials + EnvResolver / BasicAuthResolver + ContextVar
 ├── middleware.py       # ASGI Basic-auth middleware (basic mode only)
-├── client_pool.py      # LRU pool of EsetHttpClient keyed by (user, region)
+├── client_pool.py      # LRU pool of EsetHttpClient keyed by (user, region, ...)
 ├── http_client.py      # async httpx + 202 polling + 429 retry + 401 refresh
-├── auth.py             # OAuth2 password grant, proactive refresh
-├── regions.py          # region → per-service domains
+├── auth.py             # CloudTokenManager (OAuth2) + OnPremTokenManager (/GetTokens)
+├── regions.py          # cloud region → per-service domains + on-prem URL resolver
 ├── modes.py            # RO/RW gate
 ├── errors.py           # HTTP error → agent-friendly text
 ├── config.py           # .env loading
 ├── response_shaping.py # fields projection + byte cap
 ├── composite_tools.py  # hand-written high-level tools
-├── tools_loader.py     # generator: tools from OpenAPI specs
-└── openapi/            # 16 ESET Connect OpenAPI 3.0.1 specs (bundled)
+├── tools_loader.py     # generator: tools from OpenAPI specs + on-prem path overrides
+├── observability/      # JSON/text structured logging + Prometheus metrics
+└── openapi/            # 16 ESET Connect OpenAPI 3.0.1 specs + onprem path overrides
 ```
 
 ---

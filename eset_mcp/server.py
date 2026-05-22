@@ -234,15 +234,21 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
         try:
             return await _dispatch(name, arguments, tel)
         finally:
-            _emit_tool_call_telemetry(
-                name=name,
-                deployment=tel["deployment"],
-                user=tel["user"],
-                mode=settings.mode,
-                status=tel["status"],
-                duration_s=_time.monotonic() - tel["t0"],
-                bytes_out=tel["bytes_out"],
-            )
+            # Telemetry must NEVER kill a tool call. Wrap defensively so
+            # that a misbehaving metrics registry or formatter cannot
+            # turn a successful tool call into a 500 to the agent.
+            try:
+                _emit_tool_call_telemetry(
+                    name=name,
+                    deployment=tel["deployment"],
+                    user=tel["user"],
+                    mode=settings.mode,
+                    status=tel["status"],
+                    duration_s=_time.monotonic() - tel["t0"],
+                    bytes_out=tel["bytes_out"],
+                )
+            except Exception:  # noqa: BLE001 - observability MUST be best-effort
+                _LOG.exception("telemetry emission failed for tool=%s", name)
 
     async def _dispatch(name: str, arguments: dict[str, Any], tel: dict[str, Any]) -> list[TextContent]:
         try:
