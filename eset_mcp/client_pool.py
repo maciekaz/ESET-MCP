@@ -19,6 +19,7 @@ from collections import OrderedDict
 from .config import Settings
 from .credentials import Credentials
 from .http_client import EsetHttpClient
+from .observability import set_pool_size
 
 # Hard cap on concurrently-cached clients. Realistic multi-tenant MCP
 # deployments fronting an ESET MSP will see well under 100 active credentials
@@ -64,12 +65,13 @@ class ClientPool:
             client = EsetHttpClient(creds)
             self._clients[key] = client
             await self._maybe_evict_locked()
+            set_pool_size(len(self._clients))
             return client
 
     async def _maybe_evict_locked(self) -> None:
         while len(self._clients) > self._max:
             _, evicted = self._clients.popitem(last=False)
-            # Close in background — don't block the get() that triggered eviction.
+            # Close in background - don't block the get() that triggered eviction.
             task = asyncio.create_task(evicted.aclose())
             self._eviction_tasks.add(task)
             task.add_done_callback(self._eviction_tasks.discard)
@@ -79,6 +81,7 @@ class ClientPool:
         async with self._lock:
             clients = list(self._clients.values())
             self._clients.clear()
+        set_pool_size(0)
         # Best-effort close of all clients in parallel.
         await asyncio.gather(*(c.aclose() for c in clients), return_exceptions=True)
 

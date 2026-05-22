@@ -133,6 +133,24 @@ HTTP errors are mapped to readable hints: 403 → check Permission Sets in
 ESET PROTECT Hub; 401 → server refreshes the token automatically; 429 →
 back off; 5xx → retry shortly.
 
+### Observability (logs + Prometheus)
+
+- **Structured logs** to stderr. Text (default) for dev, JSON Lines for
+  prod log shippers via `ESET_MCP_LOG_FORMAT=json`. Every tool call,
+  token refresh, HTTP retry and pool eviction emits a typed `event`
+  record with low-cardinality fields (tool, deployment, status,
+  duration_ms, response_bytes, ...).
+- **Prometheus metrics** at an opt-in `/metrics` endpoint
+  (`ESET_MCP_METRICS_ENABLED=true`, requires
+  `pip install eset-mcp[metrics]`). Counters for tool calls, token
+  refreshes, HTTP retries, cap hits; histograms for tool duration and
+  response sizes; gauge for client pool size.
+- **What never enters logs or metrics**: passwords, `Authorization`
+  headers, CF Access secrets, request/response bodies, query strings,
+  substituted path parameters (which can leak UUIDs). A defensive
+  deny-list in the logger strips known-sensitive keys before any
+  formatter sees them.
+
 ---
 
 ## Security
@@ -273,6 +291,9 @@ All settings live in `.env`. Required fields are marked in
 | `ESET_MCP_HTTP_PORT`           | `8765`        | HTTP port                                                     |
 | `ESET_MCP_RESPONSE_BYTES_MAX`  | `100000`      | Per-call response byte cap; `0` disables                      |
 | `ESET_LOG_LEVEL`               | `INFO`        | `DEBUG` / `INFO` / `WARNING` / `ERROR`                        |
+| `ESET_MCP_LOG_FORMAT`          | `text`        | `text` (dev, human-readable) or `json` (prod log shippers)    |
+| `ESET_MCP_METRICS_ENABLED`     | `false`       | Mount Prometheus `/metrics`; requires `eset-mcp[metrics]`     |
+| `ESET_MCP_METRICS_PATH`        | `/metrics`    | Where to mount the metrics endpoint                           |
 | `ESET_DEPLOYMENT`              | `cloud`       | `cloud` (ESET Connect) or `onprem` (customer-hosted PROTECT)  |
 | `ESET_ONPREM_SERVER_URL`       | -             | `https://host[:port]` of the on-prem console (req. in env+onprem) |
 | `ESET_ONPREM_VERIFY_SSL`       | `true`        | Set `false` for on-prem consoles with self-signed certs       |

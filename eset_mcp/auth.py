@@ -20,6 +20,7 @@ tenants.
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from dataclasses import dataclass
 from typing import Protocol
@@ -28,7 +29,10 @@ import httpx
 
 from .credentials import Credentials
 from .errors import map_http_error
+from .observability import inc_token_refresh, log_event
 from .regions import resolve_auth_url
+
+_LOG = logging.getLogger("eset_mcp.auth")
 
 # Safety margin — refresh the token N seconds before its nominal expiry.
 # Cloud uses 5 min (1h tokens, plenty of headroom); on-prem mirrors the
@@ -71,15 +75,28 @@ class _TokenManagerBase:
     async def get_access_token(self) -> str:
         async with self._lock:
             if self._expired_or_expiring():
+                reason = "initial" if self._token is None else "proactive"
                 await self._refresh_locked()
+                self._record_refresh(reason)
             assert self._token is not None
             return self._token.access_token
 
     async def force_refresh(self) -> str:
         async with self._lock:
             await self._refresh_locked()
+            self._record_refresh("forced_401")
             assert self._token is not None
             return self._token.access_token
+
+    def _record_refresh(self, reason: str) -> None:
+        """Emit metric + log entry for a successful token refresh."""
+        inc_token_refresh(deployment=self._creds.deployment, reason=reason)
+        log_event(
+            _LOG, "token_refresh",
+            deployment=self._creds.deployment,
+            reason=reason,
+            user=self._creds.user,
+        )
 
     async def _refresh_locked(self) -> None:  # pragma: no cover - abstract
         raise NotImplementedError

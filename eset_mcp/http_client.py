@@ -28,6 +28,7 @@ import httpx
 from .auth import TokenManagerProto, make_token_manager
 from .credentials import Credentials
 from .errors import EsetApiError, map_http_error
+from .observability import inc_http_retry, log_event
 from .regions import resolve_base_url
 
 _LOG = logging.getLogger("eset_mcp.http")
@@ -119,27 +120,49 @@ class EsetHttpClient:
         json: Any | None = None,
         _retry_after_401: bool = True,
     ) -> dict[str, Any] | list[Any]:
-        """Execute a request, handle 202/401/429/5xx, return the body as JSON."""
+        """Execute a request, handle 202/401/429/5xx, return the body as JSON.
+
+        ``path`` is the *template* path from the OpenAPI spec (with
+        ``{placeholder}`` segments already substituted by the caller). We
+        intentionally do NOT log the substituted URL - it can reveal device
+        UUIDs and other tenant data. Logs carry only the template-shaped
+        path the caller passed plus the upstream status code.
+        """
         url = resolve_base_url(self._creds, service) + path
         token = await self._token_mgr.get_access_token()
         headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
 
+        import time as _time
+        t0 = _time.monotonic()
         resp = await self._http.request(method, url, params=query, json=json, headers=headers)
 
-        # 401 — token expired between get_access_token() and the request; force-refresh + retry.
+        # 401 - token expired between get_access_token() and the request; force-refresh + retry.
         if resp.status_code == 401 and _retry_after_401:
-            _LOG.info("401 from %s — forcing token refresh and retrying", url)
+            inc_http_retry(deployment=self._creds.deployment, status="401")
+            log_event(
+                _LOG, "http_request_retry",
+                deployment=self._creds.deployment,
+                method=method, service=service, status=401,
+                reason="token_expired",
+            )
             await self._token_mgr.force_refresh()
             return await self.request(
                 method, service, path, query=query, json=json, _retry_after_401=False
             )
 
-        # 429 — rate limit, backoff.
+        # 429 - rate limit, backoff.
         if resp.status_code == 429:
             for attempt in range(1, _RATE_LIMIT_MAX_TRIES + 1):
                 retry_after = _parse_retry_after(resp.headers.get("Retry-After"))
                 wait_s = retry_after or _RATE_LIMIT_BASE_BACKOFF_S * (2 ** (attempt - 1))
-                _LOG.warning("429 from %s — sleeping %.1fs (try %d/%d)", url, wait_s, attempt, _RATE_LIMIT_MAX_TRIES)
+                inc_http_retry(deployment=self._creds.deployment, status="429")
+                log_event(
+                    _LOG, "http_request_retry", level=logging.WARNING,
+                    deployment=self._creds.deployment,
+                    method=method, service=service, status=429,
+                    reason="rate_limited", wait_s=round(wait_s, 2),
+                    attempt=attempt, max_attempts=_RATE_LIMIT_MAX_TRIES,
+                )
                 await asyncio.sleep(wait_s)
                 resp = await self._http.request(method, url, params=query, json=json, headers=headers)
                 if resp.status_code != 429:
@@ -153,6 +176,13 @@ class EsetHttpClient:
             return await self._poll_pending(method, url, response_id, headers, query, json)
 
         if resp.status_code >= 400:
+            log_event(
+                _LOG, "http_request_complete", level=logging.WARNING,
+                deployment=self._creds.deployment,
+                method=method, service=service, status=resp.status_code,
+                duration_ms=int((_time.monotonic() - t0) * 1000),
+                request_id=resp.headers.get("request-id"),
+            )
             raise map_http_error(
                 status=resp.status_code,
                 body=resp.text,
@@ -160,6 +190,13 @@ class EsetHttpClient:
                 request_id=resp.headers.get("request-id"),
             )
 
+        log_event(
+            _LOG, "http_request_complete",
+            deployment=self._creds.deployment,
+            method=method, service=service, status=resp.status_code,
+            duration_ms=int((_time.monotonic() - t0) * 1000),
+            request_id=resp.headers.get("request-id"),
+        )
         return _parse_json(resp)
 
     async def _poll_pending(

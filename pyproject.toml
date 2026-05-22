@@ -27,6 +27,12 @@ dev = [
     "pytest-asyncio>=0.23",
     "respx>=0.21",          # httpx mocking for unit tests
     "ruff>=0.6",
+    "prometheus-client>=0.20",  # needed for the metrics tests
+]
+metrics = [
+    # Opt-in Prometheus exposition. Without this dep, ESET_MCP_METRICS_ENABLED=true
+    # still works but /metrics returns a 503 with a helpful hint.
+    "prometheus-client>=0.20",
 ]
 
 [project.scripts]

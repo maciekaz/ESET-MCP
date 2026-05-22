@@ -61,6 +61,18 @@ class Settings:
     onprem_cf_access_client_id: str
     onprem_cf_access_client_secret: str
 
+    # ─── Observability ────────────────────────────────────────────────────
+    # ``text`` (default) - human-readable single line per record, ideal for
+    # local dev. ``json`` - JSON Lines, ideal for log shippers in prod.
+    log_format: str
+    # Opt-in Prometheus /metrics endpoint (HTTP transport only). When
+    # enabled, the metrics route is mounted alongside /mcp on the same
+    # uvicorn server but bypasses the basic-auth middleware (Prometheus
+    # scrapers don't speak Basic auth, and /metrics carries no secrets).
+    # Protect at the network layer instead.
+    metrics_enabled: bool
+    metrics_path: str
+
     @property
     def has_env_credentials(self) -> bool:
         return bool(self.user and self.password)
@@ -142,6 +154,12 @@ class Settings:
             ),
             onprem_cf_access_client_id=cf_id,
             onprem_cf_access_client_secret=cf_secret,
+            log_format=_parse_log_format(os.getenv("ESET_MCP_LOG_FORMAT", "text")),
+            metrics_enabled=_parse_bool(
+                os.getenv("ESET_MCP_METRICS_ENABLED", "false"),
+                "ESET_MCP_METRICS_ENABLED",
+            ),
+            metrics_path=os.getenv("ESET_MCP_METRICS_PATH", "/metrics"),
         )
 
 
@@ -189,6 +207,13 @@ def _parse_int(raw: str, var: str) -> int:
     if n < 0:
         raise RuntimeError(f"{var} must be >= 0 (0 disables), got {n}")
     return n
+
+
+def _parse_log_format(raw: str) -> str:
+    val = raw.split("#", 1)[0].strip().lower()
+    if val not in ("text", "json"):
+        raise RuntimeError(f"ESET_MCP_LOG_FORMAT must be 'text' or 'json', got {raw!r}")
+    return val
 
 
 def _parse_bool(raw: str, var: str) -> bool:

@@ -51,13 +51,23 @@ _REALM = "ESET-MCP"
 
 
 class BasicAuthCredentialsMiddleware(BaseHTTPMiddleware):
-    """Require Basic auth on every HTTP request and stash creds in a ContextVar."""
+    """Require Basic auth on every HTTP request and stash creds in a ContextVar.
 
-    def __init__(self, app: ASGIApp, *, settings: Settings):
+    ``skip_paths`` lets specific routes bypass auth entirely - used for the
+    Prometheus ``/metrics`` endpoint, which carries no secrets and is
+    expected to be reachable by scrapers that can't speak Basic auth.
+    Protect those routes at the network layer instead.
+    """
+
+    def __init__(self, app: ASGIApp, *, settings: Settings, skip_paths: tuple[str, ...] = ()):
         super().__init__(app)
         self._settings = settings
+        self._skip_paths = tuple(skip_paths)
 
     async def dispatch(self, request: Request, call_next) -> Response:
+        # Routes the operator opted out of auth for (e.g. /metrics).
+        if self._skip_paths and request.url.path in self._skip_paths:
+            return await call_next(request)
         auth_header = request.headers.get("authorization", "")
         region_header = request.headers.get("x-eset-region")
         server_url_header = request.headers.get("x-eset-server-url")

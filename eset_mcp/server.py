@@ -34,6 +34,13 @@ from .credentials import CredentialResolverError
 from .errors import EsetApiError, ModeForbiddenError
 from .http_client import EsetHttpClient
 from .modes import check_mode_allows
+from .observability import (
+    inc_capped,
+    inc_tool_call,
+    log_event,
+    observe_response_bytes,
+    observe_tool_duration,
+)
 from .response_shaping import apply_fields_projection, cap_response_size
 from .tools_loader import ToolDef, load_all_tools
 
@@ -213,14 +220,42 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
+        import time as _time
+
+        # All mutable telemetry state lives in this dict so the finally
+        # block can read it without resorting to `locals().get(...)`.
+        tel: dict[str, Any] = {
+            "t0": _time.monotonic(),
+            "deployment": "unknown",
+            "user": "",
+            "status": "error",
+            "bytes_out": 0,
+        }
+        try:
+            return await _dispatch(name, arguments, tel)
+        finally:
+            _emit_tool_call_telemetry(
+                name=name,
+                deployment=tel["deployment"],
+                user=tel["user"],
+                mode=settings.mode,
+                status=tel["status"],
+                duration_s=_time.monotonic() - tel["t0"],
+                bytes_out=tel["bytes_out"],
+            )
+
+    async def _dispatch(name: str, arguments: dict[str, Any], tel: dict[str, Any]) -> list[TextContent]:
         try:
             http = await _http()
         except CredentialResolverError as e:
+            tel["status"] = "auth_error"
             return [TextContent(type="text", text=f"Auth error: {e}")]
+        tel["deployment"] = http.credentials.deployment
+        tel["user"] = getattr(http.credentials, "user", "")
 
         # `fields` is a *synthetic* parameter we add to every read-only tool
         # (see tools_loader._build_input_schema). It is a server-side
-        # projection, never forwarded to ESET — so we pop it before dispatch.
+        # projection, never forwarded to ESET - so we pop it before dispatch.
         arguments = dict(arguments)
         fields = arguments.pop("fields", None)
         max_bytes = settings.response_bytes_max
@@ -228,20 +263,31 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
         # Composite tools dispatch first (they are not OpenAPI-derived).
         composite = await _dispatch_composite(http, name, arguments, fields, max_bytes)
         if composite is not None:
+            tel["status"] = "200"
+            if composite and composite[0].text:
+                tel["bytes_out"] = len(composite[0].text.encode("utf-8"))
             return composite
 
         tool = tools_by_name.get(name)
         if tool is None:
+            tel["status"] = "unknown_tool"
             raise ValueError(f"Unknown tool: {name}")
         check_mode_allows(tool.required_mode, settings.mode, name)
         try:
             result = await _execute_tool(http, tool, arguments)
         except ModeForbiddenError as e:
-            # Surface a readable message to the agent instead of an exception.
+            tel["status"] = "mode_forbidden"
             return [TextContent(type="text", text=str(e))]
         except EsetApiError as e:
+            tel["status"] = str(getattr(e, "status", "error"))
             return [TextContent(type="text", text=f"ESET API error: {e}")]
-        return [TextContent(type="text", text=_to_text(_shape(result, fields, max_bytes)))]
+        shaped = _shape(result, fields, max_bytes)
+        if isinstance(shaped, dict) and "_capped" in shaped:
+            inc_capped(tool=name)
+        text = _to_text(shaped)
+        tel["bytes_out"] = len(text.encode("utf-8"))
+        tel["status"] = "200"
+        return [TextContent(type="text", text=text)]
 
     # ─── RESOURCES ────────────────────────────────────────────────────────────
 
@@ -450,6 +496,33 @@ def _to_text(result: Any) -> str:
         return json.dumps(result, indent=2, ensure_ascii=False)
     except (TypeError, ValueError):
         return str(result)
+
+
+def _emit_tool_call_telemetry(
+    *,
+    name: str,
+    deployment: str,
+    user: str,
+    mode: str,
+    status: str,
+    duration_s: float,
+    bytes_out: int,
+) -> None:
+    """Emit the metric + log pair for a finished tool call."""
+    inc_tool_call(tool=name, deployment=deployment, status=status)
+    observe_tool_duration(tool=name, deployment=deployment, seconds=duration_s)
+    if bytes_out > 0:
+        observe_response_bytes(tool=name, deployment=deployment, n_bytes=bytes_out)
+    log_event(
+        _LOG, "tool_call",
+        tool=name,
+        deployment=deployment,
+        user=user,
+        mode=mode,
+        status=status,
+        duration_ms=int(duration_s * 1000),
+        response_bytes=bytes_out,
+    )
 
 
 def _shape(result: Any, fields: list[str] | None, max_bytes: int) -> Any:

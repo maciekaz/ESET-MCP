@@ -1,32 +1,36 @@
-"""Server entrypoint — stdio or Streamable HTTP transport."""
+"""Server entrypoint - stdio or Streamable HTTP transport."""
 from __future__ import annotations
 
 import asyncio
 import logging
-import sys
 
 from .client_pool import ClientPool
 from .config import Settings
 from .credentials import BasicAuthCredentialResolver, EnvCredentialResolver
+from .observability import configure_logging, log_event
 from .server import build_server
 
 
 def main() -> None:
     settings = Settings.from_env()
-    logging.basicConfig(
-        level=settings.log_level,
-        format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
-        stream=sys.stderr,  # MCP stdio uses stdout for JSON-RPC — logs MUST go to stderr.
-    )
+    configure_logging(level=settings.log_level, fmt=settings.log_format)
     log = logging.getLogger("eset_mcp")
-    log.info(
-        "ESET-MCP starting — mode=%s region=%s transport=%s auth=%s deployment=%s",
-        settings.mode, settings.region, settings.transport, settings.auth_mode, settings.deployment,
+    log_event(
+        log, "server_starting",
+        mode=settings.mode,
+        region=settings.region,
+        transport=settings.transport,
+        auth_mode=settings.auth_mode,
+        deployment=settings.deployment,
+        metrics_enabled=settings.metrics_enabled,
+        log_format=settings.log_format,
     )
     if settings.deployment == "onprem":
-        log.info("ESET-MCP on-prem default URL: %s (verify_ssl=%s)",
-                 settings.onprem_server_url or "(none — must be supplied per request)",
-                 settings.onprem_verify_ssl)
+        log_event(
+            log, "onprem_default",
+            server_url=settings.onprem_server_url or "(none - must be supplied per request)",
+            verify_ssl=settings.onprem_verify_ssl,
+        )
 
     asyncio.run(_run(settings))
 
@@ -74,15 +78,34 @@ async def _serve_http(settings: Settings, server) -> None:
         async with manager.run():
             yield
 
-    app = Starlette(
-        routes=[Mount("/mcp", app=manager.handle_request)],
-        lifespan=_lifespan,
-    )
+    routes = [Mount("/mcp", app=manager.handle_request)]
+    # Optional /metrics endpoint - mounted BEFORE the basic-auth middleware
+    # is added so that Prometheus scrapers don't need to send Basic auth
+    # to pull metrics. The endpoint carries no secrets and is intended to
+    # be protected at the network layer (private subnet / VPN / Caddy ACL).
+    if settings.metrics_enabled:
+        from .observability.metrics import metrics_asgi_app, metrics_available
+        routes.append(Mount(settings.metrics_path, app=metrics_asgi_app()))
+        if not metrics_available():
+            logging.getLogger("eset_mcp").warning(
+                "ESET_MCP_METRICS_ENABLED=true but prometheus_client is not "
+                "installed - %s will return 503. Install via "
+                "'pip install eset-mcp[metrics]'.",
+                settings.metrics_path,
+            )
 
-    # Basic-auth middleware sits in front of everything in `basic` mode.
+    app = Starlette(routes=routes, lifespan=_lifespan)
+
+    # Basic-auth middleware sits in front of everything in `basic` mode -
+    # EXCEPT the /metrics route, which was added above. We skip the
+    # middleware for that path so scrapers don't get 401'd.
     if settings.auth_mode == "basic":
         from .middleware import BasicAuthCredentialsMiddleware
-        app.add_middleware(BasicAuthCredentialsMiddleware, settings=settings)
+        app.add_middleware(
+            BasicAuthCredentialsMiddleware,
+            settings=settings,
+            skip_paths=(settings.metrics_path,) if settings.metrics_enabled else (),
+        )
 
     config = uvicorn.Config(
         app, host=settings.http_host, port=settings.http_port, log_level=settings.log_level.lower()
