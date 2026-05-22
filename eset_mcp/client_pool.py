@@ -21,10 +21,22 @@ from .credentials import Credentials
 from .http_client import EsetHttpClient
 from .observability import set_pool_size
 
-# Hard cap on concurrently-cached clients. Realistic multi-tenant MCP
-# deployments fronting an ESET MSP will see well under 100 active credentials
-# at any time; the cap exists to bound memory if something goes wrong.
-_DEFAULT_MAX_CLIENTS = 64
+# Hard cap on concurrently-cached clients. The cap exists to bound memory
+# if something goes wrong (e.g. random-credential spraying); realistic
+# multi-tenant MCP deployments fronting an ESET MSP will see well under
+# this number of active credentials at any time.
+#
+# Worth knowing: when the pool is at the cap and a new client is added,
+# the LRU entry is evicted and its underlying httpx.AsyncClient is
+# aclose()d in the background. If that evicted client happens to have a
+# request in flight at that exact moment, httpcore will tear the
+# connection down and the request fails (per
+# https://github.com/encode/httpcore - AsyncConnectionPool.aclose
+# clears all existing requests and connections). The default cap is
+# deliberately set high so this race is vanishingly unlikely in
+# practice; operators with extreme tenant counts can raise it further
+# via the constructor.
+_DEFAULT_MAX_CLIENTS = 256
 
 
 class ClientPool:

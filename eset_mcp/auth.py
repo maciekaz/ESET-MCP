@@ -83,6 +83,15 @@ class _TokenManagerBase:
 
     async def force_refresh(self) -> str:
         async with self._lock:
+            # Coalesce: under a 401 burst (e.g. cloud-side token revoked),
+            # N concurrent requests all call force_refresh(). The first
+            # one re-auths; subsequent ones acquire the lock, see that
+            # the cached token is fresh (just minted), and return it
+            # without re-auth. Otherwise we'd do N identical OAuth
+            # handshakes back-to-back.
+            if not self._expired_or_expiring():
+                assert self._token is not None
+                return self._token.access_token
             await self._refresh_locked()
             self._record_refresh("forced_401")
             assert self._token is not None
