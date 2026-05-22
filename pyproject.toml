@@ -8,8 +8,24 @@ version = "1.0.0"
 description = "MCP server for the ESET ecosystem (Connect cloud + PROTECT On-Prem, RO/RW, multi-tenant, Cloudflare Access, Prometheus metrics)"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
-authors = [{ name = "Maciej" }]
+license = { file = "LICENSE" }
+authors = [{ name = "maciekaz", email = "117506172+maciekaz@users.noreply.github.com" }]
+keywords = ["mcp", "model-context-protocol", "eset", "eset-connect", "eset-protect", "security", "edr", "ai-agents"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
 dependencies = [
     # MCP SDK (Python) — spec 2025-11-25 compatible.
     "mcp>=1.2.0",
@@ -38,6 +54,12 @@ metrics = [
 [project.scripts]
 # After `pip install .` we get `eset-mcp` on PATH.
 eset-mcp = "eset_mcp.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/maciekaz/ESET-MCP"
+Repository = "https://github.com/maciekaz/ESET-MCP"
+Issues = "https://github.com/maciekaz/ESET-MCP/issues"
+Changelog = "https://github.com/maciekaz/ESET-MCP/releases"
 
 [tool.setuptools.packages.find]
 where = ["."]
