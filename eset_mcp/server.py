@@ -247,7 +247,7 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
                     duration_s=_time.monotonic() - tel["t0"],
                     bytes_out=tel["bytes_out"],
                 )
-            except Exception:  # noqa: BLE001 - observability MUST be best-effort
+            except Exception:  # observability MUST be best-effort
                 _LOG.exception("telemetry emission failed for tool=%s", name)
 
     async def _dispatch(name: str, arguments: dict[str, Any], tel: dict[str, Any]) -> list[TextContent]:

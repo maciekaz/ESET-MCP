@@ -151,7 +151,7 @@ async def _metrics_app_enabled(scope: Scope, receive: Receive, send: Send) -> No
         payload = generate_latest(REGISTRY) if _METRICS_AVAILABLE else b""
         status = 200
         ct = CONTENT_TYPE_LATEST.encode("ascii")
-    except Exception as exc:  # noqa: BLE001 - never let a scraper take us down
+    except Exception as exc:  # never let a scraper take us down
         payload = f"metrics generation failed: {type(exc).__name__}\n".encode()
         status = 500
         ct = b"text/plain; charset=utf-8"
