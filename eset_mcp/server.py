@@ -257,7 +257,18 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
             Resource(
                 uri="eset://config/region",
                 name="ESET region",
-                description="API region (eu/de/us/ca/jpn).",
+                description="API region (eu/de/us/ca/jpn). Only meaningful for cloud deployments.",
+                mimeType="text/plain",
+            ),
+            Resource(
+                uri="eset://config/deployment",
+                name="ESET deployment kind",
+                description=(
+                    "Per-request: 'cloud' (ESET Connect API) or 'onprem' "
+                    "(customer-hosted ESET PROTECT console). In basic-auth "
+                    "mode an X-ESET-Server-URL header switches the request "
+                    "to on-prem."
+                ),
                 mimeType="text/plain",
             ),
             Resource(
@@ -288,6 +299,16 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
                 return resolver.resolve().region
             except CredentialResolverError:
                 return settings.region
+        if uri == "eset://config/deployment":
+            # For on-prem credentials we surface the server URL too — it's
+            # the only useful "where am I" hint the agent has.
+            try:
+                creds = resolver.resolve()
+            except CredentialResolverError:
+                return settings.deployment
+            if creds.deployment == "onprem":
+                return f"onprem ({creds.server_url})"
+            return "cloud"
         if uri == "eset://config/tools-catalog":
             catalog = [
                 {
@@ -399,10 +420,14 @@ async def _execute_tool(
     tool: ToolDef,
     arguments: dict[str, Any],
 ) -> Any:
-    """Turn (ToolDef + arguments) into an HTTP request against ESET."""
+    """Turn (ToolDef + arguments) into an HTTP request against ESET.
+
+    For on-prem credentials we pick :attr:`ToolDef.onprem_path` when one is
+    registered for this tool — see ``openapi/onprem-path-overrides.json``.
+    """
     args = dict(arguments)
-    # Substitute path params into {placeholders}.
-    path = tool.path
+    # Pick cloud or on-prem variant of the path before placeholder substitution.
+    path = tool.path_for(http.credentials.deployment)
     for pname in tool.path_params:
         if pname not in args:
             raise ValueError(f"Missing required path parameter: {pname}")

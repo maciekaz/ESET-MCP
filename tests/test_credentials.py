@@ -78,6 +78,10 @@ def test_env_resolver_always_returns_same_creds() -> None:
         user = "env-user"
         password = "env-pass"
         region = "eu"
+        # On-prem fields added in v0.2 — cloud-only setups keep defaults.
+        deployment = "cloud"
+        onprem_server_url = ""
+        onprem_verify_ssl = True
 
     r = EnvCredentialResolver(FakeSettings())  # type: ignore[arg-type]
     creds = r.resolve()
@@ -87,8 +91,19 @@ def test_env_resolver_always_returns_same_creds() -> None:
     assert r.resolve() is creds
 
 
+def _fake_settings_for_basic_resolver(default_region: str = "eu"):
+    """BasicAuthCredentialResolver now takes the full Settings object — build
+    a minimal duck-typed stand-in instead of constructing the real one."""
+    class FakeSettings:
+        region = default_region
+        deployment = "cloud"
+        onprem_server_url = ""
+        onprem_verify_ssl = True
+    return FakeSettings()
+
+
 def test_basic_resolver_reads_contextvar() -> None:
-    r = BasicAuthCredentialResolver(default_region="eu")
+    r = BasicAuthCredentialResolver(_fake_settings_for_basic_resolver())  # type: ignore[arg-type]
     creds = Credentials("alice", "s3cr3t", "us")
     token = request_credentials.set(creds)
     try:
@@ -98,7 +113,7 @@ def test_basic_resolver_reads_contextvar() -> None:
 
 
 def test_basic_resolver_raises_when_contextvar_empty() -> None:
-    r = BasicAuthCredentialResolver(default_region="eu")
+    r = BasicAuthCredentialResolver(_fake_settings_for_basic_resolver())  # type: ignore[arg-type]
     # Defensive — ensure the var is empty (it should be by default).
     token = request_credentials.set(None)
     try:

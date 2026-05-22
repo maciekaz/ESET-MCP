@@ -1,0 +1,24 @@
+{
+  "_comment": [
+    "Path overrides applied only when a tool is dispatched against an on-prem",
+    "ESET PROTECT console (creds.deployment == 'onprem').",
+    "",
+    "ESET PROTECT On-Prem and ESET Connect (cloud) share the vast majority of",
+    "REST paths, but a few diverge — usually because on-prem keeps a legacy",
+    "action verb. Each entry below names the exact cloud (service, method,",
+    "path) tuple and the on-prem replacement to use.",
+    "",
+    "If a tool name is not listed here, the cloud path is used verbatim and",
+    "the on-prem console either accepts it or returns 404 (which the agent",
+    "sees as a plain ESET API error)."
+  ],
+  "overrides": [
+    {
+      "service": "device-management",
+      "method": "POST",
+      "path": "/v1/devices/{deviceUuid}:rename",
+      "onprem_path": "/v1/devices/{deviceUuid}:renameDevice",
+      "source": "Fenrindale/eset-protect-mcp src/eset-client.ts:169-172"
+    }
+  ]
+}

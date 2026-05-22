@@ -20,9 +20,13 @@ def main() -> None:
     )
     log = logging.getLogger("eset_mcp")
     log.info(
-        "ESET-MCP starting — mode=%s region=%s transport=%s auth=%s",
-        settings.mode, settings.region, settings.transport, settings.auth_mode,
+        "ESET-MCP starting — mode=%s region=%s transport=%s auth=%s deployment=%s",
+        settings.mode, settings.region, settings.transport, settings.auth_mode, settings.deployment,
     )
+    if settings.deployment == "onprem":
+        log.info("ESET-MCP on-prem default URL: %s (verify_ssl=%s)",
+                 settings.onprem_server_url or "(none — must be supplied per request)",
+                 settings.onprem_verify_ssl)
 
     asyncio.run(_run(settings))
 
@@ -32,7 +36,7 @@ async def _run(settings: Settings) -> None:
     if settings.auth_mode == "env":
         resolver = EnvCredentialResolver(settings)
     else:
-        resolver = BasicAuthCredentialResolver(default_region=settings.region)
+        resolver = BasicAuthCredentialResolver(settings)
 
     server = build_server(settings, pool, resolver)
     try:
@@ -78,7 +82,7 @@ async def _serve_http(settings: Settings, server) -> None:
     # Basic-auth middleware sits in front of everything in `basic` mode.
     if settings.auth_mode == "basic":
         from .middleware import BasicAuthCredentialsMiddleware
-        app.add_middleware(BasicAuthCredentialsMiddleware, default_region=settings.region)
+        app.add_middleware(BasicAuthCredentialsMiddleware, settings=settings)
 
     config = uvicorn.Config(
         app, host=settings.http_host, port=settings.http_port, log_level=settings.log_level.lower()

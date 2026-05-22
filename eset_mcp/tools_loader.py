@@ -68,6 +68,18 @@ class ToolDef:
     path_params: list[str] = field(default_factory=list)
     query_params: list[str] = field(default_factory=list)
     has_body: bool = False
+    # When the same logical operation has a different URL on on-prem ESET
+    # PROTECT, this holds the on-prem replacement path (with the same
+    # `{placeholder}` segments as ``path``). Resolved from
+    # ``eset_mcp/openapi/onprem-path-overrides.json`` at load time. ``None``
+    # means: use ``path`` verbatim on both cloud and on-prem.
+    onprem_path: str | None = None
+
+    def path_for(self, deployment: str) -> str:
+        """Return the path to use for the given deployment ('cloud' or 'onprem')."""
+        if deployment == "onprem" and self.onprem_path:
+            return self.onprem_path
+        return self.path
 
 
 def load_all_tools() -> list[ToolDef]:
@@ -77,11 +89,61 @@ def load_all_tools() -> list[ToolDef]:
     for entry in sorted(pkg.iterdir()):
         if entry.suffix != ".json":
             continue
+        # Non-spec helper files live alongside the OpenAPI docs but must not
+        # be parsed as specs themselves.
+        if entry.name in _NON_SPEC_FILES:
+            continue
         service = entry.stem  # "device-management"
         spec = json.loads(entry.read_text(encoding="utf-8"))
         tools.extend(_tools_from_spec(service, spec))
     _disambiguate_names(tools)
+    _apply_onprem_overrides(tools)
     return tools
+
+
+# Files under eset_mcp/openapi/ that are NOT OpenAPI specs.
+_NON_SPEC_FILES: set[str] = {"onprem-path-overrides.json"}
+
+
+def _apply_onprem_overrides(tools: list[ToolDef]) -> None:
+    """Decorate tools with their on-prem path override, if any.
+
+    Matches by the (service, method, path) triple — robust to renames of the
+    auto-generated tool name. Silently ignores override entries that no
+    longer match any tool (e.g. after an OpenAPI refresh removed an op):
+    the agent simply hits 404 on that endpoint as it would for any other
+    unsupported call.
+    """
+    overrides_file = resources.files("eset_mcp") / "openapi" / "onprem-path-overrides.json"
+    try:
+        raw = overrides_file.read_text(encoding="utf-8")
+    except (FileNotFoundError, OSError):
+        return
+    try:
+        doc = json.loads(raw)
+    except json.JSONDecodeError:
+        return
+    overrides = doc.get("overrides", []) if isinstance(doc, dict) else []
+    if not overrides:
+        return
+
+    index: dict[tuple[str, str, str], ToolDef] = {
+        (t.service, t.method.upper(), t.path): t for t in tools
+    }
+    for entry in overrides:
+        if not isinstance(entry, dict):
+            continue
+        key = (
+            str(entry.get("service", "")),
+            str(entry.get("method", "")).upper(),
+            str(entry.get("path", "")),
+        )
+        target = index.get(key)
+        if target is None:
+            continue
+        onprem_path = entry.get("onprem_path")
+        if isinstance(onprem_path, str) and onprem_path:
+            target.onprem_path = onprem_path
 
 
 def _disambiguate_names(tools: list[ToolDef]) -> None:

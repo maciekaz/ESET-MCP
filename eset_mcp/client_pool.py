@@ -41,7 +41,9 @@ class ClientPool:
     def __init__(self, settings: Settings, *, max_clients: int = _DEFAULT_MAX_CLIENTS):
         self._settings = settings
         self._max = max_clients
-        self._clients: OrderedDict[tuple[str, str, str], EsetHttpClient] = OrderedDict()
+        # Key is (user, password_hash, deployment, region_or_server_url) — see
+        # Credentials.cache_key() for the rationale.
+        self._clients: OrderedDict[tuple[str, str, str, str], EsetHttpClient] = OrderedDict()
         self._lock = asyncio.Lock()
         # Hold strong refs to background eviction tasks so they don't get GC'd
         # before they finish closing the underlying httpx clients.

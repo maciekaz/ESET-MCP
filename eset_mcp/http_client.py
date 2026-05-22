@@ -7,8 +7,14 @@ Rules from the ESET Connect docs:
 - 5xx = transient; single retry.
 
 This class is *credentials-bound*: a single client owns one OAuth session for
-one ESET account. In multi-tenant mode the :class:`ClientPool` keeps one
-instance per (user, region).
+one ESET account (cloud) or one PROTECT console (on-prem). In multi-tenant
+mode the :class:`ClientPool` keeps one instance per pool key.
+
+For on-prem credentials the underlying httpx client honours
+``creds.verify_ssl`` (default True) — operators of intranet deployments with
+self-signed certs opt out via ``ESET_ONPREM_VERIFY_SSL=false``. A single
+WARNING is logged at construction time when verification is disabled so
+the operator notices it once, without log spam on every request.
 """
 from __future__ import annotations
 
@@ -19,10 +25,10 @@ from typing import Any
 
 import httpx
 
-from .auth import TokenManager
+from .auth import TokenManagerProto, make_token_manager
 from .credentials import Credentials
 from .errors import EsetApiError, map_http_error
-from .regions import base_url
+from .regions import resolve_base_url
 
 _LOG = logging.getLogger("eset_mcp.http")
 
@@ -37,11 +43,11 @@ _RATE_LIMIT_BASE_BACKOFF_S = 1.0
 
 
 class EsetHttpClient:
-    """High-level HTTP client for the ESET Connect API.
+    """High-level HTTP client for the ESET Connect API or an on-prem PROTECT console.
 
-    One instance == one OAuth session for one ESET account in one region.
-    Use directly when you have fixed credentials; in multi-tenant mode go
-    through :class:`ClientPool`.
+    One instance == one auth session for one ESET account (cloud) or one
+    on-prem console. Use directly when you have fixed credentials; in
+    multi-tenant mode go through :class:`ClientPool`.
 
     Usage:
         async with EsetHttpClient(credentials) as client:
@@ -57,8 +63,17 @@ class EsetHttpClient:
 
     def __init__(self, credentials: Credentials):
         self._creds = credentials
-        self._http = httpx.AsyncClient(timeout=120, follow_redirects=False)
-        self._token_mgr = TokenManager(credentials, self._http)
+        # TLS verification is configurable only for on-prem (which routinely
+        # ships with self-signed certs). Cloud credentials always verify.
+        verify = True if credentials.deployment == "cloud" else credentials.verify_ssl
+        if credentials.deployment == "onprem" and not verify:
+            _LOG.warning(
+                "TLS certificate verification DISABLED for on-prem server %s — "
+                "set ESET_ONPREM_VERIFY_SSL=true once the console cert is trusted.",
+                credentials.server_url,
+            )
+        self._http = httpx.AsyncClient(timeout=120, follow_redirects=False, verify=verify)
+        self._token_mgr: TokenManagerProto = make_token_manager(credentials, self._http)
 
     @property
     def credentials(self) -> Credentials:
@@ -84,7 +99,7 @@ class EsetHttpClient:
         _retry_after_401: bool = True,
     ) -> dict[str, Any] | list[Any]:
         """Execute a request, handle 202/401/429/5xx, return the body as JSON."""
-        url = base_url(self._creds.region, service) + path
+        url = resolve_base_url(self._creds, service) + path
         token = await self._token_mgr.get_access_token()
         headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
 

@@ -19,6 +19,16 @@ from eset_mcp.credentials import request_credentials
 from eset_mcp.middleware import BasicAuthCredentialsMiddleware
 
 
+def _fake_settings(default_region: str = "eu"):
+    """Duck-typed Settings for the middleware (avoids loading .env)."""
+    class FakeSettings:
+        region = default_region
+        deployment = "cloud"
+        onprem_server_url = ""
+        onprem_verify_ssl = True
+    return FakeSettings()
+
+
 def _app(default_region="eu"):
     async def probe(request):
         creds = request_credentials.get()
@@ -29,7 +39,7 @@ def _app(default_region="eu"):
         )
 
     app = Starlette(routes=[Route("/probe", probe)])
-    app.add_middleware(BasicAuthCredentialsMiddleware, default_region=default_region)
+    app.add_middleware(BasicAuthCredentialsMiddleware, settings=_fake_settings(default_region))
     return app
 
 
@@ -65,7 +75,9 @@ def test_region_header_overrides_default() -> None:
         assert r.json()["region"] == "us"
 
 
-def test_unknown_region_returns_401() -> None:
+def test_unknown_region_returns_400() -> None:
+    """Region/URL header validation is a request-format issue (400), distinct
+    from the credentials-format 401 raised for bad Basic auth."""
     with TestClient(_app()) as client:
         r = client.get(
             "/probe",
@@ -74,7 +86,7 @@ def test_unknown_region_returns_401() -> None:
                 "x-eset-region": "atlantis",
             },
         )
-        assert r.status_code == 401
+        assert r.status_code == 400
 
 
 def test_malformed_basic_returns_401() -> None:

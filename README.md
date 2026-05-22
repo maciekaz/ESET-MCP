@@ -18,6 +18,7 @@ Claude Code, or a custom agent — through tools, resources, and prompts.
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
 - [Multi-tenant deployment (basic-auth mode)](#multi-tenant-deployment-basic-auth-mode)
+- [On-prem ESET PROTECT support](#on-prem-eset-protect-support)
 - [Production deployment (HTTPS via Caddy)](#production-deployment-https-via-caddy)
 - [Tools, resources & prompts](#tools-resources--prompts)
 - [Architecture](#architecture)
@@ -55,11 +56,14 @@ Claude Code, or a custom agent — through tools, resources, and prompts.
 
 - `ESET_AUTH_MODE=env` — single tenant, credentials from `.env`.
 - `ESET_AUTH_MODE=basic` — multi tenant, clients pass
-  `Authorization: Basic <base64(user:password)>` (and optional
-  `X-ESET-Region`) per request. One server fronts many ESET accounts.
+  `Authorization: Basic <base64(user:password)>` per request (plus optional
+  `X-ESET-Region` for a different cloud region, or `X-ESET-Server-URL` to
+  route the request to an on-prem PROTECT console). One server fronts many
+  ESET accounts and can mix cloud + on-prem in the same process.
 - Per-tenant OAuth tokens, pooled and isolated by
-  `(user, password_hash, region)`. Rotating a password mints a fresh
-  token rather than reusing a stale one.
+  `(user, password_hash, deployment, region-or-server-url)`. Rotating a
+  password mints a fresh token rather than reusing a stale one; cloud and
+  on-prem clients for the same user never share a pool entry.
 
 ### Transports
 
@@ -70,6 +74,15 @@ Claude Code, or a custom agent — through tools, resources, and prompts.
 
 `eu` / `de` / `us` / `ca` / `jpn`. Fixed via `ESET_REGION` in `env` mode;
 per-request via `X-ESET-Region` in `basic` mode.
+
+### Cloud + on-prem in one process
+
+In addition to the cloud regions, a single MCP server can front
+customer-hosted **ESET PROTECT On-Prem** consoles. The on-prem auth wire
+format (`POST /GetTokens` with a camelCase response) and per-host URL
+structure are handled transparently; clients pick the target per request
+via the `X-ESET-Server-URL` header. See
+[On-prem ESET PROTECT support](#on-prem-eset-protect-support).
 
 ### Resilience
 
@@ -243,6 +256,9 @@ All settings live in `.env`. Required fields are marked in
 | `ESET_MCP_HTTP_PORT`           | `8765`        | HTTP port                                                     |
 | `ESET_MCP_RESPONSE_BYTES_MAX`  | `100000`      | Per-call response byte cap; `0` disables                      |
 | `ESET_LOG_LEVEL`               | `INFO`        | `DEBUG` / `INFO` / `WARNING` / `ERROR`                        |
+| `ESET_DEPLOYMENT`              | `cloud`       | `cloud` (ESET Connect) or `onprem` (customer-hosted PROTECT)  |
+| `ESET_ONPREM_SERVER_URL`       | —             | `https://host[:port]` of the on-prem console (req. in env+onprem) |
+| `ESET_ONPREM_VERIFY_SSL`       | `true`        | Set `false` for on-prem consoles with self-signed certs       |
 | `ESET_PUBLIC_DOMAIN`           | —             | Domain Caddy issues a TLS cert for (`prod` profile only)      |
 | `ESET_ACME_EMAIL`              | —             | Email Let's Encrypt uses for renewals (`prod` profile only)   |
 
@@ -262,10 +278,11 @@ ESET_REGION=eu   # default region; clients can override per request
 
 Every HTTP request must carry:
 
-| Header             | Required | Notes                                                |
-|--------------------|----------|------------------------------------------------------|
-| `Authorization`    | yes      | `Basic <base64(user:password)>`                      |
-| `X-ESET-Region`    | no       | Override default region (`eu`/`de`/`us`/`ca`/`jpn`)  |
+| Header              | Required | Notes                                                                  |
+|---------------------|----------|------------------------------------------------------------------------|
+| `Authorization`     | yes      | `Basic <base64(user:password)>`                                        |
+| `X-ESET-Region`     | no       | Override default region (`eu`/`de`/`us`/`ca`/`jpn`)                    |
+| `X-ESET-Server-URL` | no       | Route this request to an on-prem PROTECT console (e.g. `https://protect.example.com:9443`) — see [On-prem support](#on-prem-eset-protect-support) |
 
 Example Python client:
 
@@ -287,6 +304,93 @@ async with streamablehttp_client(
 
 > ⚠️ **Basic auth without TLS leaks credentials.** Always run `basic`
 > mode behind HTTPS.
+
+---
+
+## On-prem ESET PROTECT support
+
+ESET ships PROTECT as both a cloud service (the ESET Connect API at
+`*.eset.systems`) and an on-prem console customers self-host. The on-prem
+REST API lives on a single host (default port `9443`) and uses a different
+authentication endpoint — `POST /GetTokens` with a JSON body and a
+camelCase response — but otherwise shares the URL structure of the cloud
+API. ESET-MCP supports both, **in the same process**.
+
+### How the server decides cloud vs on-prem
+
+| `ESET_AUTH_MODE` | What controls the deployment per request                                               |
+|------------------|----------------------------------------------------------------------------------------|
+| `env`            | Static: `ESET_DEPLOYMENT` (cloud) or `ESET_DEPLOYMENT=onprem` + `ESET_ONPREM_SERVER_URL` |
+| `basic`          | Per request: presence of `X-ESET-Server-URL` switches that single request to on-prem; absence falls back to the env default (cloud or on-prem) |
+
+So a single MCP server can front the cloud for most clients **and** route
+specific requests to one or more on-prem consoles — keyed entirely by which
+URL each client sends in `X-ESET-Server-URL`.
+
+### Single-tenant on-prem (env mode)
+
+```bash
+# .env
+ESET_AUTH_MODE=env
+ESET_DEPLOYMENT=onprem
+ESET_ONPREM_SERVER_URL=https://protect.company.local:9443
+ESET_ONPREM_VERIFY_SSL=true     # set to false only for self-signed certs you trust
+ESET_USER=api-user@company.local
+ESET_PASSWORD=...
+```
+
+### Multi-tenant on-prem (basic auth, per-request URL)
+
+```bash
+# .env
+ESET_AUTH_MODE=basic
+ESET_MCP_TRANSPORT=http
+ESET_DEPLOYMENT=cloud            # default; clients opt into on-prem per-request
+# ESET_ONPREM_SERVER_URL is optional — if set it becomes the on-prem default
+```
+
+Client targeting on-prem:
+
+```python
+headers = {
+    "Authorization": f"Basic {token}",
+    "X-ESET-Server-URL": "https://protect.client-a.local:9443",
+}
+```
+
+Same MCP server, different request — same headers minus `X-ESET-Server-URL`
+— stays on cloud.
+
+### What works on on-prem vs cloud
+
+The tool catalog is identical for both deployments (all 102 OpenAPI-derived
+tools plus the 4 composites). At call time the server uses cloud paths for
+cloud credentials and on-prem paths for on-prem credentials.
+
+- **Shared & verified**: `device_*`, `asset_groups_*`, `policy_*` and most
+  of `task_*` (Automation) work the same on cloud and on-prem.
+- **Cloud-only modules**: `incident_*`, `mobile_*`, `wap_*`, `nap_*`,
+  `quarantine_*` and most of `vuln_*` correspond to separate ESET products
+  (ESET Inspect, Cloud Office Security, MDM) that are not part of the
+  on-prem PROTECT installation. Calling them against an on-prem console
+  returns a plain 404 from ESET — surfaced to the agent as an
+  `ESET API error: 404` text response with no special handling.
+- **Path overrides**: a few endpoints have a different URL on-prem — e.g.
+  `POST /v1/devices/{uuid}:rename` is `:renameDevice` on-prem. These are
+  declared in [`eset_mcp/openapi/onprem-path-overrides.json`](eset_mcp/openapi/onprem-path-overrides.json)
+  and applied automatically when the request targets on-prem.
+
+### Security notes for on-prem
+
+- `X-ESET-Server-URL` accepts only `https://` URLs with no path, query or
+  fragment. Trailing slashes are stripped. Anything else → HTTP 400.
+- `ESET_ONPREM_VERIFY_SSL=false` disables TLS certificate verification and
+  exposes the connection to MITM. The server logs a single WARNING per
+  client construction when it's disabled. Use only on trusted intranets
+  with self-signed certs you cannot replace.
+- On-prem tokens are held in memory per `(user, password_hash, server_url)`
+  — same isolation rules as cloud tokens. The pool keys them separately so
+  cloud and on-prem clients never collide.
 
 ---
 
@@ -335,6 +439,7 @@ Each composite degrades gracefully when a sub-call returns 403/404
 
 - `eset://config/mode` — `RO` or `RW`.
 - `eset://config/region` — current region (per-request in basic-auth mode).
+- `eset://config/deployment` — `cloud` or `onprem (<server-url>)` for this request.
 - `eset://config/tools-catalog` — JSON catalog of all 106 tools (name,
   mode, method, path, service, description).
 - `eset://docs/rate-limits` — quick reminder about the 10 req/s ceiling.

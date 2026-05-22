@@ -1,17 +1,30 @@
 """Credential resolution — env-based (single tenant) or per-request (multi-tenant).
 
-The MCP server can run in two auth modes:
+The MCP server can run in two auth modes and two deployment kinds:
 
 - ``env``:  credentials are read once from ``.env`` and used for every request.
             Suitable for a single-tenant deployment (one MCP server, one ESET
             account). Works on both stdio and HTTP transports.
 
 - ``basic``: credentials are read per-request from HTTP ``Authorization: Basic``
-             headers and (optionally) ``X-ESET-Region``. One MCP server can
-             then serve many tenants. Only meaningful on the HTTP transport;
-             stdio refuses this mode at startup.
+             headers and (optionally) ``X-ESET-Region`` and/or
+             ``X-ESET-Server-URL``. One MCP server can then serve many
+             tenants — and a mix of cloud + on-prem in the same process.
+             Only meaningful on the HTTP transport; stdio refuses this mode
+             at startup.
 
-The resolver returns a :class:`Credentials` triple; the rest of the codebase
+Deployment kind:
+
+- ``cloud``: hits the ESET Connect API at ``{region}.*.eset.systems`` with
+             OAuth2 password grant against ``/oauth/token``. Region picked
+             from ``X-ESET-Region`` or the env default.
+- ``onprem``: hits a customer-hosted ESET PROTECT console at a single
+             ``server_url`` with the on-prem auth endpoint ``/GetTokens``
+             (camelCase response). Selected by the presence of
+             ``X-ESET-Server-URL`` (basic mode) or ``ESET_DEPLOYMENT=onprem``
+             (env mode).
+
+The resolver returns a :class:`Credentials` object; the rest of the codebase
 (:mod:`auth`, :mod:`http_client`, :mod:`client_pool`) never sees a fixed set
 of credentials any more — they always come through a resolver.
 """
@@ -22,7 +35,7 @@ import binascii
 from contextvars import ContextVar
 from dataclasses import dataclass
 
-from .config import VALID_REGIONS, Region, Settings
+from .config import VALID_REGIONS, Deployment, Region, Settings, _normalize_server_url
 
 
 @dataclass(frozen=True)
@@ -30,8 +43,15 @@ class Credentials:
     user: str
     password: str
     region: Region
+    deployment: Deployment = "cloud"
+    # On-prem only: full origin URL (e.g. "https://protect.example.com:9443").
+    # Empty string for cloud credentials.
+    server_url: str = ""
+    # On-prem only: whether httpx should verify the TLS cert. Always True for
+    # cloud (the public ESET endpoints have valid certs).
+    verify_ssl: bool = True
 
-    def cache_key(self) -> tuple[str, str, Region]:
+    def cache_key(self) -> tuple[str, str, str, str]:
         """Identity used by the client pool.
 
         Includes a *hash* of the password so that changing the password (e.g.
@@ -39,10 +59,18 @@ class Credentials:
         than reusing a cached client whose token was minted with the old
         password. We hash rather than embed the raw value so the key is safe
         to log / inspect for debugging.
+
+        For cloud credentials the fourth tuple element is the region
+        (``"eu"``/``"us"``/…). For on-prem it is the server URL. This way
+        cloud and on-prem clients never collide in the pool, and the same
+        on-prem console hit via two different URLs (e.g. IP vs hostname)
+        gets two pool entries.
         """
         import hashlib
         pw_hash = hashlib.sha256(self.password.encode("utf-8")).hexdigest()[:16]
-        return (self.user, pw_hash, self.region)
+        # The fourth slot is "region OR server_url" — unique per deployment.
+        endpoint = self.server_url if self.deployment == "onprem" else self.region
+        return (self.user, pw_hash, self.deployment, endpoint)
 
 
 class CredentialResolverError(Exception):
@@ -62,7 +90,12 @@ class EnvCredentialResolver:
 
     def __init__(self, settings: Settings):
         self._creds = Credentials(
-            user=settings.user, password=settings.password, region=settings.region
+            user=settings.user,
+            password=settings.password,
+            region=settings.region,
+            deployment=settings.deployment,
+            server_url=settings.onprem_server_url,
+            verify_ssl=settings.onprem_verify_ssl,
         )
 
     def resolve(self) -> Credentials:
@@ -72,12 +105,12 @@ class EnvCredentialResolver:
 class BasicAuthCredentialResolver:
     """Returns credentials pulled from the per-request ContextVar.
 
-    `default_region` is the fallback used when the client did not send an
-    explicit ``X-ESET-Region`` header — typically the value from ``.env``.
+    Defaults — used for fields the client did not override via headers — come
+    from the server's ``.env`` (region, deployment, server URL, verify-SSL).
     """
 
-    def __init__(self, default_region: Region):
-        self._default_region = default_region
+    def __init__(self, settings: Settings):
+        self._settings = settings
 
     def resolve(self) -> Credentials:
         creds = request_credentials.get()
@@ -122,3 +155,19 @@ def normalize_region(raw: str | None, default: Region) -> Region:
             f"X-ESET-Region must be one of {VALID_REGIONS}; got {raw!r}."
         )
     return val  # type: ignore[return-value]
+
+
+def normalize_server_url_header(raw: str | None) -> str:
+    """Normalise an ``X-ESET-Server-URL`` header. Returns ``""`` if not set.
+
+    Reuses :func:`config._normalize_server_url` for the validation rules
+    (https-only, no path/query/fragment, trailing slash stripped). On invalid
+    input raises :class:`CredentialResolverError` so the middleware can
+    translate it into a 400 response.
+    """
+    if not raw:
+        return ""
+    try:
+        return _normalize_server_url(raw.strip())
+    except RuntimeError as e:
+        raise CredentialResolverError(f"X-ESET-Server-URL invalid: {e}") from e
