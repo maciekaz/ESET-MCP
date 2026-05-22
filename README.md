@@ -5,9 +5,17 @@
 [![MCP spec](https://img.shields.io/badge/MCP%20spec-2025--11--25-informational)](https://modelcontextprotocol.io/specification/2025-11-25)
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server for the
-[ESET Connect API](https://help.eset.com/eset_connect/en-US/). Drive ESET
-PROTECT / ESET Inspect / ESET Cloud Office from any MCP host — Claude Desktop,
-Claude Code, or a custom agent — through tools, resources, and prompts.
+entire ESET management surface: [ESET Connect](https://help.eset.com/eset_connect/en-US/)
+(cloud, all regions), ESET PROTECT On-Prem, ESET Inspect, and ESET Cloud
+Office. Drive any of them from any MCP host (Claude Desktop, Claude Code,
+or a custom agent) through tools, resources, and prompts.
+
+Built as a **single hub for any number of ESET deployments**. One process
+fronts cloud and on-prem consoles at the same time; clients pick the target
+per request via headers. As long as MCP receives valid credentials (Basic
+auth, plus an optional URL override and optional Cloudflare Access service
+token) it routes the call to the right backend, mints its own tokens, and
+keeps tenants isolated in the pool.
 
 ---
 
@@ -38,7 +46,7 @@ Claude Code, or a custom agent — through tools, resources, and prompts.
   mobile-device-management, network-access-protection, patch-management,
   policy-management, quarantine-management, user-management,
   vulnerability-management, and web-access-protection.
-- **4 high-level composites** that fold 3–6 raw calls into one:
+- **4 high-level composites** that fold 3-6 raw calls into one:
   `eset_search`, `device_full_profile`, `incident_full_context`,
   `latest_detections`.
 
@@ -54,8 +62,8 @@ Claude Code, or a custom agent — through tools, resources, and prompts.
 
 ### Authentication
 
-- `ESET_AUTH_MODE=env` — single tenant, credentials from `.env`.
-- `ESET_AUTH_MODE=basic` — multi tenant, clients pass
+- `ESET_AUTH_MODE=env` - single tenant, credentials from `.env`.
+- `ESET_AUTH_MODE=basic` - multi tenant, clients pass
   `Authorization: Basic <base64(user:password)>` per request (plus optional
   `X-ESET-Region` for a different cloud region, or `X-ESET-Server-URL` to
   route the request to an on-prem PROTECT console). One server fronts many
@@ -67,8 +75,8 @@ Claude Code, or a custom agent — through tools, resources, and prompts.
 
 ### Transports
 
-- **stdio** — JSON-RPC over stdin/stdout for local hosts.
-- **Streamable HTTP** — the current MCP transport (Nov 2025 spec).
+- **stdio** - JSON-RPC over stdin/stdout for local hosts.
+- **Streamable HTTP** - the current MCP transport (Nov 2025 spec).
 
 ### Multi-region
 
@@ -84,6 +92,15 @@ structure are handled transparently; clients pick the target per request
 via the `X-ESET-Server-URL` header. See
 [On-prem ESET PROTECT support](#on-prem-eset-protect-support).
 
+### Cloudflare Access (optional)
+
+When the on-prem console sits behind a Cloudflare Access tunnel, MCP
+authenticates as a [service token](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/)
+(env-default or per-request `X-ESET-CF-Access-Client-Id` /
+`X-ESET-CF-Access-Client-Secret`) and rides through to the origin. The
+CF token is an extra ingress layer in front of - not a replacement for -
+the ESET account credentials. Cloud requests never carry these headers.
+
 ### Resilience
 
 - OAuth2 with proactive refresh ~5 min before token expiry and a forced
@@ -95,15 +112,15 @@ via the `X-ESET-Server-URL` header. See
 
 ### Response shaping (context-window protection)
 
-A single uncapped `list_*` call can return hundreds of KB — enough to
+A single uncapped `list_*` call can return hundreds of KB - enough to
 overflow a model's context. Two transformations are applied to every
 tool response:
 
-- **`fields` projection** — every GET tool exposes an optional
+- **`fields` projection** - every GET tool exposes an optional
   `fields: [string]` parameter that filters each list-item down to the
   requested keys (e.g. `["uuid", "displayName"]`). Applied server-side
   after fetch.
-- **Byte cap** (`ESET_MCP_RESPONSE_BYTES_MAX`, default 100 KB) — if a
+- **Byte cap** (`ESET_MCP_RESPONSE_BYTES_MAX`, default 100 KB) - if a
   payload still exceeds the budget, the longest list is trimmed while
   every top-level field (`nextPageToken`, `totalSize`, …) is preserved,
   and a `_capped` metadata block is attached with an actionable hint
@@ -139,7 +156,7 @@ back off; 5xx → retry shortly.
 | `basic` | http only         | `Authorization: Basic` header per request |
 
 `basic` mode over plain HTTP would leak passwords. The server enforces
-HTTP transport for `basic` mode at startup but does **not** enforce TLS —
+HTTP transport for `basic` mode at startup but does **not** enforce TLS -
 that is the deployment's job. The `prod` docker-compose profile fronts
 the server with Caddy + Let's Encrypt.
 
@@ -151,9 +168,9 @@ Missing / malformed `Authorization` in `basic` mode → HTTP 401 with a
 
 Two independent layers:
 
-1. **Catalog hiding** — `list_tools` filters out every non-GET tool in
+1. **Catalog hiding** - `list_tools` filters out every non-GET tool in
    RO mode. The agent never sees write tools.
-2. **Defence-in-depth gate** — `call_tool` validates the tool's declared
+2. **Defence-in-depth gate** - `call_tool` validates the tool's declared
    mode against `ESET_MODE` before any HTTP request goes out. Hard-coded
    clients, prompt-injection attempts, and stale agent snapshots all hit
    the gate and receive a structured `ModeForbiddenError` text response
@@ -174,7 +191,7 @@ that respect annotations can require a per-call confirmation.
 ### Network surface
 
 - In dev (`docker compose up`) the MCP server publishes `:8765`.
-- In the `prod` profile the MCP container has **no published port** —
+- In the `prod` profile the MCP container has **no published port** -
   Caddy joins the same docker bridge network and proxies HTTPS in. The
   only host ports are 80 (HTTP-01 ACME) and 443 (HTTPS).
 - No outbound traffic except to `*.eset.systems` (auth + APIs).
@@ -247,8 +264,8 @@ All settings live in `.env`. Required fields are marked in
 | Variable                       | Default       | Purpose                                                       |
 |--------------------------------|---------------|---------------------------------------------------------------|
 | `ESET_AUTH_MODE`               | `env`         | `env` (single tenant) or `basic` (multi tenant)               |
-| `ESET_USER`                    | —             | API user (required in `env` mode)                             |
-| `ESET_PASSWORD`                | —             | API password (required in `env` mode)                         |
+| `ESET_USER`                    | -             | API user (required in `env` mode)                             |
+| `ESET_PASSWORD`                | -             | API password (required in `env` mode)                         |
 | `ESET_MODE`                    | `RO`          | `RO` (read-only catalog) or `RW`                              |
 | `ESET_REGION`                  | `eu`          | `eu` / `de` / `us` / `ca` / `jpn`                             |
 | `ESET_MCP_TRANSPORT`           | `stdio`       | `stdio` or `http`                                             |
@@ -257,14 +274,14 @@ All settings live in `.env`. Required fields are marked in
 | `ESET_MCP_RESPONSE_BYTES_MAX`  | `100000`      | Per-call response byte cap; `0` disables                      |
 | `ESET_LOG_LEVEL`               | `INFO`        | `DEBUG` / `INFO` / `WARNING` / `ERROR`                        |
 | `ESET_DEPLOYMENT`              | `cloud`       | `cloud` (ESET Connect) or `onprem` (customer-hosted PROTECT)  |
-| `ESET_ONPREM_SERVER_URL`       | —             | `https://host[:port]` of the on-prem console (req. in env+onprem) |
+| `ESET_ONPREM_SERVER_URL`       | -             | `https://host[:port]` of the on-prem console (req. in env+onprem) |
 | `ESET_ONPREM_VERIFY_SSL`       | `true`        | Set `false` for on-prem consoles with self-signed certs       |
-| `ESET_ONPREM_CF_ACCESS_CLIENT_ID` | —          | Cloudflare Access Service Token client-id (on-prem behind CF) |
-| `ESET_ONPREM_CF_ACCESS_CLIENT_SECRET` | —      | Cloudflare Access Service Token client-secret (paired with the above) |
-| `ESET_PUBLIC_DOMAIN`           | —             | Domain Caddy issues a TLS cert for (`prod` profile only)      |
-| `ESET_ACME_EMAIL`              | —             | Email Let's Encrypt uses for renewals (`prod` profile only)   |
+| `ESET_ONPREM_CF_ACCESS_CLIENT_ID` | -          | Cloudflare Access Service Token client-id (on-prem behind CF) |
+| `ESET_ONPREM_CF_ACCESS_CLIENT_SECRET` | -      | Cloudflare Access Service Token client-secret (paired with the above) |
+| `ESET_PUBLIC_DOMAIN`           | -             | Domain Caddy issues a TLS cert for (`prod` profile only)      |
+| `ESET_ACME_EMAIL`              | -             | Email Let's Encrypt uses for renewals (`prod` profile only)   |
 
-> Use a **dedicated API user** — not your console login. Create one in
+> Use a **dedicated API user** - not your console login. Create one in
 > ESET PROTECT Hub / ESET Business Account → API users.
 
 ---
@@ -284,9 +301,9 @@ Every HTTP request must carry:
 |---------------------|----------|------------------------------------------------------------------------|
 | `Authorization`     | yes      | `Basic <base64(user:password)>`                                        |
 | `X-ESET-Region`     | no       | Override default region (`eu`/`de`/`us`/`ca`/`jpn`)                    |
-| `X-ESET-Server-URL` | no       | Route this request to an on-prem PROTECT console (e.g. `https://protect.example.com:9443`) — see [On-prem support](#on-prem-eset-protect-support) |
+| `X-ESET-Server-URL` | no       | Route this request to an on-prem PROTECT console (e.g. `https://protect.example.com:9443`) - see [On-prem support](#on-prem-eset-protect-support) |
 | `X-ESET-CF-Access-Client-Id` | no | Cloudflare Access Service Token client-id (on-prem behind CF Access) |
-| `X-ESET-CF-Access-Client-Secret` | no | Paired with the above — both must be sent together |
+| `X-ESET-CF-Access-Client-Secret` | no | Paired with the above - both must be sent together |
 
 Example Python client:
 
@@ -316,8 +333,8 @@ async with streamablehttp_client(
 ESET ships PROTECT as both a cloud service (the ESET Connect API at
 `*.eset.systems`) and an on-prem console customers self-host. The on-prem
 REST API lives on a single host (default port `9443`) and uses a different
-authentication endpoint — `POST /GetTokens` with a JSON body and a
-camelCase response — but otherwise shares the URL structure of the cloud
+authentication endpoint - `POST /GetTokens` with a JSON body and a
+camelCase response - but otherwise shares the URL structure of the cloud
 API. ESET-MCP supports both, **in the same process**.
 
 ### How the server decides cloud vs on-prem
@@ -328,7 +345,7 @@ API. ESET-MCP supports both, **in the same process**.
 | `basic`          | Per request: presence of `X-ESET-Server-URL` switches that single request to on-prem; absence falls back to the env default (cloud or on-prem) |
 
 So a single MCP server can front the cloud for most clients **and** route
-specific requests to one or more on-prem consoles — keyed entirely by which
+specific requests to one or more on-prem consoles - keyed entirely by which
 URL each client sends in `X-ESET-Server-URL`.
 
 ### Single-tenant on-prem (env mode)
@@ -350,7 +367,7 @@ ESET_PASSWORD=...
 ESET_AUTH_MODE=basic
 ESET_MCP_TRANSPORT=http
 ESET_DEPLOYMENT=cloud            # default; clients opt into on-prem per-request
-# ESET_ONPREM_SERVER_URL is optional — if set it becomes the on-prem default
+# ESET_ONPREM_SERVER_URL is optional - if set it becomes the on-prem default
 ```
 
 Client targeting on-prem:
@@ -362,8 +379,8 @@ headers = {
 }
 ```
 
-Same MCP server, different request — same headers minus `X-ESET-Server-URL`
-— stays on cloud.
+Same MCP server, different request - same headers minus `X-ESET-Server-URL`
+- stays on cloud.
 
 ### What works on on-prem vs cloud
 
@@ -377,9 +394,9 @@ cloud credentials and on-prem paths for on-prem credentials.
   `quarantine_*` and most of `vuln_*` correspond to separate ESET products
   (ESET Inspect, Cloud Office Security, MDM) that are not part of the
   on-prem PROTECT installation. Calling them against an on-prem console
-  returns a plain 404 from ESET — surfaced to the agent as an
+  returns a plain 404 from ESET - surfaced to the agent as an
   `ESET API error: 404` text response with no special handling.
-- **Path overrides**: a few endpoints have a different URL on-prem — e.g.
+- **Path overrides**: a few endpoints have a different URL on-prem - e.g.
   `POST /v1/devices/{uuid}:rename` is `:renameDevice` on-prem. These are
   declared in [`eset_mcp/openapi/onprem-path-overrides.json`](eset_mcp/openapi/onprem-path-overrides.json)
   and applied automatically when the request targets on-prem.
@@ -398,7 +415,7 @@ ESET_ONPREM_CF_ACCESS_CLIENT_ID=abc1234567890.access
 ESET_ONPREM_CF_ACCESS_CLIENT_SECRET=<long-secret>
 ```
 
-…or per-request in basic-auth mode (overrides the env defaults — handy
+…or per-request in basic-auth mode (overrides the env defaults - handy
 when each tenant has its own tunnel and its own service token):
 
 ```python
@@ -412,13 +429,13 @@ headers = {
 
 MCP translates the `X-ESET-CF-*` input headers into the actual
 `CF-Access-Client-Id` / `CF-Access-Client-Secret` headers that Cloudflare
-Access expects, and attaches them to **every** outbound call — both the
+Access expects, and attaches them to **every** outbound call - both the
 `POST /GetTokens` auth handshake and every subsequent ESET API request.
 
 The CF secret is treated like the password: never logged, only its SHA-256
 hash enters the client pool key. Rotating the secret mints a fresh client
 + fresh ESET token. Cloud requests **never** carry CF Access headers
-regardless of env defaults — ESET Connect is a public SaaS.
+regardless of env defaults - ESET Connect is a public SaaS.
 
 ### Security notes for on-prem
 
@@ -429,7 +446,7 @@ regardless of env defaults — ESET Connect is a public SaaS.
   client construction when it's disabled. Use only on trusted intranets
   with self-signed certs you cannot replace.
 - On-prem tokens are held in memory per
-  `(user, password_hash, server_url, cf_secret_hash)` — same isolation
+  `(user, password_hash, server_url, cf_secret_hash)` - same isolation
   rules as cloud tokens. The pool keys them separately so cloud and
   on-prem clients never collide, and two clients hitting the same on-prem
   URL with different CF service tokens get separate pool entries.
@@ -443,7 +460,7 @@ regardless of env defaults — ESET Connect is a public SaaS.
 
 The `prod` docker-compose profile launches Caddy in front of the MCP
 server. Caddy fetches a Let's Encrypt cert on first start (HTTP-01
-challenge — ports 80 / 443 must be reachable from the public internet)
+challenge - ports 80 / 443 must be reachable from the public internet)
 and proxies HTTPS to the internal MCP container.
 
 ```bash
@@ -460,7 +477,7 @@ You get:
 
 - HTTPS on 443 with auto-renewing Let's Encrypt cert.
 - HTTP-01 challenge on 80.
-- MCP container bound only to the docker bridge network — no published port.
+- MCP container bound only to the docker bridge network - no published port.
 - gzip / zstd compression, JSON access logs on stdout.
 
 ---
@@ -482,18 +499,18 @@ Each composite degrades gracefully when a sub-call returns 403/404
 
 ### Resources
 
-- `eset://config/mode` — `RO` or `RW`.
-- `eset://config/region` — current region (per-request in basic-auth mode).
-- `eset://config/deployment` — `cloud` or `onprem (<server-url>)` for this request.
-- `eset://config/tools-catalog` — JSON catalog of all 106 tools (name,
+- `eset://config/mode` - `RO` or `RW`.
+- `eset://config/region` - current region (per-request in basic-auth mode).
+- `eset://config/deployment` - `cloud` or `onprem (<server-url>)` for this request.
+- `eset://config/tools-catalog` - JSON catalog of all 106 tools (name,
   mode, method, path, service, description).
-- `eset://docs/rate-limits` — quick reminder about the 10 req/s ceiling.
+- `eset://docs/rate-limits` - quick reminder about the 10 req/s ceiling.
 
 ### Prompts
 
-- `audit_inactive_devices(days=30)` — offboarding candidates.
-- `vulnerability_report` — per-device CVE report.
-- `incident_triage` — open incidents + related detections.
+- `audit_inactive_devices(days=30)` - offboarding candidates.
+- `vulnerability_report` - per-device CVE report.
+- `incident_triage` - open incidents + related detections.
 
 ---
 
@@ -501,7 +518,7 @@ Each composite degrades gracefully when a sub-call returns 403/404
 
 ```
 eset_mcp/
-├── __main__.py         # entrypoint — stdio or HTTP, wires resolver + pool
+├── __main__.py         # entrypoint - stdio or HTTP, wires resolver + pool
 ├── server.py           # MCP server (tools / resources / prompts)
 ├── credentials.py      # Credentials + EnvResolver / BasicAuthResolver + ContextVar
 ├── middleware.py       # ASGI Basic-auth middleware (basic mode only)
@@ -528,7 +545,7 @@ pytest -m "not rw"      # RO only (default in CI)
 pytest -m rw            # RW (requires an account with RW permissions)
 ```
 
-Integration tests hit a real ESET tenant — credentials supplied via the
+Integration tests hit a real ESET tenant - credentials supplied via the
 same `.env`. CI workflow:
 [`.github/workflows/integration.yml`](.github/workflows/integration.yml)
 runs on PR, on push to `main`, and once a day at 03:17 UTC. The cron
