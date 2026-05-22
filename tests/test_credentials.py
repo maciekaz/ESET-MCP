@@ -82,6 +82,9 @@ def test_env_resolver_always_returns_same_creds() -> None:
         deployment = "cloud"
         onprem_server_url = ""
         onprem_verify_ssl = True
+        # CF Access fields added later — cloud-only setups keep them empty.
+        onprem_cf_access_client_id = ""
+        onprem_cf_access_client_secret = ""
 
     r = EnvCredentialResolver(FakeSettings())  # type: ignore[arg-type]
     creds = r.resolve()
@@ -99,6 +102,8 @@ def _fake_settings_for_basic_resolver(default_region: str = "eu"):
         deployment = "cloud"
         onprem_server_url = ""
         onprem_verify_ssl = True
+        onprem_cf_access_client_id = ""
+        onprem_cf_access_client_secret = ""
     return FakeSettings()
 
 

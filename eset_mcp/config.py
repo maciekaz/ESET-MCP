@@ -49,6 +49,17 @@ class Settings:
     # Default keeps TLS verification on; operators of intranet deployments
     # opt out with ``ESET_ONPREM_VERIFY_SSL=false``.
     onprem_verify_ssl: bool
+    # Optional Cloudflare Access Service Token, used when the on-prem PROTECT
+    # console sits behind Cloudflare Access (zero-trust ingress). When both
+    # values are set, the HTTP client adds ``CF-Access-Client-Id`` /
+    # ``CF-Access-Client-Secret`` headers to every request — both the
+    # ``POST /GetTokens`` auth call and every subsequent API call. In
+    # basic-auth mode clients can override per-request with
+    # ``X-ESET-CF-Access-Client-Id`` / ``X-ESET-CF-Access-Client-Secret``.
+    # Cloud credentials always ignore these (ESET Connect is a public SaaS
+    # and is not fronted by anyone's Cloudflare Access).
+    onprem_cf_access_client_id: str
+    onprem_cf_access_client_secret: str
 
     @property
     def has_env_credentials(self) -> bool:
@@ -89,6 +100,16 @@ class Settings:
         deployment = _parse_deployment(os.getenv("ESET_DEPLOYMENT", "cloud"))
         onprem_server_url_raw = os.getenv("ESET_ONPREM_SERVER_URL", "").strip()
         onprem_server_url = _normalize_server_url(onprem_server_url_raw) if onprem_server_url_raw else ""
+        # Cloudflare Access Service Token (optional). Both values must be set
+        # together — half a token pair is useless and almost always a typo.
+        cf_id = os.getenv("ESET_ONPREM_CF_ACCESS_CLIENT_ID", "").strip()
+        cf_secret = os.getenv("ESET_ONPREM_CF_ACCESS_CLIENT_SECRET", "").strip()
+        if bool(cf_id) != bool(cf_secret):
+            raise RuntimeError(
+                "ESET_ONPREM_CF_ACCESS_CLIENT_ID and "
+                "ESET_ONPREM_CF_ACCESS_CLIENT_SECRET must be set together "
+                "(both or neither)."
+            )
         # When the default deployment is on-prem and we're in env mode the
         # server URL is mandatory — otherwise every request fails at dispatch.
         # In basic-auth mode it's allowed to be empty: requests then MUST
@@ -119,6 +140,8 @@ class Settings:
                 os.getenv("ESET_ONPREM_VERIFY_SSL", "true"),
                 "ESET_ONPREM_VERIFY_SSL",
             ),
+            onprem_cf_access_client_id=cf_id,
+            onprem_cf_access_client_secret=cf_secret,
         )
 
 

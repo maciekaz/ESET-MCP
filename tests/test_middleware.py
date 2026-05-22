@@ -26,6 +26,8 @@ def _fake_settings(default_region: str = "eu"):
         deployment = "cloud"
         onprem_server_url = ""
         onprem_verify_ssl = True
+        onprem_cf_access_client_id = ""
+        onprem_cf_access_client_secret = ""
     return FakeSettings()
 
 

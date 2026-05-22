@@ -72,7 +72,28 @@ class EsetHttpClient:
                 "set ESET_ONPREM_VERIFY_SSL=true once the console cert is trusted.",
                 credentials.server_url,
             )
-        self._http = httpx.AsyncClient(timeout=120, follow_redirects=False, verify=verify)
+        # Cloudflare Access Service Token (on-prem only). When set, every
+        # request — including the POST /GetTokens auth call — carries the
+        # CF-Access-Client-Id / CF-Access-Client-Secret headers so the
+        # Cloudflare Access edge lets the request through to the origin.
+        default_headers: dict[str, str] = {}
+        if (
+            credentials.deployment == "onprem"
+            and credentials.cf_access_client_id
+            and credentials.cf_access_client_secret
+        ):
+            default_headers["CF-Access-Client-Id"] = credentials.cf_access_client_id
+            default_headers["CF-Access-Client-Secret"] = credentials.cf_access_client_secret
+            _LOG.info(
+                "Cloudflare Access Service Token attached for on-prem server %s",
+                credentials.server_url,
+            )
+        self._http = httpx.AsyncClient(
+            timeout=120,
+            follow_redirects=False,
+            verify=verify,
+            headers=default_headers or None,
+        )
         self._token_mgr: TokenManagerProto = make_token_manager(credentials, self._http)
 
     @property

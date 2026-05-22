@@ -61,6 +61,13 @@ class BasicAuthCredentialsMiddleware(BaseHTTPMiddleware):
         auth_header = request.headers.get("authorization", "")
         region_header = request.headers.get("x-eset-region")
         server_url_header = request.headers.get("x-eset-server-url")
+        # Cloudflare Access Service Token (optional). Per-request override of
+        # the env defaults. Both values must be sent together; mixing one
+        # header with the env default is an obvious foot-gun, so we treat
+        # half-pair input as an explicit "use env" (a missing pair is
+        # validated at .env load time).
+        cf_id_header = request.headers.get("x-eset-cf-access-client-id")
+        cf_secret_header = request.headers.get("x-eset-cf-access-client-secret")
 
         try:
             user, password = parse_basic_auth_header(auth_header)
@@ -81,6 +88,26 @@ class BasicAuthCredentialsMiddleware(BaseHTTPMiddleware):
         except CredentialResolverError as e:
             return JSONResponse(status_code=400, content={"error": str(e)})
 
+        # CF Service Token: a complete pair in the headers wins; otherwise
+        # fall back to the env defaults. A half-pair in the headers is a
+        # 400 (the operator clearly meant to override but typoed).
+        if cf_id_header or cf_secret_header:
+            if not (cf_id_header and cf_secret_header):
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "error": (
+                            "X-ESET-CF-Access-Client-Id and "
+                            "X-ESET-CF-Access-Client-Secret must be sent together."
+                        )
+                    },
+                )
+            cf_id = cf_id_header.strip()
+            cf_secret = cf_secret_header.strip()
+        else:
+            cf_id = self._settings.onprem_cf_access_client_id
+            cf_secret = self._settings.onprem_cf_access_client_secret
+
         if override_url:
             # Per-request on-prem override.
             creds = Credentials(
@@ -90,6 +117,8 @@ class BasicAuthCredentialsMiddleware(BaseHTTPMiddleware):
                 deployment="onprem",
                 server_url=override_url,
                 verify_ssl=self._settings.onprem_verify_ssl,
+                cf_access_client_id=cf_id,
+                cf_access_client_secret=cf_secret,
             )
         elif self._settings.deployment == "onprem":
             # Env default is on-prem and the client didn't override.
@@ -111,9 +140,13 @@ class BasicAuthCredentialsMiddleware(BaseHTTPMiddleware):
                 deployment="onprem",
                 server_url=self._settings.onprem_server_url,
                 verify_ssl=self._settings.onprem_verify_ssl,
+                cf_access_client_id=cf_id,
+                cf_access_client_secret=cf_secret,
             )
         else:
             # Cloud path (env default + no per-request on-prem override).
+            # CF tokens are intentionally NOT propagated to cloud credentials —
+            # ESET Connect is a public SaaS, never behind anyone's CF Access.
             creds = Credentials(
                 user=user,
                 password=password,

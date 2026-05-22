@@ -155,6 +155,26 @@ def test_cache_key_password_hash_changes_when_password_rotates() -> None:
     assert a.cache_key() != b.cache_key()
 
 
+def test_cache_key_cf_token_rotation_creates_new_pool_entry() -> None:
+    """Different CF Access secret for the same on-prem URL → distinct pool entry.
+
+    Important: the httpx default headers carrying the CF tokens are baked in
+    at construction time, so swapping the secret on a shared client would
+    race. The cache key must reflect the secret so the pool hands out a
+    fresh client when it changes.
+    """
+    base = dict(user="u", password="p", region="eu",
+                deployment="onprem", server_url="https://protect.local:9443")
+    with_a = Credentials(**base, cf_access_client_id="id", cf_access_client_secret="A")
+    with_b = Credentials(**base, cf_access_client_id="id", cf_access_client_secret="B")
+    no_cf = Credentials(**base)
+    keys = {with_a.cache_key(), with_b.cache_key(), no_cf.cache_key()}
+    assert len(keys) == 3, "expected three distinct pool keys (A, B, no-CF)"
+    # CF id alone (without secret) is never used — only secret hash distinguishes.
+    assert with_a.cache_key()[4] != ""
+    assert no_cf.cache_key()[4] == ""
+
+
 # ─── Header normalisation (middleware helpers) ────────────────────────────────
 
 
@@ -507,3 +527,230 @@ def test_rename_device_has_onprem_override_loaded_from_json() -> None:
     rename = by_name["device_devices__rename_device"]
     assert rename.path == "/v1/devices/{deviceUuid}:rename"
     assert rename.onprem_path == "/v1/devices/{deviceUuid}:renameDevice"
+
+
+# ─── Cloudflare Access Service Token ──────────────────────────────────────────
+
+
+def test_settings_cf_access_requires_both_id_and_secret(monkeypatch) -> None:
+    """Half-pair (only ID, only SECRET) is a 100% chance of operator typo."""
+    _set_env(monkeypatch, ESET_ONPREM_CF_ACCESS_CLIENT_ID="just-the-id")
+    with pytest.raises(RuntimeError, match="must be set together"):
+        Settings.from_env(env_file=None)
+
+
+def test_settings_cf_access_both_set_ok(monkeypatch) -> None:
+    _set_env(
+        monkeypatch,
+        ESET_DEPLOYMENT="onprem",
+        ESET_ONPREM_SERVER_URL="https://protect.local:9443",
+        ESET_ONPREM_CF_ACCESS_CLIENT_ID="abc.access",
+        ESET_ONPREM_CF_ACCESS_CLIENT_SECRET="s3cr3t",
+    )
+    s = Settings.from_env(env_file=None)
+    assert s.onprem_cf_access_client_id == "abc.access"
+    assert s.onprem_cf_access_client_secret == "s3cr3t"
+
+
+def test_http_client_onprem_attaches_cf_headers_to_httpx_defaults() -> None:
+    """When CF tokens are present, the httpx client default headers carry
+    CF-Access-Client-Id / CF-Access-Client-Secret on every outbound call —
+    including the /GetTokens auth call (same underlying httpx client)."""
+    creds = Credentials(
+        user="u", password="p", region="eu",
+        deployment="onprem", server_url="https://protect.local:9443",
+        cf_access_client_id="abc.access", cf_access_client_secret="s3cr3t",
+    )
+    client = EsetHttpClient(creds)
+    try:
+        assert client._http.headers["cf-access-client-id"] == "abc.access"
+        assert client._http.headers["cf-access-client-secret"] == "s3cr3t"
+    finally:
+        del client
+
+
+def test_http_client_cloud_does_not_attach_cf_headers() -> None:
+    """Cloud creds must NEVER carry CF Access headers — ESET Connect is a
+    public SaaS and is not behind anyone's Cloudflare Access."""
+    creds = Credentials(
+        user="u", password="p", region="eu",
+        cf_access_client_id="abc.access", cf_access_client_secret="s3cr3t",
+    )
+    client = EsetHttpClient(creds)
+    try:
+        assert "cf-access-client-id" not in client._http.headers
+        assert "cf-access-client-secret" not in client._http.headers
+    finally:
+        del client
+
+
+@respx.mock
+async def test_onprem_get_tokens_call_carries_cf_headers() -> None:
+    """End-to-end wiring check: /GetTokens (auth handshake) must include the
+    CF Access headers, otherwise Cloudflare blocks it at the edge."""
+    creds = Credentials(
+        user="u", password="p", region="eu",
+        deployment="onprem", server_url="https://protect.local:9443",
+        cf_access_client_id="abc.access", cf_access_client_secret="s3cr3t",
+    )
+    route = respx.post("https://protect.local:9443/GetTokens").mock(
+        return_value=httpx.Response(200, json={"accessToken": "T", "expiresIn": 3600})
+    )
+    client = EsetHttpClient(creds)
+    try:
+        token = await client._token_mgr.get_access_token()
+        assert token == "T"
+        sent = route.calls.last.request
+        assert sent.headers.get("CF-Access-Client-Id") == "abc.access"
+        assert sent.headers.get("CF-Access-Client-Secret") == "s3cr3t"
+    finally:
+        await client.aclose()
+
+
+async def test_middleware_cf_headers_passthrough(monkeypatch) -> None:
+    """X-ESET-CF-Access-* headers stash on the Credentials in the ContextVar."""
+    _set_env(
+        monkeypatch,
+        ESET_AUTH_MODE="basic",
+        ESET_MCP_TRANSPORT="http",
+        ESET_DEPLOYMENT="onprem",
+        ESET_ONPREM_SERVER_URL="https://protect.local:9443",
+    )
+    s = Settings.from_env(env_file=None)
+
+    # Tiny app exposing what the middleware stashed.
+    from starlette.applications import Starlette
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+
+    from eset_mcp.middleware import BasicAuthCredentialsMiddleware
+
+    async def _echo(_request):
+        c = request_credentials.get()
+        return JSONResponse({"id": c.cf_access_client_id, "secret": c.cf_access_client_secret})
+
+    app = Starlette(routes=[Route("/echo", _echo)])
+    app.add_middleware(BasicAuthCredentialsMiddleware, settings=s)
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
+        r = await client.get(
+            "/echo",
+            headers={
+                "authorization": _basic_header(),
+                "x-eset-cf-access-client-id": "per-req.access",
+                "x-eset-cf-access-client-secret": "per-req-secret",
+            },
+        )
+    body = r.json()
+    assert body["id"] == "per-req.access"
+    assert body["secret"] == "per-req-secret"
+
+
+async def test_middleware_cf_half_pair_returns_400(monkeypatch) -> None:
+    """Sending only one of the two CF headers is a 400 (almost-certain typo)."""
+    _set_env(
+        monkeypatch,
+        ESET_AUTH_MODE="basic",
+        ESET_MCP_TRANSPORT="http",
+        ESET_DEPLOYMENT="onprem",
+        ESET_ONPREM_SERVER_URL="https://protect.local:9443",
+    )
+    s = Settings.from_env(env_file=None)
+
+    from starlette.applications import Starlette
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+
+    from eset_mcp.middleware import BasicAuthCredentialsMiddleware
+
+    async def _echo(_request):
+        return JSONResponse({"ok": True})
+
+    app = Starlette(routes=[Route("/echo", _echo)])
+    app.add_middleware(BasicAuthCredentialsMiddleware, settings=s)
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
+        r = await client.get(
+            "/echo",
+            headers={
+                "authorization": _basic_header(),
+                "x-eset-cf-access-client-id": "only-id",
+                # No secret header.
+            },
+        )
+    assert r.status_code == 400
+
+
+async def test_middleware_cf_env_fallback_when_no_headers(monkeypatch) -> None:
+    """When client sends no CF headers, env defaults are used."""
+    _set_env(
+        monkeypatch,
+        ESET_AUTH_MODE="basic",
+        ESET_MCP_TRANSPORT="http",
+        ESET_DEPLOYMENT="onprem",
+        ESET_ONPREM_SERVER_URL="https://protect.local:9443",
+        ESET_ONPREM_CF_ACCESS_CLIENT_ID="env-id.access",
+        ESET_ONPREM_CF_ACCESS_CLIENT_SECRET="env-secret",
+    )
+    s = Settings.from_env(env_file=None)
+
+    from starlette.applications import Starlette
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+
+    from eset_mcp.middleware import BasicAuthCredentialsMiddleware
+
+    async def _echo(_request):
+        c = request_credentials.get()
+        return JSONResponse({"id": c.cf_access_client_id, "secret": c.cf_access_client_secret})
+
+    app = Starlette(routes=[Route("/echo", _echo)])
+    app.add_middleware(BasicAuthCredentialsMiddleware, settings=s)
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
+        r = await client.get("/echo", headers={"authorization": _basic_header()})
+    body = r.json()
+    assert body["id"] == "env-id.access"
+    assert body["secret"] == "env-secret"
+
+
+async def test_middleware_cloud_request_never_propagates_cf_headers(monkeypatch) -> None:
+    """Even if env defaults set CF tokens, cloud requests must not carry them.
+
+    Cloud creds always have empty CF fields because ESET Connect doesn't sit
+    behind anyone's CF Access — propagating the headers would leak the
+    token to the public ESET API for no benefit.
+    """
+    _set_env(
+        monkeypatch,
+        ESET_AUTH_MODE="basic",
+        ESET_MCP_TRANSPORT="http",
+        ESET_DEPLOYMENT="cloud",
+        ESET_ONPREM_CF_ACCESS_CLIENT_ID="env-id.access",
+        ESET_ONPREM_CF_ACCESS_CLIENT_SECRET="env-secret",
+    )
+    s = Settings.from_env(env_file=None)
+
+    from starlette.applications import Starlette
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+
+    from eset_mcp.middleware import BasicAuthCredentialsMiddleware
+
+    async def _echo(_request):
+        c = request_credentials.get()
+        return JSONResponse({
+            "deployment": c.deployment,
+            "id": c.cf_access_client_id,
+            "secret": c.cf_access_client_secret,
+        })
+
+    app = Starlette(routes=[Route("/echo", _echo)])
+    app.add_middleware(BasicAuthCredentialsMiddleware, settings=s)
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
+        r = await client.get("/echo", headers={"authorization": _basic_header()})
+    body = r.json()
+    assert body["deployment"] == "cloud"
+    assert body["id"] == ""
+    assert body["secret"] == ""

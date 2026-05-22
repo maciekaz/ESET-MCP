@@ -61,9 +61,9 @@ Claude Code, or a custom agent — through tools, resources, and prompts.
   route the request to an on-prem PROTECT console). One server fronts many
   ESET accounts and can mix cloud + on-prem in the same process.
 - Per-tenant OAuth tokens, pooled and isolated by
-  `(user, password_hash, deployment, region-or-server-url)`. Rotating a
-  password mints a fresh token rather than reusing a stale one; cloud and
-  on-prem clients for the same user never share a pool entry.
+  `(user, password_hash, deployment, region-or-server-url, cf_secret_hash)`.
+  Rotating a password or Cloudflare Access service token mints a fresh
+  client; cloud and on-prem clients for the same user never share a pool entry.
 
 ### Transports
 
@@ -259,6 +259,8 @@ All settings live in `.env`. Required fields are marked in
 | `ESET_DEPLOYMENT`              | `cloud`       | `cloud` (ESET Connect) or `onprem` (customer-hosted PROTECT)  |
 | `ESET_ONPREM_SERVER_URL`       | —             | `https://host[:port]` of the on-prem console (req. in env+onprem) |
 | `ESET_ONPREM_VERIFY_SSL`       | `true`        | Set `false` for on-prem consoles with self-signed certs       |
+| `ESET_ONPREM_CF_ACCESS_CLIENT_ID` | —          | Cloudflare Access Service Token client-id (on-prem behind CF) |
+| `ESET_ONPREM_CF_ACCESS_CLIENT_SECRET` | —      | Cloudflare Access Service Token client-secret (paired with the above) |
 | `ESET_PUBLIC_DOMAIN`           | —             | Domain Caddy issues a TLS cert for (`prod` profile only)      |
 | `ESET_ACME_EMAIL`              | —             | Email Let's Encrypt uses for renewals (`prod` profile only)   |
 
@@ -283,6 +285,8 @@ Every HTTP request must carry:
 | `Authorization`     | yes      | `Basic <base64(user:password)>`                                        |
 | `X-ESET-Region`     | no       | Override default region (`eu`/`de`/`us`/`ca`/`jpn`)                    |
 | `X-ESET-Server-URL` | no       | Route this request to an on-prem PROTECT console (e.g. `https://protect.example.com:9443`) — see [On-prem support](#on-prem-eset-protect-support) |
+| `X-ESET-CF-Access-Client-Id` | no | Cloudflare Access Service Token client-id (on-prem behind CF Access) |
+| `X-ESET-CF-Access-Client-Secret` | no | Paired with the above — both must be sent together |
 
 Example Python client:
 
@@ -380,6 +384,42 @@ cloud credentials and on-prem paths for on-prem credentials.
   declared in [`eset_mcp/openapi/onprem-path-overrides.json`](eset_mcp/openapi/onprem-path-overrides.json)
   and applied automatically when the request targets on-prem.
 
+### Cloudflare Access in front of the on-prem console
+
+When the on-prem PROTECT console is exposed via a Cloudflare tunnel and
+gated by **Cloudflare Access**, MCP can authenticate as a
+[service token](https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/).
+The chain becomes **MCP → Cloudflare Access → ESET on-prem**.
+
+Two values per token pair, supplied either via `.env`:
+
+```bash
+ESET_ONPREM_CF_ACCESS_CLIENT_ID=abc1234567890.access
+ESET_ONPREM_CF_ACCESS_CLIENT_SECRET=<long-secret>
+```
+
+…or per-request in basic-auth mode (overrides the env defaults — handy
+when each tenant has its own tunnel and its own service token):
+
+```python
+headers = {
+    "Authorization": f"Basic {token}",
+    "X-ESET-Server-URL": "https://protect.client-a.local:9443",
+    "X-ESET-CF-Access-Client-Id": "abc1234567890.access",
+    "X-ESET-CF-Access-Client-Secret": "<long-secret>",
+}
+```
+
+MCP translates the `X-ESET-CF-*` input headers into the actual
+`CF-Access-Client-Id` / `CF-Access-Client-Secret` headers that Cloudflare
+Access expects, and attaches them to **every** outbound call — both the
+`POST /GetTokens` auth handshake and every subsequent ESET API request.
+
+The CF secret is treated like the password: never logged, only its SHA-256
+hash enters the client pool key. Rotating the secret mints a fresh client
++ fresh ESET token. Cloud requests **never** carry CF Access headers
+regardless of env defaults — ESET Connect is a public SaaS.
+
 ### Security notes for on-prem
 
 - `X-ESET-Server-URL` accepts only `https://` URLs with no path, query or
@@ -388,9 +428,14 @@ cloud credentials and on-prem paths for on-prem credentials.
   exposes the connection to MITM. The server logs a single WARNING per
   client construction when it's disabled. Use only on trusted intranets
   with self-signed certs you cannot replace.
-- On-prem tokens are held in memory per `(user, password_hash, server_url)`
-  — same isolation rules as cloud tokens. The pool keys them separately so
-  cloud and on-prem clients never collide.
+- On-prem tokens are held in memory per
+  `(user, password_hash, server_url, cf_secret_hash)` — same isolation
+  rules as cloud tokens. The pool keys them separately so cloud and
+  on-prem clients never collide, and two clients hitting the same on-prem
+  URL with different CF service tokens get separate pool entries.
+- Sending only one of the two `X-ESET-CF-*` headers returns HTTP 400
+  rather than silently falling back to the env default (almost certain
+  operator typo).
 
 ---
 

@@ -50,8 +50,14 @@ class Credentials:
     # On-prem only: whether httpx should verify the TLS cert. Always True for
     # cloud (the public ESET endpoints have valid certs).
     verify_ssl: bool = True
+    # On-prem only: optional Cloudflare Access Service Token used when the
+    # console sits behind Cloudflare Access. Both values are sent on every
+    # request (auth + API) as CF-Access-Client-Id / CF-Access-Client-Secret.
+    # Empty strings mean "no CF Access in front of the origin".
+    cf_access_client_id: str = ""
+    cf_access_client_secret: str = ""
 
-    def cache_key(self) -> tuple[str, str, str, str]:
+    def cache_key(self) -> tuple[str, str, str, str, str]:
         """Identity used by the client pool.
 
         Includes a *hash* of the password so that changing the password (e.g.
@@ -65,12 +71,24 @@ class Credentials:
         cloud and on-prem clients never collide in the pool, and the same
         on-prem console hit via two different URLs (e.g. IP vs hostname)
         gets two pool entries.
+
+        The fifth slot carries a hash of the Cloudflare Access secret (or
+        empty string when none is configured). Two requests against the
+        same on-prem URL with different CF tokens get separate pool entries
+        because the CF headers are baked into the httpx client's defaults
+        at construction time — swapping them per-request on a shared
+        instance would race.
         """
         import hashlib
         pw_hash = hashlib.sha256(self.password.encode("utf-8")).hexdigest()[:16]
         # The fourth slot is "region OR server_url" — unique per deployment.
         endpoint = self.server_url if self.deployment == "onprem" else self.region
-        return (self.user, pw_hash, self.deployment, endpoint)
+        cf_hash = ""
+        if self.cf_access_client_secret:
+            cf_hash = hashlib.sha256(
+                self.cf_access_client_secret.encode("utf-8")
+            ).hexdigest()[:16]
+        return (self.user, pw_hash, self.deployment, endpoint, cf_hash)
 
 
 class CredentialResolverError(Exception):
@@ -96,6 +114,8 @@ class EnvCredentialResolver:
             deployment=settings.deployment,
             server_url=settings.onprem_server_url,
             verify_ssl=settings.onprem_verify_ssl,
+            cf_access_client_id=settings.onprem_cf_access_client_id,
+            cf_access_client_secret=settings.onprem_cf_access_client_secret,
         )
 
     def resolve(self) -> Credentials:
