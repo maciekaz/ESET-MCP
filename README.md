@@ -278,36 +278,77 @@ Please open a private security advisory rather than a public issue:
 
 ## Quick start
 
+The fastest path is the published Docker image. No Python install, no
+venv, no source checkout - just `.env` + `docker run`. The image is
+multi-arch (amd64 + arm64), signed with cosign, ships with SBOM +
+build provenance, and is published to GHCR on every release.
+
 ```bash
-git clone https://github.com/maciekaz/ESET-MCP.git
-cd ESET-MCP
 cp .env.example .env          # fill in ESET_USER / ESET_PASSWORD / ESET_REGION
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-eset-mcp                       # stdio transport, ready for an MCP host
+docker run --rm -i --env-file .env ghcr.io/maciekaz/eset-mcp:1
 ```
 
-### Wire up to Claude Desktop / Claude Code
+Pin policy:
+
+- `:1` - latest 1.x.x (auto-updates within the major)
+- `:1.0` - latest 1.0.x (auto-updates within the minor)
+- `:1.0.1` - exact version (production)
+- `:latest` - most recent stable release
+- `:main` / `:sha-<short>` - edge builds from main (not for production)
+
+### Wire up to Claude Desktop / Claude Code (stdio)
 
 ```jsonc
 // claude_desktop_config.json
 {
   "mcpServers": {
     "eset": {
-      "command": "/absolute/path/to/.venv/bin/eset-mcp"
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "--env-file", "/absolute/path/to/.env",
+               "ghcr.io/maciekaz/eset-mcp:1"]
     }
   }
 }
 ```
 
-### Docker (HTTP transport)
+### HTTP transport (single-tenant or behind your own proxy)
+
+```bash
+docker run -d --name eset-mcp \
+  --env-file .env -p 8765:8765 \
+  -e ESET_MCP_TRANSPORT=http \
+  ghcr.io/maciekaz/eset-mcp:1
+# MCP endpoint: http://localhost:8765/mcp
+```
+
+### Verify the image (cosign keyless)
+
+```bash
+cosign verify \
+  --certificate-identity-regexp '^https://github.com/maciekaz/ESET-MCP/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  ghcr.io/maciekaz/eset-mcp:1
+```
+
+### From source (contributors / local hacking)
+
+```bash
+git clone https://github.com/maciekaz/ESET-MCP.git
+cd ESET-MCP
+cp .env.example .env
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+eset-mcp
+```
+
+### Docker Compose (dev with hot rebuild)
 
 ```bash
 docker compose up --build eset-mcp-http
 # MCP endpoint: http://localhost:8765/mcp
 ```
 
-One-off stdio inside a container:
+One-off stdio inside a built-from-source container:
 
 ```bash
 docker compose --profile stdio run --rm eset-mcp-stdio
