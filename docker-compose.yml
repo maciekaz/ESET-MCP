@@ -1,9 +1,10 @@
 services:
-  # ─── Development / single-host HTTP server ───────────────────────────────
+  # --- Dev / single-host HTTP server (uses the published GHCR image) ---
   # HTTP mode (Streamable HTTP, MCP spec 2025-11-25) on 0.0.0.0:8765/mcp.
-  # Default for local development. Use --profile prod for the Caddy stack.
+  # Default - pulls the public image so first 'up' is fast (no local build).
+  # Contributors hacking on source: see eset-mcp-http-dev below.
   eset-mcp-http:
-    build: .
+    image: ghcr.io/maciekaz/eset-mcp:1
     container_name: eset-mcp-http
     restart: unless-stopped
     env_file: .env
@@ -11,16 +12,14 @@ services:
       ESET_MCP_TRANSPORT: http
       ESET_MCP_HTTP_HOST: 0.0.0.0
       ESET_MCP_HTTP_PORT: "8765"
-    # Publishes the port for local dev. The prod profile uses a separate
-    # service (`eset-mcp-http-prod`) that does NOT publish; Caddy proxies it.
     ports:
       - "8765:8765"
     networks: [eset-mcp]
 
-  # ─── stdio one-shot (Claude Desktop / Claude Code locally) ───────────────
-  # Run on demand: `docker compose run --rm eset-mcp-stdio`
+  # --- stdio one-shot (Claude Desktop / Claude Code locally) ---
+  # `docker compose run --rm eset-mcp-stdio` - uses the GHCR image too.
   eset-mcp-stdio:
-    build: .
+    image: ghcr.io/maciekaz/eset-mcp:1
     profiles: ["stdio"]
     env_file: .env
     environment:
@@ -28,7 +27,25 @@ services:
     stdin_open: true
     tty: false
 
-  # ─── Production (prod profile): Caddy + auto-HTTPS in front of MCP ───────
+  # --- Contributor / source-built profile ---
+  # `docker compose --profile dev up --build eset-mcp-http-dev`
+  # Builds from the local Dockerfile instead of pulling the GHCR image.
+  # Use this when iterating on code; otherwise stick with eset-mcp-http.
+  eset-mcp-http-dev:
+    build: .
+    profiles: ["dev"]
+    container_name: eset-mcp-http-dev
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ESET_MCP_TRANSPORT: http
+      ESET_MCP_HTTP_HOST: 0.0.0.0
+      ESET_MCP_HTTP_PORT: "8765"
+    ports:
+      - "8765:8765"
+    networks: [eset-mcp]
+
+  # --- Production (prod profile): Caddy + auto-HTTPS in front of MCP ---
   # docker compose --profile prod up -d
   # Requires ESET_PUBLIC_DOMAIN and ESET_ACME_EMAIL in .env, plus the host
   # being reachable from the public internet on ports 80 and 443.
@@ -48,10 +65,10 @@ services:
     networks: [eset-mcp]
     depends_on: [eset-mcp-http-prod]
 
-  # Same image as eset-mcp-http but only bound to the internal docker network
-  # in prod (no published port) and joined to the same network as Caddy.
+  # Same image as eset-mcp-http but internal-only in prod (no published
+  # port) and joined to the same network as Caddy.
   eset-mcp-http-prod:
-    build: .
+    image: ghcr.io/maciekaz/eset-mcp:1
     profiles: ["prod"]
     container_name: eset-mcp-http-prod
     restart: unless-stopped
@@ -60,7 +77,7 @@ services:
       ESET_MCP_TRANSPORT: http
       ESET_MCP_HTTP_HOST: 0.0.0.0
       ESET_MCP_HTTP_PORT: "8765"
-      # Strongly recommended in production — basic auth is meaningless without
+      # Strongly recommended in production - basic auth is meaningless without
       # TLS, which Caddy supplies in front of us.
       ESET_AUTH_MODE: basic
     expose:

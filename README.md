@@ -341,17 +341,28 @@ pip install -e ".[dev]"
 eset-mcp
 ```
 
-### Docker Compose (dev with hot rebuild)
+### Docker Compose (uses the published image)
 
 ```bash
-docker compose up --build eset-mcp-http
+docker compose up -d eset-mcp-http
 # MCP endpoint: http://localhost:8765/mcp
 ```
 
-One-off stdio inside a built-from-source container:
+By default the compose file pulls `ghcr.io/maciekaz/eset-mcp:1` - no
+local build, fast first start. Pin a specific version by editing the
+`image:` line in `docker-compose.yml`.
+
+One-off stdio via compose:
 
 ```bash
 docker compose --profile stdio run --rm eset-mcp-stdio
+```
+
+Hacking on the source? Use the dev profile to build from your local
+checkout instead of pulling:
+
+```bash
+docker compose --profile dev up --build eset-mcp-http-dev
 ```
 
 ---
