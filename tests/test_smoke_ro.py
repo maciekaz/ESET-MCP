@@ -1,4 +1,4 @@
-"""RO smoke tests — hit the real ESET API and verify that GET tools
+"""RO smoke tests - hit the real ESET API and verify that GET tools
 are callable and return data matching the documentation.
 """
 from __future__ import annotations
@@ -11,7 +11,7 @@ pytestmark = pytest.mark.ro
 
 
 async def test_catalog_size_in_ro_mode(mcp_session) -> None:
-    """In RO mode the catalog exposes ONLY read-only tools — RW tools are hidden entirely.
+    """In RO mode the catalog exposes ONLY read-only tools - RW tools are hidden entirely.
 
     Counts: 47 RO from OpenAPI + 4 hand-written composites (all RO) = 51 tools.
     """
@@ -78,7 +78,7 @@ async def test_resources_readable(mcp_session) -> None:
 
 
 async def test_list_device_groups(mcp_session) -> None:
-    """RO endpoint /v1/device_groups — must return a list under `deviceGroups`."""
+    """RO endpoint /v1/device_groups - must return a list under `deviceGroups`."""
     async with mcp_session() as client:
         result = await client.call_tool(
             "device_device_groups__list_groups", arguments={"pageSize": 5}
@@ -127,9 +127,7 @@ async def test_list_users(mcp_session) -> None:
     assert "users" in payload
 
 
-# ─── Response shaping: live verification ───────────────────────────────────
-
-
+# --- Response shaping: live verification ---
 async def test_fields_projection_returns_skinny_rows(mcp_session) -> None:
     """`fields=['uuid','displayName']` must drop every other key per device."""
     async with mcp_session() as client:
@@ -141,7 +139,7 @@ async def test_fields_projection_returns_skinny_rows(mcp_session) -> None:
     assert payload.get("devices")
     for device in payload["devices"]:
         # Every projected device must have *only* the requested keys.
-        # (Some endpoints return items without a displayName — that's fine,
+        # (Some endpoints return items without a displayName - that's fine,
         # the key may be missing, but no other keys may appear.)
         assert set(device.keys()) <= {"uuid", "displayName"}, (
             f"projection leaked extra keys: {sorted(set(device.keys()) - {'uuid','displayName'})}"
@@ -169,13 +167,13 @@ async def test_response_size_cap_kicks_in_on_large_payload(mcp_session) -> None:
     payload = json.loads(text)
     if "_capped" not in payload:
         # If the tenant has so few devices that even pageSize=1000 fits under
-        # the cap, the test is a no-op — skip rather than fail.
+        # the cap, the test is a no-op - skip rather than fail.
         pytest.skip("Tenant returned a smaller-than-cap list; nothing to truncate.")
     meta = payload["_capped"]
     assert meta["truncated"] is True
     assert meta["itemsKey"] == "devices"
     assert meta["originalItems"] > meta["returnedItems"] > 0
-    # nextPageToken (if the endpoint returned one) must survive — otherwise
+    # nextPageToken (if the endpoint returned one) must survive - otherwise
     # the agent would have no way to fetch the items we trimmed.
     if payload.get("nextPageToken"):
         assert payload["nextPageToken"], "nextPageToken must be preserved through capping"

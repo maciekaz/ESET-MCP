@@ -32,7 +32,7 @@ def _fake_settings(default_region: str = "eu"):
 
 
 def _app(default_region="eu"):
-    async def probe(request):
+    async def probe(_request):
         creds = request_credentials.get()
         if creds is None:
             return JSONResponse({"creds": None})

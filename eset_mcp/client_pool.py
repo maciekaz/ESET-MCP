@@ -9,7 +9,7 @@ The pool also bounds memory: an LRU eviction with a small cap keeps the server
 from accumulating clients forever in a busy multi-tenant deployment.
 
 Single-tenant (env mode) just hits the pool with the same key over and over,
-so it's effectively a no-op — same client every time.
+so it's effectively a no-op - same client every time.
 """
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ class ClientPool:
         client = await pool.get(credentials)
         await client.request(...)
 
-    The caller does NOT close the returned client — the pool owns its lifecycle.
+    The caller does NOT close the returned client - the pool owns its lifecycle.
     On shutdown, call `await pool.close()` to drain every cached client.
     """
 
@@ -55,7 +55,7 @@ class ClientPool:
         self._settings = settings
         self._max = max_clients
         # Key is (user, password_hash, deployment, region_or_server_url,
-        # cf_secret_hash) — see Credentials.cache_key() for the rationale.
+        # cf_secret_hash) - see Credentials.cache_key() for the rationale.
         self._clients: OrderedDict[
             tuple[str, str, str, str, str], EsetHttpClient
         ] = OrderedDict()

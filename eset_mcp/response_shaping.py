@@ -1,14 +1,14 @@
-"""Response shaping — keep tool output usable inside an LLM context window.
+"""Response shaping - keep tool output usable inside an LLM context window.
 
 Two independent transformations applied after the ESET API responds and
 before the result is serialised to the MCP client:
 
-1. **Fields projection** (`apply_fields_projection`) — when the agent passes a
+1. **Fields projection** (`apply_fields_projection`) - when the agent passes a
    ``fields`` argument, every list-item is filtered down to the requested
    keys. This is **not** a native ESET API parameter; it is enforced server
    side on the JSON we already pulled. Cheap on bytes, agent decides per call.
 
-2. **Smart size cap** (`cap_response_size`) — if the serialised response
+2. **Smart size cap** (`cap_response_size`) - if the serialised response
    exceeds the byte budget, drop *items* from the longest list value while
    keeping every top-level field (especially ``nextPageToken`` /
    ``totalSize``) intact, then attach a ``_capped`` metadata block telling
@@ -27,7 +27,7 @@ from typing import Any
 # never overshoot the budget when we attach it.
 _CAPPED_METADATA_OVERHEAD = 512
 
-# Top-level keys we always keep, even when truncating the items list — they
+# Top-level keys we always keep, even when truncating the items list - they
 # carry pagination + totals so the agent can continue.
 _PAGINATION_KEYS = frozenset({"nextPageToken", "pageToken", "totalSize", "totalCount"})
 
@@ -37,7 +37,7 @@ def apply_fields_projection(result: Any, fields: list[str] | None) -> Any:
 
     Top-level keys (e.g. ``nextPageToken``) are preserved. If ``fields`` is
     falsy, the input is returned unchanged. Single-object responses are
-    untouched — projection only meaningfully reduces tokens on lists.
+    untouched - projection only meaningfully reduces tokens on lists.
 
     >>> apply_fields_projection({"devices": [{"uuid": "1", "displayName": "a", "tags": []}]}, ["uuid"])
     {'devices': [{'uuid': '1'}]}
@@ -84,8 +84,7 @@ def cap_response_size(result: Any, max_bytes: int) -> tuple[Any, bool]:
     return _hard_truncate(result, max_bytes, serialized_len), True
 
 
-# ─── helpers ──────────────────────────────────────────────────────────────────
-
+# --- helpers ---
 def _byte_len(obj: Any) -> int:
     return len(json.dumps(obj, ensure_ascii=False).encode("utf-8"))
 

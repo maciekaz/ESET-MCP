@@ -1,15 +1,15 @@
 """High-level, hand-written MCP tools that compose multiple ESET API calls.
 
-These do NOT come from the OpenAPI generator (`tools_loader.py`) — they sit on
+These do NOT come from the OpenAPI generator (`tools_loader.py`) - they sit on
 top, calling several endpoints under the hood to spare the agent from gluing
 3-5 raw tool calls together. They also degrade gracefully when individual
 sub-calls return 403/404 (e.g. a tenant without vulnerability-management access).
 
 Currently:
-- `eset_search`         — cross-cutting substring search over devices/users/policies/groups
-- `device_full_profile` — device + parent group + recent detections + vulnerabilities + OS vulns
-- `incident_full_context` — incident + comments + related detections + affected devices
-- `latest_detections`   — newest detections in a time window (v2→v1 fallback, paginated, sorted)
+- `eset_search`         - cross-cutting substring search over devices/users/policies/groups
+- `device_full_profile` - device + parent group + recent detections + vulnerabilities + OS vulns
+- `incident_full_context` - incident + comments + related detections + affected devices
+- `latest_detections`   - newest detections in a time window (v2→v1 fallback, paginated, sorted)
 
 Each composite is registered in `server.py` alongside the auto-generated tools.
 """
@@ -121,7 +121,7 @@ async def eset_search(
     needle = query.strip().lower()
     selected = tuple(dict.fromkeys(kinds or ALL_KINDS))  # de-dup, preserve order
 
-    # Hit each kind in parallel — the per-kind helper handles its own errors.
+    # Hit each kind in parallel - the per-kind helper handles its own errors.
     results = await asyncio.gather(
         *(_search_one_kind(http, k, needle, limit_per_kind) for k in selected),
         return_exceptions=False,  # we already catch inside _search_one_kind
@@ -154,7 +154,7 @@ async def _search_one_kind(
     """Paginate one kind, filter locally, return (matches, scanned_count, error_or_None).
 
     Falls back to an alternative endpoint (when the config provides one) if the
-    primary errors out — used for `group`, which is exposed by two different
+    primary errors out - used for `group`, which is exposed by two different
     services depending on whether the tenant uses asset-management.
     """
     cfg = _KIND_CONFIG[kind]
@@ -165,7 +165,7 @@ async def _search_one_kind(
         )
         if not fb_err:
             return fb_matches, fb_scanned, None
-        # Both failed — surface the primary error (most informative).
+        # Both failed - surface the primary error (most informative).
     return matches, scanned, err
 
 
@@ -211,9 +211,9 @@ def _scan_item(
     """Walk `item` through each `field_paths` entry; return (field, snippet) on first match.
 
     Path notation:
-      "displayName"           — plain key
-      "tags[]"                — list of strings
-      "identities[].userName" — list of dicts; check `userName` on each
+      "displayName"           - plain key
+      "tags[]"                - list of strings
+      "identities[].userName" - list of dicts; check `userName` on each
     """
     for path in field_paths:
         match = _scan_path(item, path, needle_lower)
@@ -260,10 +260,9 @@ def _walk(obj: Any, dotted: str) -> Any:
     return cur
 
 
-# ─── Composite #2: full device profile ────────────────────────────────────────
-
+# --- Composite #2: full device profile ---
 async def device_full_profile(http: EsetHttpClient, device_uuid: str) -> dict[str, Any]:
-    """One-shot snapshot of a device — main record + detections + vulnerabilities.
+    """One-shot snapshot of a device - main record + detections + vulnerabilities.
 
     Each sub-section degrades gracefully: if the tenant lacks permission for
     vulnerabilities or incident-management, those keys carry an error stub
@@ -276,7 +275,7 @@ async def device_full_profile(http: EsetHttpClient, device_uuid: str) -> dict[st
 
     detections_v2, detections_v1, dev_vulns, os_vulns, recent_scans = await asyncio.gather(
         _safe_get(http, "incident-management", "/v2/detections",
-                  query={"pageSize": 10}),  # v2 has no deviceUuid filter — best-effort
+                  query={"pageSize": 10}),  # v2 has no deviceUuid filter - best-effort
         _safe_get(http, "incident-management", "/v1/detections",
                   query={"pageSize": 10, "deviceUuid": device_uuid}),
         _safe_get(http, "vulnerability-management", "/v1/device-vulnerabilities",
@@ -297,13 +296,12 @@ async def device_full_profile(http: EsetHttpClient, device_uuid: str) -> dict[st
     }
 
 
-# ─── Composite #3: full incident context ──────────────────────────────────────
-
+# --- Composite #3: full incident context ---
 async def incident_full_context(http: EsetHttpClient, incident_uuid: str) -> dict[str, Any]:
     """Pull an incident with its comments, related detections, and affected devices.
 
     To stay within rate limits we cap the number of fan-out fetches (detections
-    + devices) at 10 each — anything beyond that surfaces as a UUID list.
+    + devices) at 10 each - anything beyond that surfaces as a UUID list.
     """
     try:
         incident_resp = await http.request(
@@ -334,8 +332,7 @@ async def incident_full_context(http: EsetHttpClient, incident_uuid: str) -> dic
     }
 
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
-
+# --- Helpers ---
 async def _safe_get(
     http: EsetHttpClient, service: str, path: str, *, query: dict[str, Any] | None = None
 ) -> Any:
@@ -356,10 +353,9 @@ async def _gather_by_uuid(
     return list(results)
 
 
-# ─── Composite #4: latest detections ──────────────────────────────────────────
-
+# --- Composite #4: latest detections ---
 # Don't blow the budget if the caller picks a huge window (e.g. 30d) on a
-# noisy tenant — cap pagination at this many pages of 1000 rows = 50k items.
+# noisy tenant - cap pagination at this many pages of 1000 rows = 50k items.
 _LATEST_DETECTIONS_PAGE_CAP = 50
 
 
@@ -373,13 +369,13 @@ async def latest_detections(
     """Return the newest detections in the last `hours`, sorted by occurTime desc.
 
     Why a composite: `/v1/detections` and `/v2/detections` neither accept an
-    `orderBy` parameter, nor return results in chronological order — pulling
+    `orderBy` parameter, nor return results in chronological order - pulling
     "the first page" gives you a slice that has nothing to do with recency.
     Without time-window filtering plus a local sort, agents will silently
     surface stale data (see the bug we hit while building this tool).
 
     Strategy:
-        1. Pick the right endpoint — try `/v2/detections` first (richer
+        1. Pick the right endpoint - try `/v2/detections` first (richer
            schema). If the tenant returns 501/403/etc., fall back to
            `/v1/detections` so the caller still gets something.
         2. Filter server-side with `startTime`/`endTime` so we don't drown

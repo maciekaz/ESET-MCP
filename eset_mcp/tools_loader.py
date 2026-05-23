@@ -2,13 +2,13 @@
 
 Reads every file under `eset_mcp/openapi/*.json` and, for each operation,
 builds a ToolDef with:
-- name           — `{service-prefix}_{operation_id}`, snake_case
-- description    — from OpenAPI summary/description
-- input_schema   — built from parameters + requestBody (with $refs resolved)
-- service        — OpenAPI spec basename (used to map to a domain)
+- name           - `{service-prefix}_{operation_id}`, snake_case
+- description    - from OpenAPI summary/description
+- input_schema   - built from parameters + requestBody (with $refs resolved)
+- service        - OpenAPI spec basename (used to map to a domain)
 - method, path
-- read_only      — True if HTTP method is GET, False otherwise
-- destructive    — True for DELETE/POST/PUT/PATCH (used for MCP annotations)
+- read_only      - True if HTTP method is GET, False otherwise
+- destructive    - True for DELETE/POST/PUT/PATCH (used for MCP annotations)
 """
 from __future__ import annotations
 
@@ -63,7 +63,7 @@ class ToolDef:
         # Treat POST/PUT/PATCH/DELETE as potentially destructive; only GET is pure RO.
         return not self.read_only
 
-    # Lists of path / query parameter names — needed at runtime when building
+    # Lists of path / query parameter names - needed at runtime when building
     # the URL and the query string.
     path_params: list[str] = field(default_factory=list)
     query_params: list[str] = field(default_factory=list)
@@ -108,7 +108,7 @@ _NON_SPEC_FILES: set[str] = {"onprem-path-overrides.json"}
 def _apply_onprem_overrides(tools: list[ToolDef]) -> None:
     """Decorate tools with their on-prem path override, if any.
 
-    Matches by the (service, method, path) triple — robust to renames of the
+    Matches by the (service, method, path) triple - robust to renames of the
     auto-generated tool name. Silently ignores override entries that no
     longer match any tool (e.g. after an OpenAPI refresh removed an op):
     the agent simply hits 404 on that endpoint as it would for any other
@@ -159,7 +159,7 @@ def _disambiguate_names(tools: list[ToolDef]) -> None:
             m = re.match(r"^/v(\d+)/", t.path)
             version = f"v{m.group(1)}" if m else t.method.lower()
             t.name = f"{t.name}_{version}"
-    # Sanity check — fall back to a path hash if a collision still remains.
+    # Sanity check - fall back to a path hash if a collision still remains.
     final_counts: dict[str, int] = {}
     for t in tools:
         final_counts[t.name] = final_counts.get(t.name, 0) + 1
@@ -217,9 +217,9 @@ def _build_description(method: str, path: str, summary: str, description: str) -
     extra = description if summary and description and description != summary else ""
     pieces = [head.strip(), f"({method.upper()} {path})"]
     if extra:
-        # Trim — the agent does not need the entire docstring in description.
+        # Trim - the agent does not need the entire docstring in description.
         pieces.append(extra.strip()[:400])
-    return " — ".join(p for p in pieces if p)
+    return " - ".join(p for p in pieces if p)
 
 
 def _build_input_schema(
@@ -234,7 +234,7 @@ def _build_input_schema(
     Path / query params become individual properties.
     Request body becomes a `body` property with the schema resolved.
     Read-only (GET) tools additionally expose a synthetic ``fields`` property
-    — a server-side projection (NOT a native ESET API parameter) that filters
+    - a server-side projection (NOT a native ESET API parameter) that filters
     every list-item in the response down to the requested keys, drastically
     reducing token usage when the agent only needs a few attributes.
     """
@@ -269,7 +269,7 @@ def _build_input_schema(
                 "each list-item in the response. Reduces token usage on "
                 "large list endpoints. Example: ['uuid','displayName']. "
                 "Top-level fields (e.g. nextPageToken) are always preserved. "
-                "Not forwarded to ESET — applied locally after fetch."
+                "Not forwarded to ESET - applied locally after fetch."
             ),
         }
 
@@ -288,7 +288,7 @@ def _resolve_refs(node: Any, spec: dict[str, Any], _seen: set[str] | None = None
         if "$ref" in node and isinstance(node["$ref"], str):
             ref = node["$ref"]
             if ref in _seen:
-                # Cycle — leave a stub instead of recursing forever.
+                # Cycle - leave a stub instead of recursing forever.
                 return {"description": f"(cyclic reference: {ref})"}
             target = _follow_ref(ref, spec)
             if target is None:

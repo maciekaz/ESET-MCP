@@ -54,7 +54,7 @@ def resolve_base_url(creds: Credentials, service: str) -> str:
     """Pick the right API origin for these credentials.
 
     - Cloud: per-service regional domain (e.g. ``eu.device-management.eset.systems``).
-    - On-prem: the single ``server_url`` of the PROTECT console — same URL
+    - On-prem: the single ``server_url`` of the PROTECT console - same URL
       for every service, since on-prem hosts everything from one origin.
     """
     if creds.deployment == "onprem":
@@ -74,7 +74,7 @@ def resolve_auth_url(creds: Credentials) -> str:
     - Cloud: ``{region}.business-account.iam.eset.systems/oauth/token``
       (OAuth2 password grant, snake_case response).
     - On-prem: ``{server_url}/GetTokens`` (bespoke JSON endpoint with a
-      camelCase response — see :class:`eset_mcp.auth.OnPremTokenManager`).
+      camelCase response - see :class:`eset_mcp.auth.OnPremTokenManager`).
     """
     if creds.deployment == "onprem":
         if not creds.server_url:

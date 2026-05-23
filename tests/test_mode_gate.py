@@ -3,7 +3,7 @@
   1. RW tools are HIDDEN from the catalog (not advertised by list_tools).
   2. A direct call to a hard-coded RW tool name (one the agent shouldn't even
      know about, but might from prior tool listings or hard-coded scripts) is
-     still rejected before any HTTP request goes out — defence in depth.
+     still rejected before any HTTP request goes out - defence in depth.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ pytestmark = pytest.mark.ro
 async def test_ro_hides_rw_tool_from_catalog(mcp_session) -> None:
     """Architectural decision (2026-05): RO catalog should not contain RW tools at all."""
     assert os.getenv("ESET_MODE", "RO").upper() == "RO", \
-        "This test only makes sense in RO mode — set ESET_MODE=RO in .env."
+        "This test only makes sense in RO mode - set ESET_MODE=RO in .env."
 
     async with mcp_session() as client:
         tools = await client.list_tools()

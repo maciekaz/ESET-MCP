@@ -1,6 +1,6 @@
 """Test "MCP vs docs": every OpenAPI operation MUST be backed by exactly one tool.
 
-This is the safety net required by the project directive — after large changes
+This is the safety net required by the project directive - after large changes
 it ensures nothing has vanished and nothing extra has appeared compared with
 the official ESET specification.
 """

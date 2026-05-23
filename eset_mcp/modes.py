@@ -1,4 +1,4 @@
-"""RO/RW gate — independent of the API account's permissions.
+"""RO/RW gate - independent of the API account's permissions.
 
 Pattern: every tool has a `read_only: bool` flag. When the server runs in RO mode,
 invoking a tool with `read_only=False` raises ModeForbiddenError *before* any

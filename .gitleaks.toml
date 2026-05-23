@@ -1,0 +1,31 @@
+# gitleaks configuration for ESET-MCP.
+#
+# Extends the default ruleset and adds project-specific allowlists for
+# verified false-positives. Re-run with:
+#
+#     gitleaks detect --source . --no-banner --redact
+#
+# Expected: 0 leaks.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "ESET-MCP false-positives"
+
+# The bundled OpenAPI spec from https://eu.esetconnect.eset.systems/swagger/
+# includes an `example` response for the OAuth token endpoint with the
+# textbook RFC 6749 §5.1 example values. These are NOT real tokens - they
+# appear in the public ESET documentation and the OAuth 2.0 RFC itself.
+regexes = [
+    # RFC 6749 §5.1 example access_token (also present in ESET's published spec).
+    '''2YotnFZFEjr1zCsicMWpAA''',
+    # ESET-spec example refresh_token (appears alongside the RFC example above).
+    '''qiMDgJGIpS2Yxr36FgVkHg''',
+]
+
+# Defensive: the OpenAPI spec file itself is bundled exactly as ESET
+# publishes it; nothing under openapi/ is hand-authored credential material.
+paths = [
+    '''eset_mcp/openapi/business-account\.json''',
+]

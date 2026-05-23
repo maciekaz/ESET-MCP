@@ -1,6 +1,6 @@
 """Unit tests for the response-shaping helpers.
 
-These run without any network access — they exercise pure functions.
+These run without any network access - they exercise pure functions.
 """
 from __future__ import annotations
 
@@ -8,9 +8,8 @@ import json
 
 from eset_mcp.response_shaping import apply_fields_projection, cap_response_size
 
-# ─── apply_fields_projection ──────────────────────────────────────────────────
 
-
+# --- apply_fields_projection ---
 def test_projection_basic() -> None:
     """Projection keeps only requested keys per list-item; top level intact."""
     payload = {
@@ -42,7 +41,7 @@ def test_projection_handles_non_dict_items() -> None:
     payload = {"weird": [{"uuid": "1", "drop": "me"}, "scalar", 42]}
     out = apply_fields_projection(payload, ["uuid"])
     # The current implementation filters non-dict items out of an all-dict
-    # projection — which is fine. We just assert no exception and the dict
+    # projection - which is fine. We just assert no exception and the dict
     # item is projected.
     assert {"uuid": "1"} in out["weird"]
 
@@ -60,9 +59,7 @@ def test_projection_returns_input_when_not_a_dict() -> None:
     assert apply_fields_projection(payload, ["uuid"]) is payload
 
 
-# ─── cap_response_size ────────────────────────────────────────────────────────
-
-
+# --- cap_response_size ---
 def test_cap_small_payload_unchanged() -> None:
     payload = {"devices": [{"uuid": "1"}], "nextPageToken": ""}
     result, truncated = cap_response_size(payload, max_bytes=10_000)
@@ -119,7 +116,7 @@ def test_cap_paginated_without_next_token_emits_different_hint() -> None:
 
 
 def test_cap_picks_largest_list_by_bytes_not_length() -> None:
-    """If two lists exist, trim the fat one — don't accidentally nuke a small list of UUIDs."""
+    """If two lists exist, trim the fat one - don't accidentally nuke a small list of UUIDs."""
     payload = {
         "deviceUuids": [str(i) for i in range(1000)],   # 1000 short strings
         "devices": [{"uuid": str(i), "blob": "x" * 500} for i in range(50)],  # 50 fat dicts
@@ -158,9 +155,7 @@ def test_cap_output_is_within_budget_when_paginated() -> None:
     assert serialised <= budget + 600, f"capped payload is {serialised} bytes, budget {budget}"
 
 
-# ─── shaping pipeline: projection then cap ────────────────────────────────────
-
-
+# --- shaping pipeline: projection then cap ---
 def test_projection_then_cap_keeps_more_items() -> None:
     """Skinny rows after projection should let more items fit under the cap."""
     fat = [{"uuid": str(i), "displayName": f"d{i}", "blob": "x" * 500} for i in range(200)]

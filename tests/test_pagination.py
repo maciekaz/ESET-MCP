@@ -23,7 +23,7 @@ async def test_paginate_device_groups_matches_full_page(http) -> None:
 
 
 async def test_paginate_terminates_on_last_page(http) -> None:
-    """The helper must terminate — not spin forever."""
+    """The helper must terminate - not spin forever."""
     # Small pageSize forces at least one nextPageToken iteration.
     count = 0
     async for _ in http.paginate("device-management", "/v1/device_groups", page_size=2, items_key="deviceGroups"):

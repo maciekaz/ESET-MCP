@@ -4,8 +4,8 @@ When the server runs with ``ESET_AUTH_MODE=basic``, every request to /mcp
 MUST carry an ``Authorization: Basic <base64(user:password)>`` header. The
 client may also send:
 
-- ``X-ESET-Region``     — override the default cloud region.
-- ``X-ESET-Server-URL`` — switch the request to an on-prem PROTECT console
+- ``X-ESET-Region``     - override the default cloud region.
+- ``X-ESET-Server-URL`` - switch the request to an on-prem PROTECT console
   (e.g. ``https://protect.example.com:9443``). Presence of this header takes
   precedence over ``X-ESET-Region``: the request is dispatched as on-prem
   regardless of region, and the X-ESET-Region value (if any) is ignored.
@@ -155,7 +155,7 @@ class BasicAuthCredentialsMiddleware(BaseHTTPMiddleware):
             )
         else:
             # Cloud path (env default + no per-request on-prem override).
-            # CF tokens are intentionally NOT propagated to cloud credentials —
+            # CF tokens are intentionally NOT propagated to cloud credentials -
             # ESET Connect is a public SaaS, never behind anyone's CF Access.
             creds = Credentials(
                 user=user,

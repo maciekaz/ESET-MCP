@@ -39,9 +39,8 @@ from eset_mcp.observability.metrics import (
     set_pool_size,
 )
 
-# ─── Sensitive-key deny-list ──────────────────────────────────────────────────
 
-
+# --- Sensitive-key deny-list ---
 @pytest.mark.parametrize("key", [
     "password",
     "Password",
@@ -97,9 +96,7 @@ def test_scrub_removes_sensitive_keys() -> None:
     }
 
 
-# ─── log_event end-to-end ─────────────────────────────────────────────────────
-
-
+# --- log_event end-to-end ---
 def _capture_json_logs() -> tuple[logging.Logger, io.StringIO]:
     """Build a logger writing JSON Lines into a StringIO buffer."""
     buf = io.StringIO()
@@ -178,9 +175,7 @@ def test_configure_logging_is_idempotent() -> None:
     assert len(owned) == 1
 
 
-# ─── Metrics ──────────────────────────────────────────────────────────────────
-
-
+# --- Metrics ---
 def test_metrics_available_in_test_env() -> None:
     """prometheus_client is installed as a dev dependency, so metrics work."""
     assert metrics_available() is True

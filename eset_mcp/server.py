@@ -1,4 +1,4 @@
-"""MCP server — registers tools, resources and prompts.
+"""MCP server - registers tools, resources and prompts.
 
 Targets MCP spec 2025-11-25 (Streamable HTTP). Uses the official `mcp` Python SDK.
 """
@@ -44,7 +44,7 @@ from .observability import (
 from .response_shaping import apply_fields_projection, cap_response_size
 from .tools_loader import ToolDef, load_all_tools
 
-# Resolver protocol — anything with a no-arg `resolve()` returning Credentials.
+# Resolver protocol - anything with a no-arg `resolve()` returning Credentials.
 # We don't import the protocol class to keep server.py decoupled; duck typing
 # is enough and avoids a circular import.
 
@@ -145,7 +145,7 @@ _COMPOSITE_TOOLS: list[Tool] = [
         name="latest_detections",
         description=(
             "Newest detections in a time window, sorted by occurTime descending. "
-            "Use this — NOT raw incident_detections__list_detections_* — when answering "
+            "Use this - NOT raw incident_detections__list_detections_* - when answering "
             "'what's the latest detection / what happened recently'. The raw list endpoints "
             "do NOT sort by date, so a first-page sort silently returns stale rows. "
             "This composite does v2→v1 fallback, paginates the time window, and sorts locally."
@@ -191,7 +191,7 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
 
     `resolver` is anything with a no-arg ``resolve() -> Credentials`` method
     (EnvCredentialResolver in single-tenant mode, BasicAuthCredentialResolver
-    in multi-tenant mode — see eset_mcp.credentials).
+    in multi-tenant mode - see eset_mcp.credentials).
     `pool` is the shared ClientPool keyed by (user, region).
     """
     server = Server(name="eset-mcp", version=__version__)
@@ -203,20 +203,19 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
         creds = resolver.resolve()
         return await pool.get(creds)
 
-    # ─── TOOLS ────────────────────────────────────────────────────────────────
-
+    # --- TOOLS ---
     @server.list_tools()
     async def _list_tools() -> list[Tool]:
-        # In RO mode we hide RW tools entirely — the agent never sees them in
+        # In RO mode we hide RW tools entirely - the agent never sees them in
         # the catalog. Earlier design kept them visible-but-blocked, but that
         # wasted the agent's context and tempted it to call something that
         # could never succeed. Composite tools are all RO and always shown.
         if settings.mode == "RO":
             return [
                 *_COMPOSITE_TOOLS,
-                *(_tool_to_mcp(t, settings) for t in tools if t.read_only),
+                *(_tool_to_mcp(t) for t in tools if t.read_only),
             ]
-        return [*_COMPOSITE_TOOLS, *(_tool_to_mcp(t, settings) for t in tools)]
+        return [*_COMPOSITE_TOOLS, *(_tool_to_mcp(t) for t in tools)]
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
@@ -238,15 +237,7 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
             # that a misbehaving metrics registry or formatter cannot
             # turn a successful tool call into a 500 to the agent.
             try:
-                _emit_tool_call_telemetry(
-                    name=name,
-                    deployment=tel["deployment"],
-                    user=tel["user"],
-                    mode=settings.mode,
-                    status=tel["status"],
-                    duration_s=_time.monotonic() - tel["t0"],
-                    bytes_out=tel["bytes_out"],
-                )
+                _emit_tool_call_telemetry(name, settings.mode, tel)
             except Exception:  # observability MUST be best-effort
                 _LOG.exception("telemetry emission failed for tool=%s", name)
 
@@ -295,15 +286,14 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
         tel["status"] = "200"
         return [TextContent(type="text", text=text)]
 
-    # ─── RESOURCES ────────────────────────────────────────────────────────────
-
+    # --- RESOURCES ---
     @server.list_resources()
     async def _list_resources() -> list[Resource]:
         return [
             Resource(
                 uri="eset://config/mode",
                 name="ESET MCP mode (RO/RW)",
-                description="Current server mode — independent of the API account's permissions.",
+                description="Current server mode - independent of the API account's permissions.",
                 mimeType="text/plain",
             ),
             Resource(
@@ -345,14 +335,14 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
             return settings.mode
         if uri == "eset://config/region":
             # In basic-auth mode this reflects the *current request's* region,
-            # not just the .env default — agents can use this to confirm
+            # not just the .env default - agents can use this to confirm
             # which tenant they're hitting.
             try:
                 return resolver.resolve().region
             except CredentialResolverError:
                 return settings.region
         if uri == "eset://config/deployment":
-            # For on-prem credentials we surface the server URL too — it's
+            # For on-prem credentials we surface the server URL too - it's
             # the only useful "where am I" hint the agent has.
             try:
                 creds = resolver.resolve()
@@ -376,22 +366,21 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
             return json.dumps(catalog, indent=2, ensure_ascii=False)
         if uri == "eset://docs/rate-limits":
             return (
-                "# ESET Connect — rate limits\n\n"
+                "# ESET Connect - rate limits\n\n"
                 "- **10 req/s** per credential / account / originating IP.\n"
-                "- 429 Too Many Requests on exceedance — the MCP server retries with backoff.\n"
+                "- 429 Too Many Requests on exceedance - the MCP server retries with backoff.\n"
                 "- Bursts >1000 requests trip the Fair Use Policy: some get 202, "
                 "some 50x (must be retried later).\n"
             )
         raise ValueError(f"Unknown resource URI: {uri}")
 
-    # ─── PROMPTS ──────────────────────────────────────────────────────────────
-
+    # --- PROMPTS ---
     @server.list_prompts()
     async def _list_prompts() -> list[Prompt]:
         return [
             Prompt(
                 name="audit_inactive_devices",
-                description="List devices that have not checked in for X days — offboarding candidates.",
+                description="List devices that have not checked in for X days - offboarding candidates.",
                 arguments=[
                     PromptArgument(name="days", description="Inactivity threshold in days (default 30).", required=False),
                 ],
@@ -416,14 +405,14 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
             text = (
                 f"Use the ESET MCP tools to list devices inactive for at least {days} days.\n"
                 f"Steps:\n"
-                f"1. `device_devices__list_devices` — fetch all.\n"
+                f"1. `device_devices__list_devices` - fetch all.\n"
                 f"2. Filter by `lastConnected` < now - {days}d.\n"
                 f"3. Present as a table: name, OS, last seen, group.\n"
             )
         elif name == "vulnerability_report":
             text = (
                 "Build a vulnerability report:\n"
-                "1. `vuln_vulnerabilities__list_vulnerable_devices` — list of devices.\n"
+                "1. `vuln_vulnerabilities__list_vulnerable_devices` - list of devices.\n"
                 "2. For the top-N (e.g. 10) by severity → `vuln_vulnerabilities__list_device_vulnerabilities`.\n"
                 "3. Group by CVE, sort by severity, show top 10.\n"
             )
@@ -444,13 +433,12 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
     return server
 
 
-def _tool_to_mcp(t: ToolDef, settings: Settings) -> Tool:
-    """Convert ToolDef → mcp.types.Tool with proper annotations.
+def _tool_to_mcp(t: ToolDef) -> Tool:
+    """Convert ToolDef -> mcp.types.Tool with proper annotations.
 
-    Note: in RO mode RW tools are filtered out of `list_tools` entirely, so
-    by the time this runs in RO mode `t` is guaranteed to be read-only. We
-    don't add any "BLOCKED" markers — the call_tool gate is still in place
-    as defence-in-depth in case someone calls a hard-coded RW tool name.
+    RO mode filters RW tools out of `list_tools` upstream, so by the time
+    this runs `t` is already mode-appropriate. The call_tool gate stays as
+    defence-in-depth for hard-coded RW tool names.
     """
     annotations = ToolAnnotations(
         title=f"{t.method} {t.path}",
@@ -475,7 +463,7 @@ async def _execute_tool(
     """Turn (ToolDef + arguments) into an HTTP request against ESET.
 
     For on-prem credentials we pick :attr:`ToolDef.onprem_path` when one is
-    registered for this tool — see ``openapi/onprem-path-overrides.json``.
+    registered for this tool - see ``openapi/onprem-path-overrides.json``.
     """
     args = dict(arguments)
     # Pick cloud or on-prem variant of the path before placeholder substitution.
@@ -490,31 +478,34 @@ async def _execute_tool(
 
     body = args.pop("body", None) if tool.has_body else None
     if args:
-        # Unknown parameters — silently drop, but log for debugging.
+        # Unknown parameters - silently drop, but log for debugging.
         _LOG.debug("Dropped unknown parameters for %s: %s", tool.name, list(args))
 
     return await http.request(tool.method, tool.service, path, query=query, json=body)
 
 
 def _to_text(result: Any) -> str:
-    """Render as JSON text — pretty-printed for readability."""
+    """Render as JSON text - pretty-printed for readability."""
     try:
         return json.dumps(result, indent=2, ensure_ascii=False)
     except (TypeError, ValueError):
         return str(result)
 
 
-def _emit_tool_call_telemetry(
-    *,
-    name: str,
-    deployment: str,
-    user: str,
-    mode: str,
-    status: str,
-    duration_s: float,
-    bytes_out: int,
-) -> None:
-    """Emit the metric + log pair for a finished tool call."""
+def _emit_tool_call_telemetry(name: str, mode: str, tel: dict[str, Any]) -> None:
+    """Emit the metric + log pair for a finished tool call.
+
+    `tel` is the per-call mutable state that `_call_tool` keeps (deployment,
+    user, status, bytes_out, plus `t0` from time.monotonic()). Passing the
+    dict avoids a 7-argument signature and keeps the call-site readable.
+    """
+    import time as _time
+    deployment = tel["deployment"]
+    duration_s = _time.monotonic() - tel["t0"]
+    status = tel["status"]
+    bytes_out = tel["bytes_out"]
+    user = tel["user"]
+
     inc_tool_call(tool=name, deployment=deployment, status=status)
     observe_tool_duration(tool=name, deployment=deployment, seconds=duration_s)
     if bytes_out > 0:
@@ -535,7 +526,7 @@ def _shape(result: Any, fields: list[str] | None, max_bytes: int) -> Any:
     """Apply field projection (if requested) and the global byte cap.
 
     Projection happens first so the cap, when it kicks in, kicks in on
-    already-skinnier rows — giving the agent more items per call.
+    already-skinnier rows - giving the agent more items per call.
     """
     if fields:
         result = apply_fields_projection(result, fields)
@@ -553,7 +544,7 @@ async def _dispatch_composite(
 ) -> list[TextContent] | None:
     """If `name` is one of the composite tools, run it and return MCP content.
 
-    Returns None when `name` is not a composite — caller falls through to the
+    Returns None when `name` is not a composite - caller falls through to the
     OpenAPI-derived tool registry. Composite tools are always RO; we don't
     invoke the mode gate. Composites are expected to be moderately sized but
     we still apply the cap as a safety net.

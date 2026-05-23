@@ -29,8 +29,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-# ─── Optional dependency: prometheus_client ───────────────────────────────────
-
+# --- Optional dependency: prometheus_client ---
 try:
     from prometheus_client import (
         CONTENT_TYPE_LATEST,
@@ -53,8 +52,7 @@ except ImportError:  # pragma: no cover - exercised only when extra not installe
     Counter = Gauge = Histogram = None  # type: ignore[assignment,misc]
 
 
-# ─── Metric definitions (only built when prometheus_client is present) ────────
-
+# --- Metric definitions (only built when prometheus_client is present) ---
 if _METRICS_AVAILABLE:
     _TOOL_CALLS = Counter(
         "esetmcp_tool_calls_total",
@@ -95,9 +93,7 @@ if _METRICS_AVAILABLE:
     )
 
 
-# ─── Public no-op-safe helpers ────────────────────────────────────────────────
-
-
+# --- Public no-op-safe helpers ---
 def inc_tool_call(tool: str, deployment: str, status: str | int) -> None:
     if _METRICS_AVAILABLE:
         _TOOL_CALLS.labels(tool=tool, deployment=deployment, status=str(status)).inc()
@@ -133,15 +129,13 @@ def set_pool_size(n: int) -> None:
         _CLIENT_POOL_SIZE.set(n)
 
 
-# ─── /metrics endpoint as an ASGI app ─────────────────────────────────────────
-
-
+# --- /metrics endpoint as an ASGI app ---
 Scope = dict[str, Any]
 Receive = Callable[[], Awaitable[dict[str, Any]]]
 Send = Callable[[dict[str, Any]], Awaitable[None]]
 
 
-async def _metrics_app_enabled(scope: Scope, receive: Receive, send: Send) -> None:
+async def _metrics_app_enabled(scope: Scope, _receive: Receive, send: Send) -> None:
     if scope["type"] != "http":
         return  # ignore lifespan / websocket
     # Exposition generation should never fail with the standard collectors,
@@ -167,7 +161,7 @@ async def _metrics_app_enabled(scope: Scope, receive: Receive, send: Send) -> No
     await send({"type": "http.response.body", "body": payload})
 
 
-async def _metrics_app_unavailable(scope: Scope, receive: Receive, send: Send) -> None:
+async def _metrics_app_unavailable(scope: Scope, _receive: Receive, send: Send) -> None:
     if scope["type"] != "http":
         return
     msg = (

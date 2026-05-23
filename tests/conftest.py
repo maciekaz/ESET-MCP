@@ -26,7 +26,7 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
 
 # Integration tests always run in env-auth mode against the configured tenant
 # credentials. Multi-tenant (basic auth) behaviour has its own unit tests in
-# test_middleware.py — they don't need a running ESET account. Even if the
+# test_middleware.py - they don't need a running ESET account. Even if the
 # operator has `ESET_AUTH_MODE=basic` in .env (a valid production setup), the
 # test suite forces env mode so the fixtures keep working.
 os.environ["ESET_AUTH_MODE"] = "env"
@@ -46,7 +46,7 @@ if not _have_credentials():
 @pytest.fixture(scope="session")
 def settings() -> Settings:
     if not _have_credentials():
-        pytest.skip("ESET_USER/ESET_PASSWORD missing — integration tests skipped.")
+        pytest.skip("ESET_USER/ESET_PASSWORD missing - integration tests skipped.")
     return Settings.from_env()
 
 
@@ -56,7 +56,7 @@ def _creds_from_settings(settings: Settings) -> Credentials:
 
 @pytest_asyncio.fixture
 async def http(settings: Settings) -> AsyncIterator[EsetHttpClient]:
-    """Direct HTTP client — for testing the http_client layer (e.g. pagination)."""
+    """Direct HTTP client - for testing the http_client layer (e.g. pagination)."""
     async with EsetHttpClient(_creds_from_settings(settings)) as c:
         yield c
 

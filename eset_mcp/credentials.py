@@ -1,4 +1,4 @@
-"""Credential resolution — env-based (single tenant) or per-request (multi-tenant).
+"""Credential resolution - env-based (single tenant) or per-request (multi-tenant).
 
 The MCP server can run in two auth modes and two deployment kinds:
 
@@ -9,7 +9,7 @@ The MCP server can run in two auth modes and two deployment kinds:
 - ``basic``: credentials are read per-request from HTTP ``Authorization: Basic``
              headers and (optionally) ``X-ESET-Region`` and/or
              ``X-ESET-Server-URL``. One MCP server can then serve many
-             tenants — and a mix of cloud + on-prem in the same process.
+             tenants - and a mix of cloud + on-prem in the same process.
              Only meaningful on the HTTP transport; stdio refuses this mode
              at startup.
 
@@ -26,7 +26,7 @@ Deployment kind:
 
 The resolver returns a :class:`Credentials` object; the rest of the codebase
 (:mod:`auth`, :mod:`http_client`, :mod:`client_pool`) never sees a fixed set
-of credentials any more — they always come through a resolver.
+of credentials any more - they always come through a resolver.
 """
 from __future__ import annotations
 
@@ -76,12 +76,12 @@ class Credentials:
         empty string when none is configured). Two requests against the
         same on-prem URL with different CF tokens get separate pool entries
         because the CF headers are baked into the httpx client's defaults
-        at construction time — swapping them per-request on a shared
+        at construction time - swapping them per-request on a shared
         instance would race.
         """
         import hashlib
         pw_hash = hashlib.sha256(self.password.encode("utf-8")).hexdigest()[:16]
-        # The fourth slot is "region OR server_url" — unique per deployment.
+        # The fourth slot is "region OR server_url" - unique per deployment.
         endpoint = self.server_url if self.deployment == "onprem" else self.region
         cf_hash = ""
         if self.cf_access_client_secret:
@@ -125,7 +125,7 @@ class EnvCredentialResolver:
 class BasicAuthCredentialResolver:
     """Returns credentials pulled from the per-request ContextVar.
 
-    Defaults — used for fields the client did not override via headers — come
+    Defaults - used for fields the client did not override via headers - come
     from the server's ``.env`` (region, deployment, server URL, verify-SSL).
     """
 
@@ -142,12 +142,11 @@ class BasicAuthCredentialResolver:
         return creds
 
 
-# ─── Helpers used by the ASGI middleware ─────────────────────────────────────
-
+# --- Helpers used by the ASGI middleware ---
 def parse_basic_auth_header(value: str) -> tuple[str, str]:
     """Parse ``Basic <base64(user:password)>`` and return (user, password).
 
-    Raises CredentialResolverError on any malformed input — the middleware
+    Raises CredentialResolverError on any malformed input - the middleware
     translates that into a 401 response.
     """
     if not value or not value.lower().startswith("basic "):

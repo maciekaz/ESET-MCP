@@ -2,11 +2,11 @@
 
 Two token managers, one per deployment kind:
 
-- :class:`CloudTokenManager` — ESET Connect cloud. Standard OAuth2 password
+- :class:`CloudTokenManager` - ESET Connect cloud. Standard OAuth2 password
   grant against ``/oauth/token``, snake_case response, supports refresh
   tokens. Refreshes proactively 5 minutes before expiry.
 
-- :class:`OnPremTokenManager` — ESET PROTECT on-prem console. Bespoke
+- :class:`OnPremTokenManager` - ESET PROTECT on-prem console. Bespoke
   ``POST /GetTokens`` endpoint with a JSON body and a **camelCase** response
   (``accessToken`` / ``expiresIn``). No refresh-token flow exists; on expiry
   the full username+password handshake is repeated. Refreshes 60 seconds
@@ -14,7 +14,7 @@ Two token managers, one per deployment kind:
 
 A token manager is tied to one set of credentials (one ESET account in one
 region OR one on-prem console). In multi-tenant mode each pooled
-:class:`EsetHttpClient` owns its own manager — tokens never leak between
+:class:`EsetHttpClient` owns its own manager - tokens never leak between
 tenants.
 """
 from __future__ import annotations
@@ -34,11 +34,15 @@ from .regions import resolve_auth_url
 
 _LOG = logging.getLogger("eset_mcp.auth")
 
-# Safety margin — refresh the token N seconds before its nominal expiry.
+# Safety margin - refresh the token N seconds before its nominal expiry.
 # Cloud uses 5 min (1h tokens, plenty of headroom); on-prem mirrors the
 # reference TypeScript client at 60 s.
 _REFRESH_MARGIN_CLOUD_S = 300
 _REFRESH_MARGIN_ONPREM_S = 60
+
+# Auth handshake should respond in <1 s; 30 s covers TLS + slow links and
+# matches httpx's default for short-lived control calls.
+_AUTH_REQUEST_TIMEOUT_S = 30
 
 
 @dataclass
@@ -118,7 +122,7 @@ class CloudTokenManager(_TokenManagerBase):
 
     async def _refresh_locked(self) -> None:
         # If we have a refresh_token and it has not fully expired, use it.
-        # Otherwise — fall back to the password grant.
+        # Otherwise - fall back to the password grant.
         if self._token and self._token.refresh_token and not self._expired_or_expiring(margin=0):
             data = {
                 "grant_type": "refresh_token",
@@ -137,7 +141,7 @@ class CloudTokenManager(_TokenManagerBase):
             url,
             data=data,
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            timeout=30,
+            timeout=_AUTH_REQUEST_TIMEOUT_S,
         )
         if resp.status_code != 200:
             raise map_http_error(
@@ -155,7 +159,7 @@ class CloudTokenManager(_TokenManagerBase):
         )
 
 
-# Backwards-compatible alias — older imports / tests reference TokenManager.
+# Backwards-compatible alias - older imports / tests reference TokenManager.
 TokenManager = CloudTokenManager
 
 
@@ -175,7 +179,7 @@ class OnPremTokenManager(_TokenManagerBase):
         {"accessToken": "...", "expiresIn": 3600}
 
     Note: response keys are **camelCase**, unlike the cloud's snake_case.
-    There is no refresh-token field — on expiry we re-send the password.
+    There is no refresh-token field - on expiry we re-send the password.
     """
 
     _refresh_margin_s = _REFRESH_MARGIN_ONPREM_S
@@ -191,7 +195,7 @@ class OnPremTokenManager(_TokenManagerBase):
             url,
             json=body,
             headers={"Content-Type": "application/json", "Accept": "application/json"},
-            timeout=30,
+            timeout=_AUTH_REQUEST_TIMEOUT_S,
         )
         if resp.status_code != 200:
             raise map_http_error(

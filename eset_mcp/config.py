@@ -31,11 +31,11 @@ class Settings:
     auth_mode: AuthMode
     # Per-call response byte cap applied AFTER fields projection and BEFORE
     # serialising to the MCP client. 0 disables the cap entirely (not
-    # recommended in production — single calls can consume the whole LLM
+    # recommended in production - single calls can consume the whole LLM
     # context window). Default ≈25 k tokens on a 4-chars/token heuristic.
     response_bytes_max: int
 
-    # ─── On-prem ESET PROTECT support ──────────────────────────────────────
+    # --- On-prem ESET PROTECT support ---
     # Default deployment kind used when the request did not specify one. In
     # basic-auth mode the client can override per-request by sending the
     # ``X-ESET-Server-URL`` header (presence of that header switches the
@@ -52,7 +52,7 @@ class Settings:
     # Optional Cloudflare Access Service Token, used when the on-prem PROTECT
     # console sits behind Cloudflare Access (zero-trust ingress). When both
     # values are set, the HTTP client adds ``CF-Access-Client-Id`` /
-    # ``CF-Access-Client-Secret`` headers to every request — both the
+    # ``CF-Access-Client-Secret`` headers to every request - both the
     # ``POST /GetTokens`` auth call and every subsequent API call. In
     # basic-auth mode clients can override per-request with
     # ``X-ESET-CF-Access-Client-Id`` / ``X-ESET-CF-Access-Client-Secret``.
@@ -61,7 +61,7 @@ class Settings:
     onprem_cf_access_client_id: str
     onprem_cf_access_client_secret: str
 
-    # ─── Observability ────────────────────────────────────────────────────
+    # --- Observability ---
     # ``text`` (default) - human-readable single line per record, ideal for
     # local dev. ``json`` - JSON Lines, ideal for log shippers in prod.
     log_format: str
@@ -113,7 +113,7 @@ class Settings:
         onprem_server_url_raw = os.getenv("ESET_ONPREM_SERVER_URL", "").strip()
         onprem_server_url = _normalize_server_url(onprem_server_url_raw) if onprem_server_url_raw else ""
         # Cloudflare Access Service Token (optional). Both values must be set
-        # together — half a token pair is useless and almost always a typo.
+        # together - half a token pair is useless and almost always a typo.
         cf_id = os.getenv("ESET_ONPREM_CF_ACCESS_CLIENT_ID", "").strip()
         cf_secret = os.getenv("ESET_ONPREM_CF_ACCESS_CLIENT_SECRET", "").strip()
         if bool(cf_id) != bool(cf_secret):
@@ -123,7 +123,7 @@ class Settings:
                 "(both or neither)."
             )
         # When the default deployment is on-prem and we're in env mode the
-        # server URL is mandatory — otherwise every request fails at dispatch.
+        # server URL is mandatory - otherwise every request fails at dispatch.
         # In basic-auth mode it's allowed to be empty: requests then MUST
         # carry an X-ESET-Server-URL header.
         if deployment == "onprem" and auth_mode == "env" and not onprem_server_url:
@@ -230,7 +230,7 @@ def _normalize_server_url(raw: str) -> str:
 
     Accepts: ``https://host[:port]`` with no path/query/fragment.
     Strips any trailing slash so callers can safely concatenate ``"/path"``.
-    HTTPS is mandatory — on-prem PROTECT consoles default to port 9443 over
+    HTTPS is mandatory - on-prem PROTECT consoles default to port 9443 over
     TLS and ``basic`` auth over plain HTTP would leak credentials regardless
     of deployment kind.
     """

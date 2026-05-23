@@ -63,9 +63,7 @@ def _make_settings(**overrides) -> Settings:
                 os.environ[k] = v
 
 
-# ─── ContextVar isolation ─────────────────────────────────────────────────────
-
-
+# --- ContextVar isolation ---
 async def test_contextvar_isolation_under_100_concurrent_tasks() -> None:
     """100 tasks each set the ContextVar to their own creds and then read it
     back after a couple of awaits. No task may observe another's creds.
@@ -120,9 +118,7 @@ async def test_contextvar_copied_not_shared_into_child_tasks() -> None:
     assert seen == {i: f"u{i}" for i in range(50)}
 
 
-# ─── Client pool concurrency ──────────────────────────────────────────────────
-
-
+# --- Client pool concurrency ---
 async def test_pool_returns_same_client_for_repeated_same_creds() -> None:
     settings = _make_settings()
     pool = ClientPool(settings, max_clients=8)
@@ -213,9 +209,7 @@ async def test_pool_eviction_race_documented_in_client_pool_module() -> None:
     )
 
 
-# ─── Token refresh serialisation ──────────────────────────────────────────────
-
-
+# --- Token refresh serialisation ---
 @respx.mock
 async def test_concurrent_token_refresh_calls_api_once() -> None:
     """50 tasks ask for the access token at once. The token manager's lock
@@ -260,9 +254,7 @@ async def test_concurrent_force_refresh_coalesces_under_401_storm() -> None:
     )
 
 
-# ─── Tenant isolation under partial failures ──────────────────────────────────
-
-
+# --- Tenant isolation under partial failures ---
 @respx.mock
 async def test_one_tenants_bad_password_does_not_affect_another() -> None:
     """Tenant A has bad creds (401 from OAuth). Tenant B has good creds.
@@ -305,9 +297,7 @@ async def test_one_tenants_bad_password_does_not_affect_another() -> None:
         await pool.close()
 
 
-# ─── Mixed cloud + on-prem in flight at the same time ─────────────────────────
-
-
+# --- Mixed cloud + on-prem in flight at the same time ---
 @respx.mock
 async def test_cloud_and_onprem_same_user_independent_clients() -> None:
     """Same user, but one request goes cloud (eu) and another onprem (URL).
@@ -344,9 +334,7 @@ async def test_cloud_and_onprem_same_user_independent_clients() -> None:
         await pool.close()
 
 
-# ─── End-to-end through the ASGI middleware ───────────────────────────────────
-
-
+# --- End-to-end through the ASGI middleware ---
 async def test_concurrent_basic_auth_requests_carry_their_own_creds() -> None:
     """50 concurrent HTTP requests, each carrying its own Basic auth + maybe
     its own X-ESET-Server-URL. The middleware must stash each request's
@@ -402,9 +390,7 @@ async def test_concurrent_basic_auth_requests_carry_their_own_creds() -> None:
             assert url == ""
 
 
-# ─── ContextVar leaking into module-level coroutines ──────────────────────────
-
-
+# --- ContextVar leaking into module-level coroutines ---
 async def test_resolver_never_sees_stale_contextvar_after_reset() -> None:
     """After the middleware resets the ContextVar, the resolver must raise -
     no stale value from a previous request leaks into the next one."""
@@ -413,7 +399,7 @@ async def test_resolver_never_sees_stale_contextvar_after_reset() -> None:
     # Pretend a previous request ran:
     token = request_credentials.set(Credentials(user="prev", password="p", region="eu"))
     request_credentials.reset(token)
-    # Now run the resolver in a fresh context (mimics a fresh request task):
+    # Fresh context mimics the next request's task:
     ctx = copy_context()
     from eset_mcp.credentials import CredentialResolverError
     with pytest.raises(CredentialResolverError):

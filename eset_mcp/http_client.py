@@ -1,4 +1,4 @@
-"""Thin wrapper around httpx — auth header, 202 polling, 429 retry, error mapping.
+"""Thin wrapper around httpx - auth header, 202 polling, 429 retry, error mapping.
 
 Rules from the ESET Connect docs:
 - 202 Accepted = pending; poll with `response-id` header, up to 10 minutes.
@@ -11,7 +11,7 @@ one ESET account (cloud) or one PROTECT console (on-prem). In multi-tenant
 mode the :class:`ClientPool` keeps one instance per pool key.
 
 For on-prem credentials the underlying httpx client honours
-``creds.verify_ssl`` (default True) — operators of intranet deployments with
+``creds.verify_ssl`` (default True) - operators of intranet deployments with
 self-signed certs opt out via ``ESET_ONPREM_VERIFY_SSL=false``. A single
 WARNING is logged at construction time when verification is disabled so
 the operator notices it once, without log spam on every request.
@@ -32,6 +32,11 @@ from .observability import inc_http_retry, log_event
 from .regions import resolve_base_url
 
 _LOG = logging.getLogger("eset_mcp.http")
+
+# Per-request socket timeout. Generous because ESET list endpoints can take
+# several seconds on large tenants and 202-pending polls are accounted for
+# separately (see _PENDING_POLL_BUDGET_S).
+_REQUEST_TIMEOUT_S = 120
 
 # 202 polling.
 _PENDING_POLL_INTERVAL_S = 2.0
@@ -69,12 +74,12 @@ class EsetHttpClient:
         verify = True if credentials.deployment == "cloud" else credentials.verify_ssl
         if credentials.deployment == "onprem" and not verify:
             _LOG.warning(
-                "TLS certificate verification DISABLED for on-prem server %s — "
+                "TLS certificate verification DISABLED for on-prem server %s - "
                 "set ESET_ONPREM_VERIFY_SSL=true once the console cert is trusted.",
                 credentials.server_url,
             )
         # Cloudflare Access Service Token (on-prem only). When set, every
-        # request — including the POST /GetTokens auth call — carries the
+        # request - including the POST /GetTokens auth call - carries the
         # CF-Access-Client-Id / CF-Access-Client-Secret headers so the
         # Cloudflare Access edge lets the request through to the origin.
         default_headers: dict[str, str] = {}
@@ -90,7 +95,7 @@ class EsetHttpClient:
                 credentials.server_url,
             )
         self._http = httpx.AsyncClient(
-            timeout=120,
+            timeout=_REQUEST_TIMEOUT_S,
             follow_redirects=False,
             verify=verify,
             headers=default_headers or None,
@@ -168,12 +173,15 @@ class EsetHttpClient:
                 if resp.status_code != 429:
                     break
 
-        # 202 — pending, long-poll with response-id.
+        # 202 - pending, long-poll with response-id.
         if resp.status_code == 202:
             response_id = resp.headers.get("response-id")
             if not response_id:
                 raise map_http_error(202, resp.text, url, resp.headers.get("request-id"))
-            return await self._poll_pending(method, url, response_id, headers, query, json)
+            return await self._poll_pending(
+                method, url, response_id,
+                {"headers": headers, "params": query, "json": json},
+            )
 
         if resp.status_code >= 400:
             log_event(
@@ -204,26 +212,32 @@ class EsetHttpClient:
         method: str,
         url: str,
         response_id: str,
-        headers: dict[str, str],
-        query: dict[str, Any] | None,
-        json: Any | None,
+        req: dict[str, Any],
     ) -> dict[str, Any] | list[Any]:
-        """Poll 202 with exponential backoff, up to 10 minutes."""
+        """Poll 202 with exponential backoff, up to 10 minutes.
+
+        `req` carries the original call's transport context:
+        ``{"headers": ..., "params": ..., "json": ...}``. We re-issue the
+        same request with the `response-id` header added until the upstream
+        either resolves to a non-202 status or the budget expires.
+        """
         deadline = time.monotonic() + _PENDING_POLL_BUDGET_S
         interval = _PENDING_POLL_INTERVAL_S
-        poll_headers = {**headers, "response-id": response_id}
+        poll_headers = {**req["headers"], "response-id": response_id}
 
         while True:
             if time.monotonic() > deadline:
                 raise EsetApiError(
                     status=504,
-                    message="Pending response did not complete within 10 minutes — the cached query expired.",
+                    message="Pending response did not complete within 10 minutes - the cached query expired.",
                     endpoint=url,
                 )
             await asyncio.sleep(interval)
             interval = min(interval * 1.5, _PENDING_POLL_INTERVAL_CAP_S)
 
-            resp = await self._http.request(method, url, params=query, json=json, headers=poll_headers)
+            resp = await self._http.request(
+                method, url, params=req["params"], json=req["json"], headers=poll_headers,
+            )
             if resp.status_code == 202:
                 continue
             if resp.status_code >= 400:
@@ -247,7 +261,7 @@ class EsetHttpClient:
         """Async generator iterating over all pages (pageToken/nextPageToken).
 
         items_key: the response field that holds the list (e.g. "deviceGroups").
-        If None — yields whole pages instead of items.
+        If None - yields whole pages instead of items.
         """
         page_token = ""
         while True:

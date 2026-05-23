@@ -15,8 +15,8 @@ from eset_mcp.credentials import (
     request_credentials,
 )
 
-# ─── parse_basic_auth_header ─────────────────────────────────────────────────
 
+# --- parse_basic_auth_header ---
 def _basic(user: str, password: str) -> str:
     token = base64.b64encode(f"{user}:{password}".encode()).decode()
     return f"Basic {token}"
@@ -55,8 +55,7 @@ def test_parse_basic_auth_malformed_rejected(header: str) -> None:
         parse_basic_auth_header(header)
 
 
-# ─── normalize_region ────────────────────────────────────────────────────────
-
+# --- normalize_region ---
 def test_normalize_region_default_when_missing() -> None:
     assert normalize_region(None, "eu") == "eu"
     assert normalize_region("", "us") == "us"
@@ -71,31 +70,30 @@ def test_normalize_region_rejects_unknown() -> None:
         normalize_region("antarctica", "eu")
 
 
-# ─── Resolvers ───────────────────────────────────────────────────────────────
-
+# --- Resolvers ---
 def test_env_resolver_always_returns_same_creds() -> None:
     class FakeSettings:
         user = "env-user"
         password = "env-pass"
         region = "eu"
-        # On-prem fields added in v0.2 — cloud-only setups keep defaults.
+        # On-prem fields added in v0.2 - cloud-only setups keep defaults.
         deployment = "cloud"
         onprem_server_url = ""
         onprem_verify_ssl = True
-        # CF Access fields added later — cloud-only setups keep them empty.
+        # CF Access fields added later - cloud-only setups keep them empty.
         onprem_cf_access_client_id = ""
         onprem_cf_access_client_secret = ""
 
     r = EnvCredentialResolver(FakeSettings())  # type: ignore[arg-type]
     creds = r.resolve()
     assert creds == Credentials("env-user", "env-pass", "eu")
-    # Resolves to the same identity object every time — important for the
+    # Resolves to the same identity object every time - important for the
     # client pool cache to hit consistently in env mode.
     assert r.resolve() is creds
 
 
 def _fake_settings_for_basic_resolver(default_region: str = "eu"):
-    """BasicAuthCredentialResolver now takes the full Settings object — build
+    """BasicAuthCredentialResolver now takes the full Settings object - build
     a minimal duck-typed stand-in instead of constructing the real one."""
     class FakeSettings:
         region = default_region
@@ -119,7 +117,7 @@ def test_basic_resolver_reads_contextvar() -> None:
 
 def test_basic_resolver_raises_when_contextvar_empty() -> None:
     r = BasicAuthCredentialResolver(_fake_settings_for_basic_resolver())  # type: ignore[arg-type]
-    # Defensive — ensure the var is empty (it should be by default).
+    # Defensive - ensure the var is empty (it should be by default).
     token = request_credentials.set(None)
     try:
         with pytest.raises(CredentialResolverError):
@@ -135,7 +133,7 @@ def test_credentials_cache_key_distinct_per_field() -> None:
     b = Credentials("bob", "x", "eu")
     c = Credentials("alice", "x", "us")
     assert a.cache_key() == a_same.cache_key()
-    # Password rotation forces a new client — we don't want stale tokens
+    # Password rotation forces a new client - we don't want stale tokens
     # served after an account password change.
     assert a.cache_key() != a_diff_pw.cache_key()
     assert a.cache_key() != b.cache_key()

@@ -15,7 +15,7 @@ pytestmark = pytest.mark.ro
 async def test_search_basic(mcp_session) -> None:
     """Search for a substring expected to exist in any non-empty tenant ('All' / 'Wszystkie' / 'Lost')."""
     async with mcp_session() as client:
-        # Try a couple of well-known root-group names — at least one should hit.
+        # Try a couple of well-known root-group names - at least one should hit.
         for q in ["Wszystkie", "All", "Lost"]:
             r = await client.call_tool(
                 "eset_search", arguments={"query": q, "kinds": ["group"], "limit_per_kind": 5}
@@ -28,7 +28,7 @@ async def test_search_basic(mcp_session) -> None:
                 assert first["uuid"]
                 assert first["displayName"]
                 return
-        pytest.fail("Search returned 0 matches for every well-known group name — unexpected.")
+        pytest.fail("Search returned 0 matches for every well-known group name - unexpected.")
 
 
 async def test_search_case_insensitive_substring(mcp_session) -> None:
@@ -81,7 +81,7 @@ async def test_search_graceful_per_kind_failure(mcp_session) -> None:
         # At least the device or group kind should produce something on a populated tenant.
         kinds_with_results = {m["kind"] for m in payload["matches"]}
         skipped_kinds = {s["kind"] for s in payload["skipped"]}
-        assert kinds_with_results or skipped_kinds, "neither matches nor skipped — sanity issue"
+        assert kinds_with_results or skipped_kinds, "neither matches nor skipped - sanity issue"
         # The response must always carry the four expected top-level keys.
         for key in ("query", "matches", "total", "scanned", "skipped"):
             assert key in payload
@@ -115,7 +115,7 @@ async def test_device_full_profile_real_uuid(mcp_session) -> None:
 async def test_incident_full_context_graceful_on_missing(mcp_session) -> None:
     """If incidents are not accessible (or none exist), the composite must surface a clean error."""
     async with mcp_session() as client:
-        # Bogus UUID — exercises the error branch deterministically.
+        # Bogus UUID - exercises the error branch deterministically.
         r = await client.call_tool(
             "incident_full_context",
             arguments={"incidentUuid": "00000000-0000-0000-0000-000000000000"},
@@ -129,7 +129,7 @@ async def test_incident_full_context_graceful_on_missing(mcp_session) -> None:
 async def test_latest_detections_returns_sorted_recent(mcp_session) -> None:
     """The composite must return detections in `occurTime` desc order, within the window."""
     async with mcp_session() as client:
-        # 7-day window — generous enough that even sparse tenants should hit something,
+        # 7-day window - generous enough that even sparse tenants should hit something,
         # but if not, we still expect a well-formed empty response (not a crash).
         r = await client.call_tool("latest_detections", arguments={"hours": 168, "limit": 5})
         payload = json.loads(r.content[0].text)
@@ -142,7 +142,7 @@ async def test_latest_detections_returns_sorted_recent(mcp_session) -> None:
         # If detections came back, they must be sorted desc by occurTime.
         dets = payload["detections"]
         if not dets:
-            pytest.skip("Tenant has no detections in the last 7 days — nothing to assert.")
+            pytest.skip("Tenant has no detections in the last 7 days - nothing to assert.")
         times = [d.get("occurTime", "") for d in dets]
         assert times == sorted(times, reverse=True), (
             f"detections must be sorted occurTime desc; got: {times}"

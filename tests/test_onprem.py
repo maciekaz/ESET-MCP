@@ -1,6 +1,6 @@
 """Unit tests for on-prem ESET PROTECT support.
 
-These run entirely without network — they exercise:
+These run entirely without network - they exercise:
 - Settings parsing of ESET_DEPLOYMENT / ESET_ONPREM_SERVER_URL / ESET_ONPREM_VERIFY_SSL
 - Credentials.cache_key() distinguishing cloud vs on-prem (and same user on
   two different on-prem URLs)
@@ -31,9 +31,8 @@ from eset_mcp.http_client import EsetHttpClient
 from eset_mcp.regions import resolve_auth_url, resolve_base_url
 from eset_mcp.tools_loader import ToolDef, load_all_tools
 
-# ─── Settings (env parsing) ───────────────────────────────────────────────────
 
-
+# --- Settings (env parsing) ---
 def _set_env(monkeypatch, **overrides) -> None:
     """Replace any ESET_* env vars with a clean baseline + caller's overrides."""
     # Wipe state so tests don't leak between each other.
@@ -68,7 +67,7 @@ def test_settings_onprem_requires_server_url_in_env_mode(monkeypatch) -> None:
 
 
 def test_settings_onprem_basic_mode_allows_empty_url(monkeypatch) -> None:
-    """basic auth + on-prem with no env URL is fine — clients send the header."""
+    """basic auth + on-prem with no env URL is fine - clients send the header."""
     _set_env(
         monkeypatch,
         ESET_DEPLOYMENT="onprem",
@@ -122,9 +121,7 @@ def test_settings_onprem_verify_ssl_false(monkeypatch) -> None:
     assert s.onprem_verify_ssl is False
 
 
-# ─── Credentials.cache_key() ──────────────────────────────────────────────────
-
-
+# --- Credentials.cache_key() ---
 def test_cache_key_distinguishes_cloud_from_onprem() -> None:
     cloud = Credentials(user="u", password="pw", region="eu")
     onprem = Credentials(
@@ -149,7 +146,7 @@ def test_cache_key_distinguishes_two_onprem_consoles() -> None:
 
 
 def test_cache_key_password_hash_changes_when_password_rotates() -> None:
-    """Rotating the password forces a new pool entry — no stale-token reuse."""
+    """Rotating the password forces a new pool entry - no stale-token reuse."""
     a = Credentials(user="u", password="old", region="eu")
     b = Credentials(user="u", password="new", region="eu")
     assert a.cache_key() != b.cache_key()
@@ -170,14 +167,12 @@ def test_cache_key_cf_token_rotation_creates_new_pool_entry() -> None:
     no_cf = Credentials(**base)
     keys = {with_a.cache_key(), with_b.cache_key(), no_cf.cache_key()}
     assert len(keys) == 3, "expected three distinct pool keys (A, B, no-CF)"
-    # CF id alone (without secret) is never used — only secret hash distinguishes.
+    # CF id alone (without secret) is never used - only secret hash distinguishes.
     assert with_a.cache_key()[4] != ""
     assert no_cf.cache_key()[4] == ""
 
 
-# ─── Header normalisation (middleware helpers) ────────────────────────────────
-
-
+# --- Header normalisation (middleware helpers) ---
 def test_normalize_server_url_header_empty_returns_blank() -> None:
     assert normalize_server_url_header(None) == ""
     assert normalize_server_url_header("") == ""
@@ -200,9 +195,7 @@ def test_normalize_server_url_header_rejects_path() -> None:
         normalize_server_url_header("https://protect.example.com:9443/api")
 
 
-# ─── Region/URL resolution ────────────────────────────────────────────────────
-
-
+# --- Region/URL resolution ---
 def test_resolve_base_url_cloud_per_service() -> None:
     c = Credentials(user="u", password="pw", region="eu")
     assert resolve_base_url(c, "device-management") == "https://eu.device-management.eset.systems"
@@ -232,9 +225,7 @@ def test_resolve_base_url_onprem_without_server_url_raises() -> None:
         resolve_base_url(bad, "device-management")
 
 
-# ─── EnvCredentialResolver / BasicAuthCredentialResolver ──────────────────────
-
-
+# --- EnvCredentialResolver / BasicAuthCredentialResolver ---
 def test_env_resolver_propagates_onprem_settings(monkeypatch) -> None:
     _set_env(
         monkeypatch,
@@ -267,9 +258,7 @@ def test_basic_resolver_reads_contextvar(monkeypatch) -> None:
         request_credentials.reset(tok)
 
 
-# ─── Middleware (X-ESET-Server-URL → on-prem) ─────────────────────────────────
-
-
+# --- Middleware (X-ESET-Server-URL → on-prem) ---
 def _build_app_with_middleware(settings: Settings):
     """Tiny Starlette app whose only job is to expose what the middleware stashed."""
     from starlette.applications import Starlette
@@ -394,7 +383,7 @@ async def test_middleware_env_onprem_no_url_no_header_returns_400(monkeypatch) -
         ESET_AUTH_MODE="basic",
         ESET_MCP_TRANSPORT="http",
         ESET_DEPLOYMENT="onprem",
-        # No ESET_ONPREM_SERVER_URL — must be supplied per request.
+        # No ESET_ONPREM_SERVER_URL - must be supplied per request.
     )
     s = Settings.from_env(env_file=None)
     app = _build_app_with_middleware(s)
@@ -404,9 +393,7 @@ async def test_middleware_env_onprem_no_url_no_header_returns_400(monkeypatch) -
     assert r.status_code == 400
 
 
-# ─── OnPremTokenManager wire format (respx mock) ──────────────────────────────
-
-
+# --- OnPremTokenManager wire format (respx mock) ---
 @respx.mock
 async def test_onprem_token_manager_posts_get_tokens() -> None:
     """OnPremTokenManager hits POST /GetTokens with the documented JSON body
@@ -459,9 +446,7 @@ def test_make_token_manager_picks_by_deployment() -> None:
     assert isinstance(make_token_manager(onprem_creds, h), OnPremTokenManager)
 
 
-# ─── EsetHttpClient TLS verify wiring ─────────────────────────────────────────
-
-
+# --- EsetHttpClient TLS verify wiring ---
 def test_http_client_onprem_verify_true_by_default() -> None:
     creds = Credentials(
         user="u", password="p", region="eu",
@@ -470,7 +455,7 @@ def test_http_client_onprem_verify_true_by_default() -> None:
     client = EsetHttpClient(creds)
     try:
         # httpx exposes the verify flag indirectly via the transport's SSL context.
-        # We check the public _transport's verify config — internal attribute,
+        # We check the public _transport's verify config - internal attribute,
         # but stable enough across httpx 0.27+.
         assert client._http.is_closed is False
     finally:
@@ -491,13 +476,11 @@ def test_http_client_onprem_verify_false_honoured_and_warns(caplog) -> None:
     warnings = [r for r in caplog.records if "verification DISABLED" in r.getMessage()]
     assert len(warnings) == 1
     assert "https://protect.local:9443" in warnings[0].getMessage()
-    # Don't bother awaiting close — pytest tears down the loop.
+    # Don't bother awaiting close - pytest tears down the loop.
     del client
 
 
-# ─── On-prem path overrides (tools_loader) ────────────────────────────────────
-
-
+# --- On-prem path overrides (tools_loader) ---
 def test_tool_def_path_for_picks_onprem_when_override_present() -> None:
     t = ToolDef(
         name="x", description="", input_schema={}, service="device-management",
@@ -529,9 +512,7 @@ def test_rename_device_has_onprem_override_loaded_from_json() -> None:
     assert rename.onprem_path == "/v1/devices/{deviceUuid}:renameDevice"
 
 
-# ─── Cloudflare Access Service Token ──────────────────────────────────────────
-
-
+# --- Cloudflare Access Service Token ---
 def test_settings_cf_access_requires_both_id_and_secret(monkeypatch) -> None:
     """Half-pair (only ID, only SECRET) is a 100% chance of operator typo."""
     _set_env(monkeypatch, ESET_ONPREM_CF_ACCESS_CLIENT_ID="just-the-id")
@@ -554,7 +535,7 @@ def test_settings_cf_access_both_set_ok(monkeypatch) -> None:
 
 def test_http_client_onprem_attaches_cf_headers_to_httpx_defaults() -> None:
     """When CF tokens are present, the httpx client default headers carry
-    CF-Access-Client-Id / CF-Access-Client-Secret on every outbound call —
+    CF-Access-Client-Id / CF-Access-Client-Secret on every outbound call -
     including the /GetTokens auth call (same underlying httpx client)."""
     creds = Credentials(
         user="u", password="p", region="eu",
@@ -570,7 +551,7 @@ def test_http_client_onprem_attaches_cf_headers_to_httpx_defaults() -> None:
 
 
 def test_http_client_cloud_does_not_attach_cf_headers() -> None:
-    """Cloud creds must NEVER carry CF Access headers — ESET Connect is a
+    """Cloud creds must NEVER carry CF Access headers - ESET Connect is a
     public SaaS and is not behind anyone's Cloudflare Access."""
     creds = Credentials(
         user="u", password="p", region="eu",
@@ -718,7 +699,7 @@ async def test_middleware_cloud_request_never_propagates_cf_headers(monkeypatch)
     """Even if env defaults set CF tokens, cloud requests must not carry them.
 
     Cloud creds always have empty CF fields because ESET Connect doesn't sit
-    behind anyone's CF Access — propagating the headers would leak the
+    behind anyone's CF Access - propagating the headers would leak the
     token to the public ESET API for no benefit.
     """
     _set_env(

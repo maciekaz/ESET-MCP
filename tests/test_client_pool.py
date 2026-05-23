@@ -11,7 +11,7 @@ from eset_mcp.credentials import Credentials
 
 @dataclass
 class _FakeSettings:
-    """Minimal stand-in for Settings — ClientPool only reads it to pass through."""
+    """Minimal stand-in for Settings - ClientPool only reads it to pass through."""
     user: str = "ignored"
     password: str = "ignored"
     region: str = "eu"
@@ -77,7 +77,7 @@ async def test_pool_lru_evicts_oldest() -> None:
         assert await pool.get(Credentials("u1", "x", "eu")) is first
         # u3 must still be the same cached instance.
         assert await pool.get(Credentials("u3", "x", "eu")) is third
-        # u2 was evicted — re-fetch mints a fresh client (different instance).
+        # u2 was evicted - re-fetch mints a fresh client (different instance).
         revived = await pool.get(Credentials("u2", "x", "eu"))
         assert revived is not second
     finally:
