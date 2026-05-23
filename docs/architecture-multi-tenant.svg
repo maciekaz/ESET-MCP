@@ -1,0 +1,108 @@
+<svg viewBox="0 0 860 308" xmlns="http://www.w3.org/2000/svg"
+     font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+
+  <rect width="860" height="308" fill="#ffffff" rx="10" stroke="#e1e4e8" stroke-width="1"/>
+
+  <!-- Title -->
+  <text x="430" y="26" text-anchor="middle" fill="#1f2328" font-size="13" font-weight="700">Example Multi-Tenant Architecture for MCP's</text>
+
+  <!-- Column labels -->
+  <text x="77"  y="45" text-anchor="middle" fill="#8c959f" font-size="8.5" font-weight="600" letter-spacing="0.8">MCP CLIENTS</text>
+  <text x="315" y="45" text-anchor="middle" fill="#8c959f" font-size="8.5" font-weight="600" letter-spacing="0.8">CREDS MANAGEMENT</text>
+  <text x="534" y="45" text-anchor="middle" fill="#8c959f" font-size="8.5" font-weight="600" letter-spacing="0.8">HUB</text>
+  <text x="729" y="45" text-anchor="middle" fill="#8c959f" font-size="8.5" font-weight="600" letter-spacing="0.8">ESET ENDPOINTS</text>
+
+  <!-- MCP CLIENT A -->
+  <rect x="14" y="90" width="126" height="48" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.2"/>
+  <text x="77" y="119" text-anchor="middle" fill="#1f2328" font-size="11" font-weight="600">MCP Client A</text>
+
+  <!-- MCP CLIENT B -->
+  <rect x="14" y="170" width="126" height="48" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.2"/>
+  <text x="77" y="199" text-anchor="middle" fill="#1f2328" font-size="11" font-weight="600">MCP Client B</text>
+
+  <!-- IBM CONTEXT FORGE -->
+  <rect x="200" y="54" width="230" height="196" rx="8" fill="#f6f8fa" stroke="#0969da" stroke-width="1.5"/>
+  <text x="315" y="72" text-anchor="middle" fill="#0969da" font-size="10" font-weight="700">IBM Context Forge</text>
+
+  <!-- Tenant A inner -->
+  <rect x="214" y="82" width="202" height="64" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="315" y="97" text-anchor="middle" fill="#1f2328" font-size="10" font-weight="600">Tenant A MCP</text>
+  <line x1="214" y1="103" x2="416" y2="103" stroke="#e1e4e8" stroke-width="1"/>
+  <text x="315" y="116" text-anchor="middle" fill="#1a7f37" font-size="9">Basic auth · Region: eu</text>
+  <text x="315" y="130" text-anchor="middle" fill="#57606a" font-size="8.5">Headers injected per request</text>
+  <text x="315" y="141" text-anchor="middle" fill="#8c959f" font-size="8">Credentials isolated per tenant</text>
+
+  <!-- Tenant B inner -->
+  <rect x="214" y="162" width="202" height="64" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="315" y="177" text-anchor="middle" fill="#1f2328" font-size="10" font-weight="600">Tenant B MCP</text>
+  <line x1="214" y1="183" x2="416" y2="183" stroke="#e1e4e8" stroke-width="1"/>
+  <text x="315" y="196" text-anchor="middle" fill="#9a6700" font-size="9">Basic auth · X-ESET-Server-URL</text>
+  <text x="315" y="210" text-anchor="middle" fill="#57606a" font-size="8.5">Headers injected per request</text>
+  <text x="315" y="221" text-anchor="middle" fill="#8c959f" font-size="8">Credentials isolated per tenant</text>
+
+  <!-- ESET-MCP -->
+  <rect x="460" y="54" width="148" height="196" rx="8" fill="#f6f8fa" stroke="#0969da" stroke-width="1.5"/>
+  <text x="534" y="72" text-anchor="middle" fill="#0969da" font-size="10" font-weight="700">ESET-MCP</text>
+
+  <rect x="472" y="78" width="124" height="46" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="534" y="96" text-anchor="middle" fill="#57606a" font-size="9">Auth resolver</text>
+  <text x="534" y="110" text-anchor="middle" fill="#8c959f" font-size="8">Client pool (LRU, per tenant)</text>
+
+  <rect x="472" y="134" width="124" height="46" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="534" y="152" text-anchor="middle" fill="#57606a" font-size="9">106 tools · RO/RW gate</text>
+  <text x="534" y="166" text-anchor="middle" fill="#8c959f" font-size="8">Response shaping</text>
+
+  <rect x="472" y="190" width="124" height="46" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="534" y="208" text-anchor="middle" fill="#57606a" font-size="9">Token managers</text>
+  <text x="534" y="222" text-anchor="middle" fill="#8c959f" font-size="8">OAuth2 · /GetTokens</text>
+
+  <!-- ESET Connect Cloud EU -->
+  <rect x="638" y="62" width="182" height="56" rx="6" fill="#f6f8fa" stroke="#1a7f37" stroke-width="1.3"/>
+  <text x="729" y="80" text-anchor="middle" fill="#1a7f37" font-size="10" font-weight="600">ESET Connect Cloud</text>
+  <text x="729" y="94" text-anchor="middle" fill="#57606a" font-size="9">Region: eu · *.eset.systems</text>
+  <text x="729" y="108" text-anchor="middle" fill="#8c959f" font-size="8">OAuth2 · 102 REST APIs</text>
+
+  <!-- ESET Connect Cloud US -->
+  <rect x="638" y="130" width="182" height="56" rx="6" fill="#f6f8fa" stroke="#1a7f37" stroke-width="1.3"/>
+  <text x="729" y="148" text-anchor="middle" fill="#1a7f37" font-size="10" font-weight="600">ESET Connect Cloud</text>
+  <text x="729" y="162" text-anchor="middle" fill="#57606a" font-size="9">Region: us · *.eset.systems</text>
+  <text x="729" y="176" text-anchor="middle" fill="#8c959f" font-size="8">OAuth2 · 102 REST APIs</text>
+
+  <!-- ESET PROTECT On-Prem -->
+  <rect x="638" y="198" width="182" height="52" rx="6" fill="#f6f8fa" stroke="#9a6700" stroke-width="1.3"/>
+  <text x="729" y="216" text-anchor="middle" fill="#9a6700" font-size="10" font-weight="600">ESET PROTECT On-Prem</text>
+  <text x="729" y="230" text-anchor="middle" fill="#57606a" font-size="9">https://host:9443</text>
+  <text x="729" y="242" text-anchor="middle" fill="#8c959f" font-size="8">POST /GetTokens · per-request URL</text>
+
+  <!-- Arrows + HTTPS labels -->
+  <line x1="140" y1="114" x2="200" y2="114" stroke="#0969da" stroke-width="1.3" marker-end="url(#ab)"/>
+  <text x="170" y="110" text-anchor="middle" fill="#57606a" font-size="7.5">HTTPS</text>
+
+  <line x1="140" y1="194" x2="200" y2="194" stroke="#0969da" stroke-width="1.3" marker-end="url(#ab)"/>
+  <text x="170" y="190" text-anchor="middle" fill="#57606a" font-size="7.5">HTTPS</text>
+
+  <line x1="430" y1="152" x2="460" y2="152" stroke="#0969da" stroke-width="1.3" marker-end="url(#ab)"/>
+  <text x="445" y="148" text-anchor="middle" fill="#57606a" font-size="7.5">HTTPS</text>
+
+  <line x1="608" y1="101" x2="638" y2="90" stroke="#1a7f37" stroke-width="1.2" marker-end="url(#ag)"/>
+  <text x="625" y="90" text-anchor="middle" fill="#57606a" font-size="7.5">HTTPS</text>
+
+  <line x1="608" y1="157" x2="638" y2="158" stroke="#1a7f37" stroke-width="1.2" marker-end="url(#ag)"/>
+  <text x="623" y="153" text-anchor="middle" fill="#57606a" font-size="7.5">HTTPS</text>
+
+  <line x1="608" y1="213" x2="638" y2="222" stroke="#9a6700" stroke-width="1.2" marker-end="url(#ay)"/>
+  <text x="625" y="211" text-anchor="middle" fill="#57606a" font-size="7.5">HTTPS</text>
+
+  <defs>
+    <marker id="ab" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L5.5,3 z" fill="#0969da"/>
+    </marker>
+    <marker id="ag" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L5.5,3 z" fill="#1a7f37"/>
+    </marker>
+    <marker id="ay" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L5.5,3 z" fill="#9a6700"/>
+    </marker>
+  </defs>
+
+</svg>
