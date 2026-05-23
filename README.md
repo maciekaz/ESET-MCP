@@ -18,36 +18,10 @@ auth, plus an optional URL override and optional Cloudflare Access service
 token) it routes the call to the right backend, mints its own tokens, and
 keeps tenants isolated in the pool.
 
-## Architecture at a glance
-
-The simplest setup: credentials in `.env`, one MCP host, one ESET cloud
-region. Good for personal use, a single team, or a desktop AI client like
-Claude Desktop or Claude Code.
-
-![Single-tenant: one ESET account, one deployment](docs/architecture-single-tenant.svg)
-
-For real multi-tenant or enterprise deployments, put a credentials manager
-in front of ESET-MCP. The diagram below shows one such pattern using
-[IBM mcp-context-forge](https://github.com/IBM/mcp-context-forge) as the
-"creds management" layer - any equivalent MCP gateway (or your own auth
-proxy) works the same way:
-
-![Multi-tenant: many clients, one MCP, many backends](docs/architecture-multi-tenant.svg)
-
-The forge holds per-tenant secrets and injects `Authorization: Basic`,
-`X-ESET-Region`, `X-ESET-Server-URL`, and `X-ESET-CF-Access-*` headers per
-request. ESET-MCP routes each request to the right backend (cloud region,
-on-prem PROTECT console, or on-prem behind Cloudflare Access) and the
-per-tenant LRU client pool keeps OAuth tokens fully isolated between
-tenants. This is a working pattern, not aspirational - the headers, pool
-keys, and routing rules described here are all in the test suite under
-`tests/test_concurrency.py` and `tests/test_onprem.py`.
-
----
-
 ## Table of contents
 
 - [Features](#features)
+- [Architecture at a glance](#architecture-at-a-glance)
 - [Security](#security)
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
@@ -185,6 +159,33 @@ back off; 5xx → retry shortly.
   `ESET_LOG_LEVEL=ERROR` to silence everything but hard failures.
   Disable metrics entirely with `ESET_MCP_METRICS_ENABLED=false`
   (default). The three knobs are independent.
+
+---
+
+## Architecture at a glance
+
+The simplest setup: credentials in `.env`, one MCP host, one ESET cloud
+region. Good for personal use, a single team, or a desktop AI client like
+Claude Desktop or Claude Code.
+
+![Single-tenant: one ESET account, one deployment](docs/architecture-single-tenant.svg)
+
+For real multi-tenant or enterprise deployments, put a credentials manager
+in front of ESET-MCP. The diagram below shows one such pattern using
+[IBM mcp-context-forge](https://github.com/IBM/mcp-context-forge) as the
+"creds management" layer - any equivalent MCP gateway (or your own auth
+proxy) works the same way:
+
+![Multi-tenant: many clients, one MCP, many backends](docs/architecture-multi-tenant.svg)
+
+The forge holds per-tenant secrets and injects `Authorization: Basic`,
+`X-ESET-Region`, `X-ESET-Server-URL`, and `X-ESET-CF-Access-*` headers per
+request. ESET-MCP routes each request to the right backend (cloud region,
+on-prem PROTECT console, or on-prem behind Cloudflare Access) and the
+per-tenant LRU client pool keeps OAuth tokens fully isolated between
+tenants. This is a working pattern, not aspirational - the headers, pool
+keys, and routing rules described here are all in the test suite under
+`tests/test_concurrency.py` and `tests/test_onprem.py`.
 
 ---
 
