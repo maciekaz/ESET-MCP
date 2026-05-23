@@ -4,6 +4,42 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
 [![MCP spec](https://img.shields.io/badge/MCP%20spec-2025--11--25-informational)](https://modelcontextprotocol.io/specification/2025-11-25)
 
+graph LR
+    subgraph Klienci MCP "Klienci MCP (Agenty AI)"
+        A[Claude Desktop]
+        B[Claude Code]
+        C[Własny Agent / Skrypt]
+    end
+
+    subgraph Serwer ESET-MCP "Pojedynczy Hub ESET-MCP"
+        direction TB
+        Router[Router Żądań\nRozpoznawanie Nagłówków]
+        Auth[Zarządzanie Tożsamością\nBasic Auth -> OAuth2]
+        Pool[Izolowana Pula Klientów\nCache LRU w pamięci]
+        Shaping[Ochrona Kontekstu LLM\nByte Cap / Projekcja]
+        
+        Router --> Auth
+        Auth --> Pool
+        Pool --> Shaping
+    end
+
+    subgraph Środowiska ESET "Powierzchnia Zarządzania ESET"
+        E1[ESET Connect\nChmura - Region EU]
+        E2[ESET Connect\nChmura - Region US/Inne]
+        E3[ESET PROTECT On-Prem\nKonsola Klienta A]
+        E4[ESET PROTECT On-Prem\nKonsola Klienta B + CF Access]
+        E5[ESET Inspect / Cloud Office]
+    end
+
+    A -- "Protokół MCP\n(stdio / HTTP)" --> Router
+    B -- "Protokół MCP\n(stdio / HTTP)" --> Router
+    C -- "Protokół MCP\n(stdio / HTTP)" --> Router
+
+    Shaping -- "REST API (OAuth2)" --> E1
+    Shaping -- "REST API (OAuth2)" --> E2
+    Shaping -- "REST /GetTokens" --> E3
+    Shaping -- "Tunel Cloudflare Access" --> E4
+    Shaping -- "REST API" --> E5
 A [Model Context Protocol](https://modelcontextprotocol.io) server for the
 entire ESET management surface: [ESET Connect](https://help.eset.com/eset_connect/en-US/)
 (cloud, all regions), ESET PROTECT On-Prem, ESET Inspect, and ESET Cloud
