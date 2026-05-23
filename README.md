@@ -18,6 +18,11 @@ auth, plus an optional URL override and optional Cloudflare Access service
 token) it routes the call to the right backend, mints its own tokens, and
 keeps tenants isolated in the pool.
 
+> **⚠️ Disclaimer**  
+> This is an independent, community-driven open-source project and is **not** affiliated with, officially supported by, or endorsed by ESET, spol. s r.o. ESET and its product names are registered trademarks of their respective owners.  
+> 
+> While every effort has been made to ensure this software is safe and robust (including the strict Read-Only mode gate), this code is provided "AS IS", without any warranty of any kind. You are solely responsible for how you use this tool and any changes made to your ESET environment.
+> 
 ## Table of contents
 
 - [Features](#features)
