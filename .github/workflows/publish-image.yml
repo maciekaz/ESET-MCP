@@ -17,8 +17,6 @@ on:
   push:
     tags: ['v*.*.*']
     branches: [main]
-  release:
-    types: [published]    # also fire when a Release is created from an existing tag (UI flow)
   workflow_dispatch: {}
 
 permissions:
