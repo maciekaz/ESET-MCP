@@ -62,6 +62,8 @@ jobs:
             org.opencontainers.image.title=ESET-MCP
             org.opencontainers.image.description=MCP server for the ESET ecosystem (Connect cloud + PROTECT On-Prem)
             org.opencontainers.image.licenses=MIT
+          annotations: |
+            io.modelcontextprotocol.server.name=io.github.maciekaz/eset-mcp
 
       - id: build
         uses: docker/build-push-action@v6
@@ -72,6 +74,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: mode=max
@@ -88,3 +91,47 @@ jobs:
             echo "Signing ${tag}@${DIGEST}"
             cosign sign --yes "${tag}@${DIGEST}"
           done
+
+      # MCP Registry publish - only on v*.*.* tags, not on main pushes.
+      # The registry verifies ownership by reading the
+      # io.modelcontextprotocol.server.name annotation off the manifest at
+      # the identifier in server.json - so this MUST run after the image
+      # was pushed (which it is, build-push-action step above completed).
+      - name: Install mcp-publisher
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          curl -fsSL \
+            "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" \
+            | tar xz mcp-publisher
+
+      - name: Sync server.json version with release tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          VERSION_TAG: ${{ github.ref_name }}
+        run: |
+          # Strip the leading 'v' from refs/tags/v1.0.3 -> 1.0.3, then rewrite
+          # server.json's version + per-package identifier+version to match.
+          V="${VERSION_TAG#v}"
+          python3 <<PY
+          import json, pathlib
+          p = pathlib.Path("server.json")
+          d = json.loads(p.read_text())
+          d["version"] = "$V"
+          for pkg in d.get("packages", []):
+              pkg["version"] = "$V"
+              ident = pkg.get("identifier", "")
+              if ":" in ident:
+                  pkg["identifier"] = ident.rsplit(":", 1)[0] + ":$V"
+          p.write_text(json.dumps(d, indent=2) + "\n")
+          print(p.read_text())
+          PY
+
+      - name: Validate server.json against MCP schema
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: ./mcp-publisher validate ./server.json
+
+      - name: Publish to MCP Registry
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish

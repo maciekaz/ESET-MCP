@@ -10,7 +10,8 @@ LABEL org.opencontainers.image.title="ESET-MCP" \
       org.opencontainers.image.url="https://github.com/maciekaz/ESET-MCP" \
       org.opencontainers.image.documentation="https://github.com/maciekaz/ESET-MCP#readme" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.vendor="maciekaz"
+      org.opencontainers.image.vendor="maciekaz" \
+      io.modelcontextprotocol.server.name="io.github.maciekaz/eset-mcp"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
