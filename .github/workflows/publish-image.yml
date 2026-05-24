@@ -118,7 +118,9 @@ jobs:
           d = json.loads(p.read_text())
           d["version"] = "$V"
           for pkg in d.get("packages", []):
-              pkg["version"] = "$V"
+              # OCI packages must NOT have a 'version' field; the version
+              # lives inside the identifier tag (per registry validator).
+              pkg.pop("version", None)
               ident = pkg.get("identifier", "")
               if ":" in ident:
                   pkg["identifier"] = ident.rsplit(":", 1)[0] + ":$V"
