@@ -219,9 +219,8 @@ async def test_metrics_endpoint_returns_prometheus_format() -> None:
     assert "deployment=\"cloud\"" in body
 
 
-def test_metrics_endpoint_ignores_lifespan_scope() -> None:
+async def test_metrics_endpoint_ignores_lifespan_scope() -> None:
     """Non-HTTP scopes (lifespan, websocket) must not crash the handler."""
-    import asyncio
     app = metrics_asgi_app()
 
     async def _recv() -> dict:
@@ -230,8 +229,4 @@ def test_metrics_endpoint_ignores_lifespan_scope() -> None:
     async def _send(_msg: dict) -> None:
         raise AssertionError("send must not be called for lifespan scope")
 
-    asyncio.get_event_loop().run_until_complete(
-        app({"type": "lifespan"}, _recv, _send)
-    ) if not asyncio.get_event_loop().is_running() else asyncio.create_task(
-        app({"type": "lifespan"}, _recv, _send)
-    )
+    await app({"type": "lifespan"}, _recv, _send)
