@@ -447,7 +447,7 @@ def test_make_token_manager_picks_by_deployment() -> None:
 
 
 # --- EsetHttpClient TLS verify wiring ---
-def test_http_client_onprem_verify_true_by_default() -> None:
+async def test_http_client_onprem_verify_true_by_default() -> None:
     creds = Credentials(
         user="u", password="p", region="eu",
         deployment="onprem", server_url="https://protect.local:9443",
@@ -459,8 +459,7 @@ def test_http_client_onprem_verify_true_by_default() -> None:
         # but stable enough across httpx 0.27+.
         assert client._http.is_closed is False
     finally:
-        import asyncio
-        asyncio.get_event_loop().run_until_complete(client.aclose()) if not asyncio.get_event_loop().is_running() else None
+        await client.aclose()
 
 
 def test_http_client_onprem_verify_false_honoured_and_warns(caplog) -> None:
