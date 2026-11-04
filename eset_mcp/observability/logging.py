@@ -24,6 +24,8 @@ import logging
 import sys
 from typing import Any, Final
 
+from ..security import clean_output, clean_text, sensitive_key
+
 # Substrings that, if present in a field name, cause that field to be
 # dropped before it reaches the formatter. Case-insensitive match. Add
 # liberally - false-positives just mean "this field doesn't show up in
@@ -45,7 +47,7 @@ _SENSITIVE_KEY_SUBSTRINGS: Final[tuple[str, ...]] = (
 
 def _is_sensitive(key: str) -> bool:
     k = key.lower()
-    return any(sub in k for sub in _SENSITIVE_KEY_SUBSTRINGS)
+    return sensitive_key(key) or any(sub in k for sub in _SENSITIVE_KEY_SUBSTRINGS)
 
 
 def _scrub(fields: dict[str, Any]) -> dict[str, Any]:
@@ -55,7 +57,7 @@ def _scrub(fields: dict[str, Any]) -> dict[str, Any]:
     fields and we make a deliberate choice NOT to log them at all, so they
     never appear in any log artefact under any circumstance.
     """
-    return {k: v for k, v in fields.items() if not _is_sensitive(k)}
+    return {k: clean_output(v) for k, v in fields.items() if not _is_sensitive(k)}
 
 
 class _JsonFormatter(logging.Formatter):
@@ -99,7 +101,7 @@ class _JsonFormatter(logging.Formatter):
                 out[k] = repr(v)
         if record.exc_info:
             out["exception"] = self.formatException(record.exc_info)
-        return json.dumps(out, ensure_ascii=False)
+        return json.dumps(clean_output(out), ensure_ascii=False)
 
 
 class _TextFormatter(logging.Formatter):
@@ -125,11 +127,11 @@ class _TextFormatter(logging.Formatter):
                 continue
             if _is_sensitive(k):
                 continue
-            extras[k] = v
+            extras[k] = clean_output(v)
         if extras:
             kv = " ".join(f"{k}={v!r}" if isinstance(v, str) else f"{k}={v}" for k, v in extras.items())
-            return f"{base}  {kv}"
-        return base
+            return clean_text(f"{base}  {kv}")
+        return clean_text(base)
 
 
 def configure_logging(*, level: str = "INFO", fmt: str = "text") -> None:
@@ -150,6 +152,10 @@ def configure_logging(*, level: str = "INFO", fmt: str = "text") -> None:
     else:
         handler.setFormatter(_TextFormatter())
     root.addHandler(handler)
+    # HTTP libraries otherwise log substituted paths/query strings. The app
+    # emits its own safe request events containing only method/service/status.
+    for name in ("httpx", "httpcore", "httpx2", "httpcore2"):
+        logging.getLogger(name).setLevel(logging.WARNING)
     try:
         root.setLevel(level.upper())
     except ValueError:

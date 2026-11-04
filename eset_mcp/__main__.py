@@ -57,7 +57,19 @@ async def _run(settings: Settings) -> None:
 
 
 async def _serve_http(settings: Settings, server) -> None:
-    """Streamable HTTP transport per MCP spec 2025-11-25.
+    """Serve both MCP 2026 and legacy Streamable HTTP clients."""
+    import uvicorn
+
+    app = create_http_app(settings, server)
+    config = uvicorn.Config(
+        app, host=settings.http_host, port=settings.http_port,
+        log_level=settings.log_level.lower(), access_log=False,
+    )
+    await uvicorn.Server(config).serve()
+
+
+def create_http_app(settings: Settings, server):
+    """Streamable HTTP transport per MCP spec 2026-07-28.
 
     NOTE: StreamableHTTPSessionManager owns an anyio task group that MUST be
     entered via `async with manager.run()` BEFORE any request hits
@@ -66,12 +78,24 @@ async def _serve_http(settings: Settings, server) -> None:
     """
     import contextlib
 
-    import uvicorn
     from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
+    from mcp.server.transport_security import TransportSecuritySettings
     from starlette.applications import Starlette
     from starlette.routing import Mount
 
-    manager = StreamableHTTPSessionManager(app=server, stateless=False)
+    from .config import _parse_metrics_path
+    _parse_metrics_path(settings.metrics_path)
+    if (settings.auth_mode == "env" and settings.http_host not in {"localhost", "127.0.0.1", "::1"}
+            and not settings.allow_unauthenticated_http):
+        raise RuntimeError("Public HTTP requires basic auth, or explicit ESET_MCP_ALLOW_UNAUTHENTICATED_HTTP=true behind an authenticated gateway")
+    manager = StreamableHTTPSessionManager(
+        app=server, stateless=False, session_idle_timeout=1800, max_sessions=1000,
+        security_settings=TransportSecuritySettings(
+            enable_dns_rebinding_protection=True,
+            allowed_hosts=list(settings.http_allowed_hosts),
+            allowed_origins=list(settings.http_allowed_origins),
+        ),
+    )
 
     @contextlib.asynccontextmanager
     async def _lifespan(_app):
@@ -107,10 +131,7 @@ async def _serve_http(settings: Settings, server) -> None:
             skip_paths=(settings.metrics_path,) if settings.metrics_enabled else (),
         )
 
-    config = uvicorn.Config(
-        app, host=settings.http_host, port=settings.http_port, log_level=settings.log_level.lower()
-    )
-    await uvicorn.Server(config).serve()
+    return app
 
 
 if __name__ == "__main__":

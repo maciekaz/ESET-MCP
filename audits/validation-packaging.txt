@@ -1,0 +1,1 @@
+PASS: wheel and sdist 1.1.0; installed outside checkout with locked production dependencies; SDK 2.3.0; 105 tools; 17 OpenAPI JSON files; wheel code matches final source; archives exclude .env, .git and Trikkies.

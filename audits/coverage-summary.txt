@@ -1,0 +1,25 @@
+Name                                 Stmts   Miss Branch BrPart  Cover
+----------------------------------------------------------------------
+eset_mcp/__init__.py                     1      0      0      0   100%
+eset_mcp/__main__.py                    64     27     18      4    50%
+eset_mcp/auth.py                       128      2     30      0    99%
+eset_mcp/client_pool.py                 75      2     18      2    96%
+eset_mcp/composite_tools.py            174     14     64     14    87%
+eset_mcp/config.py                     177     21     64     18    84%
+eset_mcp/credentials.py                 69      0     14      0   100%
+eset_mcp/egress.py                      44      7      8      1    85%
+eset_mcp/errors.py                      28      1      2      1    93%
+eset_mcp/http_client.py                 75      2     16      2    96%
+eset_mcp/middleware.py                  84      2     30      2    96%
+eset_mcp/modes.py                        6      0      2      0   100%
+eset_mcp/observability/__init__.py       3      0      0      0   100%
+eset_mcp/observability/logging.py       79      8     32      5    88%
+eset_mcp/observability/metrics.py       61      9     20      8    77%
+eset_mcp/regions.py                     22      2     10      2    88%
+eset_mcp/response_shaping.py            64      0     26      2    98%
+eset_mcp/security.py                    67      0     22      0   100%
+eset_mcp/server.py                     195     45     60      7    73%
+eset_mcp/tools_loader.py               170     17     72     15    87%
+eset_mcp/transport.py                   81      4     26      1    93%
+----------------------------------------------------------------------
+TOTAL                                 1667    163    534     84    87%

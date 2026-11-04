@@ -1,87 +1,66 @@
 # Security policy
 
-## Reporting a vulnerability
+Report vulnerabilities using a [private GitHub security advisory](https://github.com/maciekaz/ESET-MCP/security/advisories/new), not a public issue.
 
-**Please do not file public GitHub issues for security problems.**
+The security scope includes the package, bundled deployment configuration and CI.
+Vendor API behavior and third-party components also need independent updates and
+monitoring; this project cannot guarantee their security.
 
-Open a private security advisory instead:
+## Security boundaries in 2.0.0
 
-<https://github.com/maciekaz/ESET-MCP/security/advisories/new>
+- Authentication is internal: `/oauth/token` and `/GetTokens` are absent from
+  tools and catalogs, and blocked at the business request boundary.
+- All tool outputs, including composites, pass through request-local secret
+  filtering. Known passwords, access/refresh tokens, CF secrets, common encodings
+  and sensitive nested keys are removed. Pagination cursors remain usable.
+  Upstream error bodies, URLs and upstream correlation IDs are not returned.
+- Per-call credentials come from the SDK's explicit HTTP request. Legacy MCP
+  sessions are bound to connection identity; changed credentials require a new
+  session. Modern requests are stateless. Pool entries isolate connection
+  settings, and leases prevent eviction from closing an active operation.
+- On-prem origins require operator authorization. Environment CF credentials
+  are attached only to the configured default origin. DNS addresses are checked
+  at connection time, with the approved IP pinned for TCP and the original host
+  retained for TLS/SNI. Implicit proxies and redirects are disabled.
+- Application logging sanitizes nested values, messages and exceptions; HTTP
+  access logs are disabled. Caddy runtime logs filter request headers and URI.
+  Apply equivalent secret filtering to custom tracing/exporters and externally
+  installed log handlers.
+- RO hides and blocks all 54 write operations before contacting ESET. RW remains
+  available. Transport failures and 5xx responses do not automatically replay
+  mutations. A timeout or cancellation does not prove a mutation was undone.
 
-I aim to acknowledge reports within 72 hours and to ship a fix or a
-documented mitigation within two weeks for high/critical severity issues.
+## Deployment requirements
 
-## Scope
+Basic authentication is the existing custom ingress contract, not an OAuth 2.1
+resource server implementation. It requires a host capable of supplying custom
+headers and HTTPS at a trusted gateway. ESET bearer tokens are never accepted as
+MCP bearer credentials. Stdio uses environment credentials.
 
-In scope:
+Configure `ESET_MCP_ALLOWED_HOSTS` for the public host. An Origin header must
+match `ESET_MCP_ALLOWED_ORIGINS`; absent Origin is accepted for native clients.
+Env-auth HTTP bound beyond loopback is rejected unless the operator explicitly
+sets `ESET_MCP_ALLOW_UNAUTHENTICATED_HTTP=true` behind an authenticated gateway.
+The application cannot verify that this external gateway is configured correctly.
 
-- Anything in the `eset_mcp/` package (auth, credentials, middleware,
-  client pool, HTTP client, observability, tools loader).
-- The `Dockerfile`, `docker-compose.yml`, and `Caddyfile` shipped in
-  this repo.
-- The CI workflow under `.github/workflows/`.
+Configure `ESET_ONPREM_ORIGINS` by username for non-default consoles. Keep TLS
+verification enabled and use `ESET_CA_BUNDLE` for a private CA. Default egress
+allows normal private subnets but rejects loopback, link-local, multicast,
+unspecified and reserved addresses. Use `ESET_ONPREM_NETWORKS` to restrict targets
+further, or explicitly authorize a required special network. That is an operator
+trust decision; avoid broad CIDRs on shared servers.
 
-Out of scope (report directly to the upstream maintainer):
+The prod Compose profile exposes only Caddy, excludes non-prod profiles and
+keeps metrics private. Caddy receives only its public domain/email variables.
+Use dedicated ESET accounts with the least required permissions. Password/CF
+rotation requires a new legacy session; settings, environment credentials and CA
+bundle changes require a restart. Tokens are kept in process memory, not a token
+file; process dumps and privileged debugging still expose memory.
 
-- Vulnerabilities in the [Model Context Protocol SDK](https://github.com/modelcontextprotocol/python-sdk),
-  `httpx`, `pydantic`, `python-dotenv`, `starlette`, `uvicorn`, or
-  `prometheus-client`.
-- Vulnerabilities in the ESET Connect API itself or in ESET PROTECT
-  On-Prem (those belong to ESET's security team).
-- Misconfigurations in your own deployment (e.g. running `basic` auth
-  mode over plain HTTP, leaving `ESET_ONPREM_VERIFY_SSL=false` on
-  the public internet, exposing `/metrics` without network ACLs).
+See the [required upgrade settings](docs/security-migration-status.md) when
+migrating an existing deployment.
 
-## Verified security properties
+## Extending the server
 
-These are continuously tested in CI:
-
-- **Credential isolation between tenants**. ContextVar-scoped credentials
-  per request; per-tenant OAuth token managers; pool keyed by
-  `(user, password_hash, deployment, region_or_url, cf_secret_hash)`;
-  one tenant's auth failure does not affect any other tenant. See
-  `tests/test_concurrency.py`.
-- **No secrets in logs**. Defensive deny-list in
-  `eset_mcp/observability/logging.py` drops any field whose name matches
-  `password` / `secret` / `token` / `authorization` / `cookie` /
-  `api_key` / `bearer` / `credentials` / `cf-access-client-*` before any
-  formatter sees it. Tested in `tests/test_observability.py`, including
-  assertions that the raw secret bytes never appear in the output line.
-- **No secrets on disk**. OAuth tokens live in process memory only;
-  basic-auth credentials are never written back to the filesystem.
-- **TLS required for basic auth**. The server enforces HTTP transport
-  for `ESET_AUTH_MODE=basic` at startup; production deployments must
-  front it with TLS (the `prod` docker-compose profile uses Caddy +
-  Let's Encrypt).
-- **RO/RW defence-in-depth**. Even in RO mode, write tools are both
-  hidden from `list_tools` AND blocked at `call_tool` before any HTTP
-  request goes out.
-- **Dependency scanning**. Snyk SCA on every CI run; `prometheus-client`
-  is an opt-in extra so default installs have a minimal dep surface.
-- **SAST**. Snyk Code on every CI run; current count: 0 issues.
-- **Secret scanning**. gitleaks with a project-specific allowlist
-  for the OAuth RFC 6749 example values present in the bundled ESET
-  OpenAPI spec. Current count: 0 leaks.
-
-## Hardening checklist for operators
-
-When you deploy ESET-MCP in production:
-
-1. Use `ESET_AUTH_MODE=basic` only behind TLS (the `prod` compose
-   profile + Caddy handles this for you).
-2. Leave `ESET_ONPREM_VERIFY_SSL=true` unless you genuinely need to
-   talk to an on-prem console with a self-signed cert on a trusted
-   network.
-3. Protect `/metrics` at the network layer (private subnet, VPN, or a
-   Caddy ACL). The endpoint carries no secrets but does carry
-   per-tenant activity counts.
-4. Use a **dedicated** ESET API user (not your console login). Give it
-   the minimum Permission Set required for the tools you expose.
-5. Rotate basic-auth credentials and Cloudflare Access service tokens
-   on the schedule your organisation requires. The MCP server picks
-   up new credentials on the next request - no restart needed.
-6. Set `ESET_LOG_LEVEL=WARNING` (or `ERROR`) on chatty deployments to
-   suppress per-call INFO events while keeping retries / errors
-   visible.
-7. Pin a specific image digest (not just the `latest` tag) when
-   deploying via Docker.
+Route new output types through the common secret-filtering boundary. Do not add
+raw upstream diagnostic or authentication tools.

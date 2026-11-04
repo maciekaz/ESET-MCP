@@ -1,7 +1,7 @@
 name: Publish Docker image
 
 # Builds and publishes a multi-arch (amd64 + arm64) image to GHCR on:
-#   - any v*.*.* tag             -> semver tags (1.0.1, 1.0, 1, latest, sha-*)
+#   - any v*.*.* tag             -> semver tags (2.0.0, 2.0, 2, latest, sha-*)
 #   - every push to main         -> 'main' + 'sha-<short>' (edge, not 'latest')
 #   - manual workflow_dispatch   -> same as a main push
 #
@@ -9,9 +9,9 @@ name: Publish Docker image
 # build provenance + SBOM attestations. Users can verify with:
 #
 #   cosign verify \
-#     --certificate-identity-regexp '^https://github.com/maciekaz/ESET-MCP/' \
+#     --certificate-identity 'https://github.com/maciekaz/ESET-MCP/.github/workflows/publish-image.yml@refs/tags/v2.0.0' \
 #     --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-#     ghcr.io/maciekaz/eset-mcp:1
+#     ghcr.io/maciekaz/eset-mcp:2.0.0
 
 on:
   push:
@@ -30,11 +30,31 @@ env:
   IMAGE_NAME: ${{ github.repository_owner }}/eset-mcp
 
 jobs:
+  validate:
+    uses: ./.github/workflows/integration.yml
+
   publish:
+    needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate release versions
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python3 <<'PY'
+          import ast, json, os, pathlib, tomllib
+          version = os.environ['RELEASE_TAG'].removeprefix('v')
+          assert tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'] == version
+          tree = ast.parse(pathlib.Path('eset_mcp/__init__.py').read_text())
+          assert next(ast.literal_eval(n.value) for n in tree.body if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == '__version__' for t in n.targets)) == version
+          metadata = json.loads(pathlib.Path('server.json').read_text())
+          assert metadata['version'] == version
+          assert metadata['packages'][0]['identifier'] == f'ghcr.io/maciekaz/eset-mcp:{version}'
+          PY
 
       - uses: docker/setup-qemu-action@v3       # enables arm64 builds on amd64 runner
       - uses: docker/setup-buildx-action@v3     # BuildKit + cache backends
@@ -78,17 +98,24 @@ jobs:
           provenance: mode=max
           sbom: true
 
-      - uses: sigstore/cosign-installer@v3
+      - name: Install pinned Cosign
+        run: |
+          curl -fsSL https://github.com/sigstore/cosign/releases/download/v3.1.4/cosign-linux-amd64 -o "$RUNNER_TEMP/cosign"
+          echo "424e2c97d0b45fd7a6b608a87f090f35633f4c23ece5f092d48bba11aaf4bbfa  $RUNNER_TEMP/cosign" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/cosign"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
       - name: Sign image with cosign (keyless)
         env:
-          TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          for tag in $TAGS; do
-            echo "Signing ${tag}@${DIGEST}"
-            cosign sign --yes "${tag}@${DIGEST}"
-          done
+          IMAGE_REF="${REGISTRY}/${IMAGE_NAME}@${DIGEST}"
+          cosign sign --yes "$IMAGE_REF"
+          cosign verify \
+            --certificate-identity "https://github.com/${GITHUB_REPOSITORY}/.github/workflows/publish-image.yml@${GITHUB_REF}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            "$IMAGE_REF"
+          echo "Signed and verified: $IMAGE_REF" >> "$GITHUB_STEP_SUMMARY"
 
       # MCP Registry publish - only on v*.*.* tags, not on main pushes.
       # The registry verifies ownership by reading the
@@ -99,32 +126,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           curl -fsSL \
-            "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" \
-            | tar xz mcp-publisher
-
-      - name: Sync server.json version with release tag
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          VERSION_TAG: ${{ github.ref_name }}
-        run: |
-          # Strip the leading 'v' from refs/tags/v1.0.3 -> 1.0.3, then rewrite
-          # server.json's version + per-package identifier+version to match.
-          V="${VERSION_TAG#v}"
-          python3 <<PY
-          import json, pathlib
-          p = pathlib.Path("server.json")
-          d = json.loads(p.read_text())
-          d["version"] = "$V"
-          for pkg in d.get("packages", []):
-              # OCI packages must NOT have a 'version' field; the version
-              # lives inside the identifier tag (per registry validator).
-              pkg.pop("version", None)
-              ident = pkg.get("identifier", "")
-              if ":" in ident:
-                  pkg["identifier"] = ident.rsplit(":", 1)[0] + ":$V"
-          p.write_text(json.dumps(d, indent=2) + "\n")
-          print(p.read_text())
-          PY
+            https://github.com/modelcontextprotocol/registry/releases/download/v1.8.7/mcp-publisher_linux_amd64.tar.gz \
+            -o "$RUNNER_TEMP/mcp-publisher.tar.gz"
+          echo "00b21004149a4ce66f0782508ae4a2bce67d1bea395a8da0bd8028159fb59579  $RUNNER_TEMP/mcp-publisher.tar.gz" | sha256sum -c -
+          tar xzf "$RUNNER_TEMP/mcp-publisher.tar.gz" mcp-publisher
 
       - name: Validate server.json against MCP schema
         if: startsWith(github.ref, 'refs/tags/v')

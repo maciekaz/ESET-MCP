@@ -1,0 +1,14 @@
+{
+  "image": "eset-mcp:1.1.0-local",
+  "id": "sha256:c596cf2597eada08522ee200ef49b2604aac11b90766cb80849057d525b599ba",
+  "platform": "linux/arm64",
+  "entrypoint": [
+    "eset-mcp"
+  ],
+  "user": "esetmcp",
+  "stdio": "passed",
+  "http": "passed",
+  "graceful_http_shutdown": "passed",
+  "oom_killed": false,
+  "restarts": 0
+}

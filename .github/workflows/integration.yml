@@ -1,44 +1,68 @@
-name: Integration tests
+name: Offline compatibility and security tests
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-  schedule:
-    # Daily run at 03:17 UTC — catches drift between the MCP server and the
-    # ESET API (e.g. a new v3 endpoint appearing in Swagger).
-    - cron: "17 3 * * *"
   workflow_dispatch: {}
+  workflow_call: {}
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12', '3.13', '3.14']
+    env:
+      PYTHON_DOTENV_DISABLED: '1'
+      ESET_RUN_LIVE_TESTS: '0'
+      ESET_USER: ''
+      ESET_PASSWORD: ''
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: ${{ matrix.python }}
           cache: pip
-
-      - name: Install
+          cache-dependency-path: requirements-dev.lock
+      - name: Install locked dependencies and local package
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-
+          python -m pip install --require-hashes -r requirements-dev.lock
+          python -m pip install --no-deps --no-build-isolation -e .
       - name: Lint
-        run: ruff check eset_mcp tests
-
-      - name: Run tests (RO only)
-        env:
-          ESET_USER: ${{ secrets.ESET_USER }}
-          ESET_PASSWORD: ${{ secrets.ESET_PASSWORD }}
-          ESET_REGION: ${{ secrets.ESET_REGION || 'eu' }}
-          ESET_MODE: RO
+        run: ruff check eset_mcp tests audits
+      - name: Offline tests including raw MCP, CLI and local TLS
+        run: python -m pytest -q tests audits
+      - name: Build distributable
+        run: python -m build --no-isolation
+      - name: Verify pinned Caddy config and redaction on loopback
+        if: matrix.python == '3.13'
         run: |
-          # -m "not rw" — skip RW-marked tests (CI's account is RO-only).
-          # Runs tests with the `ro` marker plus any unmarked tests.
-          pytest -v -m "not rw"
+          curl -fsSL https://github.com/caddyserver/caddy/releases/download/v2.11.7/caddy_2.11.7_linux_amd64.tar.gz -o /tmp/eset-caddy.tar.gz
+          echo '727b91701a392de6ebc5027509f548bf39979e5216340d0faed8fa5e69c84f8b  /tmp/eset-caddy.tar.gz' | sha256sum -c -
+          tar -xzf /tmp/eset-caddy.tar.gz -C /tmp caddy
+          python tests/caddy_probe.py /tmp/caddy
+      - name: Build source image
+        if: matrix.python == '3.13'
+        run: docker build --tag eset-mcp:check .
+      - name: Exercise production image against isolated TLS API
+        if: matrix.python == '3.13'
+        run: |
+          docker run --rm --network none --read-only \
+            --tmpfs /tmp:rw,nosuid,nodev,size=64m \
+            --add-host eu.business-account.iam.eset.systems:127.0.0.1 \
+            --add-host eu.device-management.eset.systems:127.0.0.1 \
+            --mount type=bind,src="$PWD/tests/docker_probe.py",dst=/tmp/docker_probe.py,readonly \
+            --entrypoint python eset-mcp:check /tmp/docker_probe.py
+      - name: Verify actual SDK 1 client compatibility
+        if: matrix.python == '3.13'
+        run: |
+          python -m venv /tmp/eset-legacy-client
+          /tmp/eset-legacy-client/bin/python -m pip install -r audits/requirements-baseline.txt
+          /tmp/eset-legacy-client/bin/python tests/legacy_sdk_probe.py "$(command -v python)"

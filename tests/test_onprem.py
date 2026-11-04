@@ -169,7 +169,7 @@ def test_cache_key_cf_token_rotation_creates_new_pool_entry() -> None:
     assert len(keys) == 3, "expected three distinct pool keys (A, B, no-CF)"
     # CF id alone (without secret) is never used - only secret hash distinguishes.
     assert with_a.cache_key()[4] != ""
-    assert no_cf.cache_key()[4] == ""
+    assert no_cf.cache_key()[4] != with_a.cache_key()[4]
 
 
 # --- Header normalisation (middleware helpers) ---
@@ -306,6 +306,7 @@ async def test_middleware_no_override_uses_cloud_default(monkeypatch) -> None:
 
 async def test_middleware_server_url_header_switches_to_onprem(monkeypatch) -> None:
     _set_env(monkeypatch, ESET_AUTH_MODE="basic", ESET_MCP_TRANSPORT="http")
+    monkeypatch.setenv("ESET_ONPREM_ORIGINS", '{"u":["https://protect.client-a.local:9443"]}')
     s = Settings.from_env(env_file=None)
     app = _build_app_with_middleware(s)
     transport = httpx.ASGITransport(app=app)
@@ -326,6 +327,7 @@ async def test_middleware_server_url_header_switches_to_onprem(monkeypatch) -> N
 async def test_middleware_server_url_wins_over_region(monkeypatch) -> None:
     """Mixing X-ESET-Server-URL with X-ESET-Region is fine; URL wins (it's on-prem)."""
     _set_env(monkeypatch, ESET_AUTH_MODE="basic", ESET_MCP_TRANSPORT="http")
+    monkeypatch.setenv("ESET_ONPREM_ORIGINS", '{"u":["https://protect.client-a.local:9443"]}')
     s = Settings.from_env(env_file=None)
     app = _build_app_with_middleware(s)
     transport = httpx.ASGITransport(app=app)

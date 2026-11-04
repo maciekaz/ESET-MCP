@@ -23,14 +23,14 @@ WORKDIR /app
 # resolve the project; copying them first keeps this layer warm across
 # code-only rebuilds. BuildKit cache mount survives between builds and
 # turns a cold rebuild from ~30s to ~3s.
-COPY pyproject.toml README.md LICENSE ./
+COPY pyproject.toml README.md LICENSE requirements.lock ./
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --upgrade pip setuptools wheel
+    pip install --require-hashes -r requirements.lock
 
 # Source layer: code changes invalidate this and below, but the deps
 # above stay cached.
 COPY eset_mcp ./eset_mcp
-RUN --mount=type=cache,target=/root/.cache/pip pip install .
+RUN --mount=type=cache,target=/root/.cache/pip pip install --no-deps .
 
 # Defaults: stdio. For HTTP, expose the port (override in docker-compose).
 ENV ESET_MCP_TRANSPORT=stdio \

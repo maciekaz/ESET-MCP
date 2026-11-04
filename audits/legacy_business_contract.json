@@ -1,0 +1,1501 @@
+{
+  "baseline_commit": "442dcadadcfde802cf0b7ccb1955438ed20fcf15",
+  "note": "Historical mapping, not a vendor conformance claim. Authentication intentionally excluded from the public tool contract.",
+  "operations": [
+    {
+      "name": "app_executables__list_executables",
+      "method": "GET",
+      "service": "application-management",
+      "domain": "application-management",
+      "path": "/v1/executables",
+      "onprem_path": "/v1/executables",
+      "path_params": [],
+      "query_params": [
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "f199498f682f8eddb4dfe92c8a082974f532e54e6afd245992f1fb707405b901"
+    },
+    {
+      "name": "app_executables__get_executable",
+      "method": "GET",
+      "service": "application-management",
+      "domain": "application-management",
+      "path": "/v1/executables/{executableUuid}",
+      "onprem_path": "/v1/executables/{executableUuid}",
+      "path_params": [
+        "executableUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "dda3b7190eb773430e2d20e52f259b32075ce1c3c51ef8a9f39a3e47809db546"
+    },
+    {
+      "name": "app_executables__block_executable",
+      "method": "POST",
+      "service": "application-management",
+      "domain": "application-management",
+      "path": "/v1/executables/{executableUuid}:block",
+      "onprem_path": "/v1/executables/{executableUuid}:block",
+      "path_params": [
+        "executableUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "dce6986728d499eb7b5627da65101a17bf4ae36ed696d58e24f7b24e1ab013c3"
+    },
+    {
+      "name": "app_executables__unblock_executable",
+      "method": "POST",
+      "service": "application-management",
+      "domain": "application-management",
+      "path": "/v1/executables/{executableUuid}:unblock",
+      "onprem_path": "/v1/executables/{executableUuid}:unblock",
+      "path_params": [
+        "executableUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "7a70fe8f99e5814498350289573c83ee487019158a859525262a6ba04981fc9d"
+    },
+    {
+      "name": "asset_groups__create_group",
+      "method": "POST",
+      "service": "asset-management",
+      "domain": "asset-management",
+      "path": "/v1/groups",
+      "onprem_path": "/v1/groups",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "aa9215f860000cd2485eddb5e6763bb6c824cce0a08f91d2e1b458a259ed8e23"
+    },
+    {
+      "name": "asset_groups__delete_group",
+      "method": "DELETE",
+      "service": "asset-management",
+      "domain": "asset-management",
+      "path": "/v1/groups/{groupUuid}",
+      "onprem_path": "/v1/groups/{groupUuid}",
+      "path_params": [
+        "groupUuid"
+      ],
+      "query_params": [
+        "releaseConsumedUnits"
+      ],
+      "has_body": false,
+      "schema_sha256": "bf7859fe305acbfe3f4fd30424b17a341419155b547af5f0264b34db6b46d19d"
+    },
+    {
+      "name": "asset_groups__move_group",
+      "method": "POST",
+      "service": "asset-management",
+      "domain": "asset-management",
+      "path": "/v1/groups/{groupUuid}:move",
+      "onprem_path": "/v1/groups/{groupUuid}:move",
+      "path_params": [
+        "groupUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "e40d18b7a900a7caa8b5f42a7c52f3e1f3956c0bc6150323331283a77649595d"
+    },
+    {
+      "name": "asset_groups__rename_group",
+      "method": "POST",
+      "service": "asset-management",
+      "domain": "asset-management",
+      "path": "/v1/groups/{groupUuid}:rename",
+      "onprem_path": "/v1/groups/{groupUuid}:rename",
+      "path_params": [
+        "groupUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "d910eef32aa7cfa106bbb2678ebbc171e020c91d36a6fd38b846a119eea6f271"
+    },
+    {
+      "name": "task_device_tasks__list_tasks",
+      "method": "GET",
+      "service": "automation",
+      "domain": "automation",
+      "path": "/v1/device_tasks",
+      "onprem_path": "/v1/device_tasks",
+      "path_params": [],
+      "query_params": [
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "f199498f682f8eddb4dfe92c8a082974f532e54e6afd245992f1fb707405b901"
+    },
+    {
+      "name": "task_device_tasks__create_task",
+      "method": "POST",
+      "service": "automation",
+      "domain": "automation",
+      "path": "/v1/device_tasks",
+      "onprem_path": "/v1/device_tasks",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "ad55c89ccc0fa7ce035e68ca6ab36c105ace417b31a2d8f629d95d966462eab4"
+    },
+    {
+      "name": "task_device_tasks__get_task",
+      "method": "GET",
+      "service": "automation",
+      "domain": "automation",
+      "path": "/v1/device_tasks/{taskUuid}",
+      "onprem_path": "/v1/device_tasks/{taskUuid}",
+      "path_params": [
+        "taskUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "81bd5a106b9a51682e980787dd2643a86c4bc4f850e78d5017d6fe6553164747"
+    },
+    {
+      "name": "task_device_tasks__delete_task",
+      "method": "DELETE",
+      "service": "automation",
+      "domain": "automation",
+      "path": "/v1/device_tasks/{taskUuid}",
+      "onprem_path": "/v1/device_tasks/{taskUuid}",
+      "path_params": [
+        "taskUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "07024109394da85af7d382dd3c5e423c4305f28ba073f5f176d87c51e4b434ca"
+    },
+    {
+      "name": "task_device_tasks__list_task_runs",
+      "method": "GET",
+      "service": "automation",
+      "domain": "automation",
+      "path": "/v1/device_tasks/{taskUuid}/runs",
+      "onprem_path": "/v1/device_tasks/{taskUuid}/runs",
+      "path_params": [
+        "taskUuid"
+      ],
+      "query_params": [
+        "deviceUuid",
+        "listOnlyLastRuns",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "9734a4013d135e4c15bade77eb4d9b608ffe73143ea6894d17a8aafed1a42e1b"
+    },
+    {
+      "name": "task_device_tasks__update_task_targets",
+      "method": "POST",
+      "service": "automation",
+      "domain": "automation",
+      "path": "/v1/device_tasks/{taskUuid}:updateTaskTargets",
+      "onprem_path": "/v1/device_tasks/{taskUuid}:updateTaskTargets",
+      "path_params": [
+        "taskUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "e355b49a23db13d23781e315d60c076b3ede4d55d4a0cba9cfc82a8a51f7b3df"
+    },
+    {
+      "name": "task_device_tasks__update_task_triggers",
+      "method": "POST",
+      "service": "automation",
+      "domain": "automation",
+      "path": "/v1/device_tasks/{taskUuid}:updateTaskTriggers",
+      "onprem_path": "/v1/device_tasks/{taskUuid}:updateTaskTriggers",
+      "path_params": [
+        "taskUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "3e181e2b0bfb810cb36bcefe1f7cb871d216f2e3382ffde928e613ac43ca8b46"
+    },
+    {
+      "name": "device_device_groups__list_groups",
+      "method": "GET",
+      "service": "device-management",
+      "domain": "device-management",
+      "path": "/v1/device_groups",
+      "onprem_path": "/v1/device_groups",
+      "path_params": [],
+      "query_params": [
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "f199498f682f8eddb4dfe92c8a082974f532e54e6afd245992f1fb707405b901"
+    },
+    {
+      "name": "device_device_groups__list_member_devices",
+      "method": "GET",
+      "service": "device-management",
+      "domain": "device-management",
+      "path": "/v1/device_groups/{groupUuid}/devices",
+      "onprem_path": "/v1/device_groups/{groupUuid}/devices",
+      "path_params": [
+        "groupUuid"
+      ],
+      "query_params": [
+        "recurseSubgroups",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "b9ba9f2a49f60ac419b12ec4d0db9843852767b1374580f9d3c245b09b0e4318"
+    },
+    {
+      "name": "device_devices__list_devices",
+      "method": "GET",
+      "service": "device-management",
+      "domain": "device-management",
+      "path": "/v1/devices",
+      "onprem_path": "/v1/devices",
+      "path_params": [],
+      "query_params": [
+        "displayNames",
+        "functionalityStatus",
+        "isMuted",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "9a6b417a8ef7b9f1faf60393f5a91fcbd846f80ecc5136881f6bfca6266a5ec6"
+    },
+    {
+      "name": "device_devices__get_device",
+      "method": "GET",
+      "service": "device-management",
+      "domain": "device-management",
+      "path": "/v1/devices/{deviceUuid}",
+      "onprem_path": "/v1/devices/{deviceUuid}",
+      "path_params": [
+        "deviceUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "028873f250e553edf63de24d7ae7fcda54e9f0d0a39c5be76db2278ed14114cb"
+    },
+    {
+      "name": "device_devices__move_device",
+      "method": "POST",
+      "service": "device-management",
+      "domain": "device-management",
+      "path": "/v1/devices/{deviceUuid}:move",
+      "onprem_path": "/v1/devices/{deviceUuid}:move",
+      "path_params": [
+        "deviceUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "f3d012df8817b3b27e2447cc8be94e21c9897f5c6a30273e6c10eb7f9344259d"
+    },
+    {
+      "name": "device_devices__rename_device",
+      "method": "POST",
+      "service": "device-management",
+      "domain": "device-management",
+      "path": "/v1/devices/{deviceUuid}:rename",
+      "onprem_path": "/v1/devices/{deviceUuid}:renameDevice",
+      "path_params": [
+        "deviceUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "bfdeb9cdea36b0caf0876f6da1a676bcf0029696aebb28b97dc2bb369084abe3"
+    },
+    {
+      "name": "device_devices__batch_get_devices",
+      "method": "GET",
+      "service": "device-management",
+      "domain": "device-management",
+      "path": "/v1/devices:batchGet",
+      "onprem_path": "/v1/devices:batchGet",
+      "path_params": [],
+      "query_params": [
+        "devicesUuids"
+      ],
+      "has_body": false,
+      "schema_sha256": "910d748eb057830ead3877efca2e4a6b9b78ba3b11c89d55edfb3176e0eae736"
+    },
+    {
+      "name": "device_devices__import_device_batch",
+      "method": "POST",
+      "service": "device-management",
+      "domain": "device-management",
+      "path": "/v1/devices:batchImport",
+      "onprem_path": "/v1/devices:batchImport",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "038c8e4f9721ffc8826093fa2e5de472f89881778dc037eec981e75c76624350"
+    },
+    {
+      "name": "iam_permissions__list_permissions",
+      "method": "GET",
+      "service": "iam",
+      "domain": "iam",
+      "path": "/v2/permissions",
+      "onprem_path": "/v2/permissions",
+      "path_params": [],
+      "query_params": [
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "f199498f682f8eddb4dfe92c8a082974f532e54e6afd245992f1fb707405b901"
+    },
+    {
+      "name": "iam_identity_provider__list_roles",
+      "method": "GET",
+      "service": "iam",
+      "domain": "iam",
+      "path": "/v2/role-assignments",
+      "onprem_path": "/v2/role-assignments",
+      "path_params": [],
+      "query_params": [
+        "includeNestedScopes",
+        "subjectReference",
+        "subjectType",
+        "pageSize",
+        "pageToken",
+        "orderBy"
+      ],
+      "has_body": false,
+      "schema_sha256": "20dc6b4e10a7171c8080fdd418aedc1182ddee78f6ddf32fab63a373a57ac4f8"
+    },
+    {
+      "name": "iam_identity_provider__assign_role",
+      "method": "POST",
+      "service": "iam",
+      "domain": "iam",
+      "path": "/v2/role-assignments:assignRole",
+      "onprem_path": "/v2/role-assignments:assignRole",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "ccebf0a69f178f8277e591bee26bef7de069b75b67ff6c297d50ed4e04d9baf8"
+    },
+    {
+      "name": "iam_identity_provider__revoke_role",
+      "method": "POST",
+      "service": "iam",
+      "domain": "iam",
+      "path": "/v2/role-assignments:revokeRole",
+      "onprem_path": "/v2/role-assignments:revokeRole",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "ccebf0a69f178f8277e591bee26bef7de069b75b67ff6c297d50ed4e04d9baf8"
+    },
+    {
+      "name": "iam_roles__create_role",
+      "method": "POST",
+      "service": "iam",
+      "domain": "iam",
+      "path": "/v2/roles",
+      "onprem_path": "/v2/roles",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "7a15a039b6cdfbb2cde7721df783873ed1699cdde71369a4208b1ad1f14a7844"
+    },
+    {
+      "name": "iam_roles__delete_role",
+      "method": "DELETE",
+      "service": "iam",
+      "domain": "iam",
+      "path": "/v2/roles/{roleName}",
+      "onprem_path": "/v2/roles/{roleName}",
+      "path_params": [
+        "roleName"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "0ca2cc453bff4b1736067853c2e3ab8cff96ceb6f69ca4e6ef301759641af137"
+    },
+    {
+      "name": "incident_detections__list_detections_v1",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v1/detections",
+      "onprem_path": "/v1/detections",
+      "path_params": [],
+      "query_params": [
+        "deviceUuid",
+        "endTime",
+        "startTime",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "5975a0ba3ec51573ea4d8b65b2ab812ccd8314e4c7453f9054e671602a7ad3bc"
+    },
+    {
+      "name": "incident_detections__get_detection_v1",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v1/detections/{detectionUuid}",
+      "onprem_path": "/v1/detections/{detectionUuid}",
+      "path_params": [
+        "detectionUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "3064634c00ea4191649c36f0850db43c5294bb0ab6eef05cb43ba08a30eba6eb"
+    },
+    {
+      "name": "incident_detection_groups__list_detection_groups",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/detection-groups",
+      "onprem_path": "/v2/detection-groups",
+      "path_params": [],
+      "query_params": [
+        "cloudOfficeTenantUuid",
+        "deviceUuid",
+        "endTime",
+        "startTime",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "54a494807a8bffe57e9883a4f6806edc1126eac95083791986b36c580fed6d5f"
+    },
+    {
+      "name": "incident_detection_groups__get_detection_group",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/detection-groups/{detectionGroupUuid}",
+      "onprem_path": "/v2/detection-groups/{detectionGroupUuid}",
+      "path_params": [
+        "detectionGroupUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "623eeafcacf3f917a4a5f9125154cdb2003ecaaa21b7a1d9a9654f152b53e27f"
+    },
+    {
+      "name": "incident_detection_groups__resolve_detection_group",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/detection-groups/{detectionGroupUuid}:resolve",
+      "onprem_path": "/v2/detection-groups/{detectionGroupUuid}:resolve",
+      "path_params": [
+        "detectionGroupUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "c9b1afce2308eda9682c660e228ddc62a866c27a4d94a2681b85a0157774551b"
+    },
+    {
+      "name": "incident_detection_groups__search_detection_groups",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/detection-groups:search",
+      "onprem_path": "/v2/detection-groups:search",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "e22558cbcabe66d3238c49b438b5af1891f83611afb4a57a2a87430c87dc6937"
+    },
+    {
+      "name": "incident_detections__list_detections_v2",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/detections",
+      "onprem_path": "/v2/detections",
+      "path_params": [],
+      "query_params": [
+        "cloudOfficeTenantUuid",
+        "endTime",
+        "startTime",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "9b95793b461f625d74304c72b78e2a0a0f84a59dd0ea02f1bb1039a2f694bd06"
+    },
+    {
+      "name": "incident_detections__get_detection_v2",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/detections/{detectionUuid}",
+      "onprem_path": "/v2/detections/{detectionUuid}",
+      "path_params": [
+        "detectionUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "3064634c00ea4191649c36f0850db43c5294bb0ab6eef05cb43ba08a30eba6eb"
+    },
+    {
+      "name": "incident_detections__resolve_detection",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/detections/{detectionUuid}:resolve",
+      "onprem_path": "/v2/detections/{detectionUuid}:resolve",
+      "path_params": [
+        "detectionUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "7106098efdd4f3c75b612797433b584040c57cd7a9fb86f2f863fd84e4fe284a"
+    },
+    {
+      "name": "incident_detections__batch_get_detections",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/detections:batchGet",
+      "onprem_path": "/v2/detections:batchGet",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "e60c9387102b140137b82f8e66c3cfa4d740dc334b5928ae3ab54c478f1a5d71"
+    },
+    {
+      "name": "incident_edr_rule_exclusions__list_edr_rule_exclusions",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rule-exclusions",
+      "onprem_path": "/v2/edr-rule-exclusions",
+      "path_params": [],
+      "query_params": [
+        "includeTotalSize",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "050b1bbad093c6857a3048fcb08242d2ea10798edbe7ad54ac1733b7bdcc5f24"
+    },
+    {
+      "name": "incident_edr_rule_exclusions__create_edr_rule_exclusion",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rule-exclusions",
+      "onprem_path": "/v2/edr-rule-exclusions",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "f4e479ff7427eb397753d0b48d643ee9bb23ffb571cdfcdeefaa6f97f0d3034a"
+    },
+    {
+      "name": "incident_edr_rule_exclusions__get_edr_rule_exclusion",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rule-exclusions/{exclusionUuid}",
+      "onprem_path": "/v2/edr-rule-exclusions/{exclusionUuid}",
+      "path_params": [
+        "exclusionUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "6a81a9082168f749eb7ef91f6dcfd3a6c04c52c8899fcd8af1679fb5fe8ef8b1"
+    },
+    {
+      "name": "incident_edr_rule_exclusions__delete_edr_rule_exclusion",
+      "method": "DELETE",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rule-exclusions/{exclusionUuid}",
+      "onprem_path": "/v2/edr-rule-exclusions/{exclusionUuid}",
+      "path_params": [
+        "exclusionUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "e076813c8ef64c7034070f1a76f7dbe86314fc573ffe0ae95dd3d80c064483ef"
+    },
+    {
+      "name": "incident_edr_rule_exclusions__update_edr_rule_exclusion_definition",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rule-exclusions/{exclusionUuid}:updateDefinition",
+      "onprem_path": "/v2/edr-rule-exclusions/{exclusionUuid}:updateDefinition",
+      "path_params": [
+        "exclusionUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "f7d62e7f55cb8298dd716c992077f8d3c4f1aa18efb1c3c5b96e52fa04e3156f"
+    },
+    {
+      "name": "incident_edr_rules__list_edr_rules",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rules",
+      "onprem_path": "/v2/edr-rules",
+      "path_params": [],
+      "query_params": [
+        "includeTotalSize",
+        "severityLevel",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "ede0215c73ed2e50b00b8a1046f8ae0e216726cd2e9cf327246b24187e1230f3"
+    },
+    {
+      "name": "incident_edr_rules__create_edr_rule",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rules",
+      "onprem_path": "/v2/edr-rules",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "ea1a7fd6f61887df6456e41b612ab5f7c83edda1af45f46fec52f4686bbf5e65"
+    },
+    {
+      "name": "incident_edr_rules__get_edr_rule",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rules/{ruleUuid}",
+      "onprem_path": "/v2/edr-rules/{ruleUuid}",
+      "path_params": [
+        "ruleUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "5c94e92dc8536af0cb8093036fa0bc808094544c8af763d5fba0728c48b2229f"
+    },
+    {
+      "name": "incident_edr_rules__delete_edr_rule",
+      "method": "DELETE",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rules/{ruleUuid}",
+      "onprem_path": "/v2/edr-rules/{ruleUuid}",
+      "path_params": [
+        "ruleUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "e1478de33a7db8ed82e96ca2b93b95ff6128858532b4bd742a817183afc057ad"
+    },
+    {
+      "name": "incident_edr_rules__disable_edr_rule",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rules/{ruleUuid}:disable",
+      "onprem_path": "/v2/edr-rules/{ruleUuid}:disable",
+      "path_params": [
+        "ruleUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "8892d5fe2883e2c1f75a4a405b1ad354d4fdafd54a07bbc12fd69c72e7542711"
+    },
+    {
+      "name": "incident_edr_rules__enable_edr_rule",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rules/{ruleUuid}:enable",
+      "onprem_path": "/v2/edr-rules/{ruleUuid}:enable",
+      "path_params": [
+        "ruleUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "8892d5fe2883e2c1f75a4a405b1ad354d4fdafd54a07bbc12fd69c72e7542711"
+    },
+    {
+      "name": "incident_edr_rules__update_edr_rule_definition",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/edr-rules/{ruleUuid}:updateDefinition",
+      "onprem_path": "/v2/edr-rules/{ruleUuid}:updateDefinition",
+      "path_params": [
+        "ruleUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "36b718ca5bf3d89e0c0a079b66d3b973cf86c40938e34cb4296ddcf7048e3b81"
+    },
+    {
+      "name": "incident_incidents__list_incidents",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/incidents",
+      "onprem_path": "/v2/incidents",
+      "path_params": [],
+      "query_params": [
+        "filter",
+        "orderBy",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "f2a79da2ec370a1e6f999cf9c8d8993e18fbef1e60a3889aaad4693c906c9c39"
+    },
+    {
+      "name": "incident_incidents__get_incident",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/incidents/{incidentUuid}",
+      "onprem_path": "/v2/incidents/{incidentUuid}",
+      "path_params": [
+        "incidentUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "d0d66f8f5f5c3f49d0dc61a7ac061ed021a6021c4680a5e50d5f451a204f9a7f"
+    },
+    {
+      "name": "incident_incidents__update_incident_basic_attributes",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/incidents/{incidentUuid}/basic-attributes:update",
+      "onprem_path": "/v2/incidents/{incidentUuid}/basic-attributes:update",
+      "path_params": [
+        "incidentUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "741e1949e835a345248c278fd8600ecace75934fe055c243896381895445c951"
+    },
+    {
+      "name": "incident_incident_comments__list_incident_comments",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/incidents/{incidentUuid}/comments",
+      "onprem_path": "/v2/incidents/{incidentUuid}/comments",
+      "path_params": [
+        "incidentUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "44ce9e7628cccde6403e872d5a1f88a2f85fb804d9396fe731ce668d286a9440"
+    },
+    {
+      "name": "incident_incident_comments__create_incident_comment",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/incidents/{incidentUuid}/comments",
+      "onprem_path": "/v2/incidents/{incidentUuid}/comments",
+      "path_params": [
+        "incidentUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "15652616c718500a7cd6d79fe040f29b5d43168825b555a39113a08c1b15a23d"
+    },
+    {
+      "name": "incident_incident_comments__get_incident_comment",
+      "method": "GET",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/incidents/{incidentUuid}/comments/{commentUuid}",
+      "onprem_path": "/v2/incidents/{incidentUuid}/comments/{commentUuid}",
+      "path_params": [
+        "incidentUuid",
+        "commentUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "cc83015d92f150b22b9c9191dc11d4293ce982a9c9b72003dbfac21702fd87b6"
+    },
+    {
+      "name": "incident_incident_comments__delete_incident_comment",
+      "method": "DELETE",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/incidents/{incidentUuid}/comments/{commentUuid}",
+      "onprem_path": "/v2/incidents/{incidentUuid}/comments/{commentUuid}",
+      "path_params": [
+        "incidentUuid",
+        "commentUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "e907b1e552f2e57dd90bc0043b74c55ceff23d23f1d69b826c74e2990800ba4d"
+    },
+    {
+      "name": "incident_incident_comments__update_incident_comment_text",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/incidents/{incidentUuid}/comments/{commentUuid}/text:update",
+      "onprem_path": "/v2/incidents/{incidentUuid}/comments/{commentUuid}/text:update",
+      "path_params": [
+        "incidentUuid",
+        "commentUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "b839d6dc4841389da1078aa655014dd3ac1cad3bc2c0bf2727e5ec08e2aa0fd9"
+    },
+    {
+      "name": "incident_incidents__close_incident",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/incidents/{incidentUuid}:close",
+      "onprem_path": "/v2/incidents/{incidentUuid}:close",
+      "path_params": [
+        "incidentUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "ebf37eb433db0cbbcfc833f940f3a5d3d4380ff33d3d04550b6e26a6817def94"
+    },
+    {
+      "name": "incident_incidents__reopen_incident",
+      "method": "POST",
+      "service": "incident-management",
+      "domain": "incident-management",
+      "path": "/v2/incidents/{incidentUuid}:reopen",
+      "onprem_path": "/v2/incidents/{incidentUuid}:reopen",
+      "path_params": [
+        "incidentUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "620c30e27b34bbc83e95fdf8178704704677bca8e17567afee87c0fc6dbcbf32"
+    },
+    {
+      "name": "installer_installers__generate_gpo_sccm_file",
+      "method": "POST",
+      "service": "installer-management",
+      "domain": "installer-management",
+      "path": "/v1/gpo-sccm-files:generate",
+      "onprem_path": "/v1/gpo-sccm-files:generate",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "024524e07a66d8e9e254d90826012ac09bfd2786b913a91a1256affcfcacdad1"
+    },
+    {
+      "name": "installer_installers__list_installers",
+      "method": "GET",
+      "service": "installer-management",
+      "domain": "installer-management",
+      "path": "/v1/installers",
+      "onprem_path": "/v1/installers",
+      "path_params": [],
+      "query_params": [
+        "usable",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "08c45c3e7ec4187b5df7a91224dc4d73b110f3e9cf096466d4093359ad9b0c44"
+    },
+    {
+      "name": "installer_installers__create_installer",
+      "method": "POST",
+      "service": "installer-management",
+      "domain": "installer-management",
+      "path": "/v1/installers",
+      "onprem_path": "/v1/installers",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "1eb3b674e983cd177187fd1eb9c15d4550f6724aa59ed8a4691e7b63c38ccfee"
+    },
+    {
+      "name": "installer_installers__get_installer",
+      "method": "GET",
+      "service": "installer-management",
+      "domain": "installer-management",
+      "path": "/v1/installers/{installerUuid}",
+      "onprem_path": "/v1/installers/{installerUuid}",
+      "path_params": [
+        "installerUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "8b184bd100dd1481fda0062c0bb3129bad12bce2a8258e996f92f53c7e0b9b37"
+    },
+    {
+      "name": "installer_installers__delete_installer",
+      "method": "DELETE",
+      "service": "installer-management",
+      "domain": "installer-management",
+      "path": "/v1/installers/{installerUuid}",
+      "onprem_path": "/v1/installers/{installerUuid}",
+      "path_params": [
+        "installerUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "911f173fc78481ac9537a6e9c935aeb42cb1a94441bcbab6cd8da827395833e0"
+    },
+    {
+      "name": "mobile_mobile_devices__batch_activate_product",
+      "method": "POST",
+      "service": "mobile-device-management",
+      "domain": "mobile-device-management",
+      "path": "/v1/mobile-devices:batchActivateProduct",
+      "onprem_path": "/v1/mobile-devices:batchActivateProduct",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "589a5b0cc82c31b52904987e8bcb689f0bea637cb37729695e18a43dc8bdef14"
+    },
+    {
+      "name": "mobile_mobile_devices__batch_get_enrollment_links",
+      "method": "POST",
+      "service": "mobile-device-management",
+      "domain": "mobile-device-management",
+      "path": "/v1/mobile-devices:batchGetEnrollmentLinks",
+      "onprem_path": "/v1/mobile-devices:batchGetEnrollmentLinks",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "167f9d8fdf728bcc0d7c2346851f9d3e506274a2db8c2ed719186eb70783c626"
+    },
+    {
+      "name": "nap_network_access_configurator__list_ip_sets",
+      "method": "GET",
+      "service": "network-access-protection",
+      "domain": "network-access-protection",
+      "path": "/v1/policies/{policyUuid}/ip-sets",
+      "onprem_path": "/v1/policies/{policyUuid}/ip-sets",
+      "path_params": [
+        "policyUuid"
+      ],
+      "query_params": [
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "e27b558742d3d08e91dd99f04dfbfb89c635b21cab731ce186c7cae5a9db47eb"
+    },
+    {
+      "name": "nap_network_access_configurator__update_ip_set",
+      "method": "POST",
+      "service": "network-access-protection",
+      "domain": "network-access-protection",
+      "path": "/v1/policies/{policyUuid}/ip-sets/{ipSetUuid}:update",
+      "onprem_path": "/v1/policies/{policyUuid}/ip-sets/{ipSetUuid}:update",
+      "path_params": [
+        "policyUuid",
+        "ipSetUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "60d80b22f2eab61f5ca59ffde1731322822fea1b9aa5f0fd7e9c0d6d81871074"
+    },
+    {
+      "name": "nap_network_access_configurator__get_ip_set",
+      "method": "GET",
+      "service": "network-access-protection",
+      "domain": "network-access-protection",
+      "path": "/v1/policies/{policyUuid}/ip-sets/{ipSetUuid}",
+      "onprem_path": "/v1/policies/{policyUuid}/ip-sets/{ipSetUuid}",
+      "path_params": [
+        "policyUuid",
+        "ipSetUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "a3f2304fc29653f53a2029b0f29848062499281f1ece283177b83dded51ec5d1"
+    },
+    {
+      "name": "patch_patch_management__list_recent_application_patching_details",
+      "method": "GET",
+      "service": "patch-management",
+      "domain": "patch-management",
+      "path": "/v1/application-patching-processes/recent/details",
+      "onprem_path": "/v1/application-patching-processes/recent/details",
+      "path_params": [],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "db51e4a8b37a2aea1a643bbd1a6b06a17168e698863fb4c9f61aca6a57f60c32"
+    },
+    {
+      "name": "patch_unpatched_devices__list_device_patches",
+      "method": "GET",
+      "service": "patch-management",
+      "domain": "patch-management",
+      "path": "/v1/device-patches",
+      "onprem_path": "/v1/device-patches",
+      "path_params": [],
+      "query_params": [
+        "deviceUuid",
+        "deviceGroupUuid",
+        "patchType",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "23f1445f628b55d52258a23813dcac4fb8fa31535fa47d1f774bdcafdf20e2cd"
+    },
+    {
+      "name": "patch_patch_management__list_device_patching_details",
+      "method": "GET",
+      "service": "patch-management",
+      "domain": "patch-management",
+      "path": "/v1/patching-process-details",
+      "onprem_path": "/v1/patching-process-details",
+      "path_params": [],
+      "query_params": [
+        "deviceUuid",
+        "deviceGroupUuid",
+        "timePeriod.startTime",
+        "timePeriod.endTime",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "6c93d5f64536c958f0c426465081071e9c5e7b8aaf8051a5a11e942db0e5ac87"
+    },
+    {
+      "name": "policy_policies__list_policies",
+      "method": "GET",
+      "service": "policy-management",
+      "domain": "policy-management",
+      "path": "/v2/policies",
+      "onprem_path": "/v2/policies",
+      "path_params": [],
+      "query_params": [
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "f199498f682f8eddb4dfe92c8a082974f532e54e6afd245992f1fb707405b901"
+    },
+    {
+      "name": "policy_policies__create_policy",
+      "method": "POST",
+      "service": "policy-management",
+      "domain": "policy-management",
+      "path": "/v2/policies",
+      "onprem_path": "/v2/policies",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "b0da2092df15fa2ed2e085c0b300e1943fbf3d76846db972145e4cd5757943f7"
+    },
+    {
+      "name": "policy_policies__get_policy",
+      "method": "GET",
+      "service": "policy-management",
+      "domain": "policy-management",
+      "path": "/v2/policies/{policyUuid}",
+      "onprem_path": "/v2/policies/{policyUuid}",
+      "path_params": [
+        "policyUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "31fb7e4b248e1ef94d93bc19ae3f732e3ccc33a995dd242616fc1c710bbf9c0a"
+    },
+    {
+      "name": "policy_policies__delete_policy",
+      "method": "DELETE",
+      "service": "policy-management",
+      "domain": "policy-management",
+      "path": "/v2/policies/{policyUuid}",
+      "onprem_path": "/v2/policies/{policyUuid}",
+      "path_params": [
+        "policyUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "8e915f71eb66180995f7e3439ec606a42f2b2eb114f8551b1cd8cec3d18b2790"
+    },
+    {
+      "name": "policy_policy_assignments__list_policy_assignments",
+      "method": "GET",
+      "service": "policy-management",
+      "domain": "policy-management",
+      "path": "/v2/policy-assignments",
+      "onprem_path": "/v2/policy-assignments",
+      "path_params": [],
+      "query_params": [
+        "policyUuids",
+        "policyUuid",
+        "target.deviceUuid",
+        "target.deviceGroupUuid",
+        "target.subscriptionUuid",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "1c0da6ac00746cb90a823e26cdda8ae412a0bd66534e2d9f4ebbeaa784e8847e"
+    },
+    {
+      "name": "policy_policy_assignments__assign_policy",
+      "method": "POST",
+      "service": "policy-management",
+      "domain": "policy-management",
+      "path": "/v2/policy-assignments",
+      "onprem_path": "/v2/policy-assignments",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "0074c619c8eeacaab8ca74b004d6d37d2d292081edf26a8e62d2bf957a59ba54"
+    },
+    {
+      "name": "policy_policy_assignments__get_policy_assignment",
+      "method": "GET",
+      "service": "policy-management",
+      "domain": "policy-management",
+      "path": "/v2/policy-assignments/{assignmentUuid}",
+      "onprem_path": "/v2/policy-assignments/{assignmentUuid}",
+      "path_params": [
+        "assignmentUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "72ff3f03cee8f7a85cf6f016c11518d96a46c526091fd0878594558b99149c88"
+    },
+    {
+      "name": "policy_policy_assignments__unassign_policy",
+      "method": "DELETE",
+      "service": "policy-management",
+      "domain": "policy-management",
+      "path": "/v2/policy-assignments/{assignmentUuid}",
+      "onprem_path": "/v2/policy-assignments/{assignmentUuid}",
+      "path_params": [
+        "assignmentUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "9b96458a796f6a95d1d8a9aae7b263731484b9965391e9addb22f3ef29124017"
+    },
+    {
+      "name": "policy_policy_assignments__update_policy_assignment_ranking",
+      "method": "POST",
+      "service": "policy-management",
+      "domain": "policy-management",
+      "path": "/v2/policy-assignments/{assignmentUuid}:updateRanking",
+      "onprem_path": "/v2/policy-assignments/{assignmentUuid}:updateRanking",
+      "path_params": [
+        "assignmentUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "cc6f174d93b980f8fc63ced2582ca96cbe2304224be44ff566a8d56919a326b9"
+    },
+    {
+      "name": "quarantine_quarantined_objects__list_quarantined_objects",
+      "method": "GET",
+      "service": "quarantine-management",
+      "domain": "quarantine-management",
+      "path": "/v1/quarantined-objects",
+      "onprem_path": "/v1/quarantined-objects",
+      "path_params": [],
+      "query_params": [
+        "filter.cloudOfficeTenantUuid",
+        "filter.emailInternetMessageId",
+        "filter.emailRecipient",
+        "filter.emailSender",
+        "filter.emailSubject",
+        "filter.fileName",
+        "filter.msSharepointRootSiteUuid",
+        "filter.msTeamsTeamUuid",
+        "filter.objectOrigin",
+        "filter.objectType",
+        "filter.quarantineReason",
+        "filter.quarantineTime.startTime",
+        "filter.quarantineTime.endTime",
+        "filter.userUuid",
+        "pageSize",
+        "pageToken",
+        "orderBy"
+      ],
+      "has_body": false,
+      "schema_sha256": "72ca43a9aac35d69638eaa8d6388721444f10dbd6ca2d82ae589d475e95228fb"
+    },
+    {
+      "name": "quarantine_quarantined_objects__get_quarantined_objects_count",
+      "method": "GET",
+      "service": "quarantine-management",
+      "domain": "quarantine-management",
+      "path": "/v1/quarantined-objects/count",
+      "onprem_path": "/v1/quarantined-objects/count",
+      "path_params": [],
+      "query_params": [
+        "filter.cloudOfficeTenantUuid",
+        "filter.emailInternetMessageId",
+        "filter.emailRecipient",
+        "filter.emailSender",
+        "filter.emailSubject",
+        "filter.fileName",
+        "filter.msSharepointRootSiteUuid",
+        "filter.msTeamsTeamUuid",
+        "filter.objectOrigin",
+        "filter.objectType",
+        "filter.quarantineReason",
+        "filter.quarantineTime.startTime",
+        "filter.quarantineTime.endTime",
+        "filter.userUuid"
+      ],
+      "has_body": false,
+      "schema_sha256": "19ea72813cf5054b50a989caef25683e72050b602a4139f419dd3c597dc109ec"
+    },
+    {
+      "name": "quarantine_quarantined_objects__get_quarantined_object",
+      "method": "GET",
+      "service": "quarantine-management",
+      "domain": "quarantine-management",
+      "path": "/v1/quarantined-objects/{objectUuid}",
+      "onprem_path": "/v1/quarantined-objects/{objectUuid}",
+      "path_params": [
+        "objectUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "e47f32bb7f25f13d1cf1dc39f956cc25bf262993accb13b6f1310a39ddf35a42"
+    },
+    {
+      "name": "quarantine_quarantined_objects__batch_delete_quarantined_objects",
+      "method": "POST",
+      "service": "quarantine-management",
+      "domain": "quarantine-management",
+      "path": "/v1/quarantined-objects:batchDelete",
+      "onprem_path": "/v1/quarantined-objects:batchDelete",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "3beaf001c3c52b0caa528d8eb3585230393d71c439c37669c3f65eaa51a37159"
+    },
+    {
+      "name": "quarantine_quarantined_objects__batch_download_quarantined_objects",
+      "method": "POST",
+      "service": "quarantine-management",
+      "domain": "quarantine-management",
+      "path": "/v1/quarantined-objects:batchDownload",
+      "onprem_path": "/v1/quarantined-objects:batchDownload",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "dd612b53f538fea40640e144d78a46f48da0b19f23bc6db89ca95a0cf27f6a32"
+    },
+    {
+      "name": "quarantine_quarantined_objects__batch_restore_quarantined_objects",
+      "method": "POST",
+      "service": "quarantine-management",
+      "domain": "quarantine-management",
+      "path": "/v1/quarantined-objects:batchRestore",
+      "onprem_path": "/v1/quarantined-objects:batchRestore",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "9069cc476a82341f83f7fdf2f207ede4a37f6fc6253a4933059ec7888c9e3fda"
+    },
+    {
+      "name": "quarantine_quarantined_objects__download_quarantined_objects",
+      "method": "POST",
+      "service": "quarantine-management",
+      "domain": "quarantine-management",
+      "path": "/v1/quarantined-objects:download",
+      "onprem_path": "/v1/quarantined-objects:download",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "5dcaceefc2263ba39be68e4c13c72483661aa046601a00bfc515d6e2a45701c4"
+    },
+    {
+      "name": "quarantine_quarantined_objects__purge_quarantined_objects",
+      "method": "POST",
+      "service": "quarantine-management",
+      "domain": "quarantine-management",
+      "path": "/v1/quarantined-objects:purge",
+      "onprem_path": "/v1/quarantined-objects:purge",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "5dcaceefc2263ba39be68e4c13c72483661aa046601a00bfc515d6e2a45701c4"
+    },
+    {
+      "name": "quarantine_quarantined_objects__restore_quarantined_objects",
+      "method": "POST",
+      "service": "quarantine-management",
+      "domain": "quarantine-management",
+      "path": "/v1/quarantined-objects:restore",
+      "onprem_path": "/v1/quarantined-objects:restore",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "4c504ed8adb3482a74401c341d19a8e67e1758c7edf2aa235778188e89e060fa"
+    },
+    {
+      "name": "user_users__list_users",
+      "method": "GET",
+      "service": "user-management",
+      "domain": "user-management",
+      "path": "/v1/users",
+      "onprem_path": "/v1/users",
+      "path_params": [],
+      "query_params": [
+        "activeProduct.autoActivated",
+        "activeProduct.autoActivationDetails.base",
+        "activeProduct.autoActivationDetails.userGroupUuid",
+        "activeProduct.subscriptionUuid",
+        "activeProduct.unitPoolUuid",
+        "activeProduct.id",
+        "activeProduct.name",
+        "cloudOfficeTenantReference",
+        "displayName",
+        "email",
+        "hasCloudOfficeMsLicense",
+        "protectionStatus",
+        "userGroupUuid",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "692afdb1ed028b5d3e28bd2df474cf76ee54890b6f072651433e112a0495f96f"
+    },
+    {
+      "name": "user_users__get_user",
+      "method": "GET",
+      "service": "user-management",
+      "domain": "user-management",
+      "path": "/v1/users/{userUuid}",
+      "onprem_path": "/v1/users/{userUuid}",
+      "path_params": [
+        "userUuid"
+      ],
+      "query_params": [],
+      "has_body": false,
+      "schema_sha256": "3a67fd244b04ea2c98c543da9661ac528ba8879c2c1d596b1dfdcfa779565bbe"
+    },
+    {
+      "name": "user_users__batch_get_users",
+      "method": "POST",
+      "service": "user-management",
+      "domain": "user-management",
+      "path": "/v1/users:batchGetUsers",
+      "onprem_path": "/v1/users:batchGetUsers",
+      "path_params": [],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "9a860f51968034bf2247ce51328b3c092d2bd445dd719dcb33e248a8aa567668"
+    },
+    {
+      "name": "vuln_vulnerable_devices__list_device_os_vulnerabilities",
+      "method": "GET",
+      "service": "vulnerability-management",
+      "domain": "vulnerability-management",
+      "path": "/v1/device-os-vulnerabilities",
+      "onprem_path": "/v1/device-os-vulnerabilities",
+      "path_params": [],
+      "query_params": [
+        "deviceUuid",
+        "deviceGroupUuid",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "04c69df5af0f79e0be80f23eef3669a1a6bf0f1cf5a4185ff865c881ae8d3c4c"
+    },
+    {
+      "name": "vuln_vulnerable_devices__list_device_vulnerabilities",
+      "method": "GET",
+      "service": "vulnerability-management",
+      "domain": "vulnerability-management",
+      "path": "/v1/device-vulnerabilities",
+      "onprem_path": "/v1/device-vulnerabilities",
+      "path_params": [],
+      "query_params": [
+        "deviceUuid",
+        "deviceGroupUuid",
+        "vulnerabilityScope",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "df86b8c76ee72c0d1bb1c3d618e23bfbf5e71a2ae123a81b8ab5f51f09571522"
+    },
+    {
+      "name": "vuln_vulnerability_management__list_recent_scan_details",
+      "method": "GET",
+      "service": "vulnerability-management",
+      "domain": "vulnerability-management",
+      "path": "/v1/scans/recent",
+      "onprem_path": "/v1/scans/recent",
+      "path_params": [],
+      "query_params": [
+        "deviceUuid",
+        "deviceGroupUuid",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "d4abc366679f6c1d62a133219a1042311f39221a23249f521c2b74b66d7fed05"
+    },
+    {
+      "name": "vuln_vulnerable_devices__list_vulnerable_devices",
+      "method": "GET",
+      "service": "vulnerability-management",
+      "domain": "vulnerability-management",
+      "path": "/v1/vulnerable-devices",
+      "onprem_path": "/v1/vulnerable-devices",
+      "path_params": [],
+      "query_params": [
+        "deviceGroupUuid",
+        "pageSize",
+        "pageToken"
+      ],
+      "has_body": false,
+      "schema_sha256": "afaf48c177b6a1d309161ad862cb1def30850ba4545082bd8e141297da045a0b"
+    },
+    {
+      "name": "wap_web_address_rules_configurator__list_web_address_rules",
+      "method": "GET",
+      "service": "web-access-protection",
+      "domain": "web-access-protection",
+      "path": "/v2/policies/{policyUuid}/web-address-rules",
+      "onprem_path": "/v2/policies/{policyUuid}/web-address-rules",
+      "path_params": [
+        "policyUuid"
+      ],
+      "query_params": [
+        "includeDomain"
+      ],
+      "has_body": false,
+      "schema_sha256": "327c925080428f3933b99385061186c3675e9099a3d86c1ebcb916a47461479f"
+    },
+    {
+      "name": "wap_web_address_rules_configurator__update_web_address_rule_domains",
+      "method": "PUT",
+      "service": "web-access-protection",
+      "domain": "web-access-protection",
+      "path": "/v2/policies/{policyUuid}/web-address-rules/{addressRuleUuid}/domains",
+      "onprem_path": "/v2/policies/{policyUuid}/web-address-rules/{addressRuleUuid}/domains",
+      "path_params": [
+        "policyUuid",
+        "addressRuleUuid"
+      ],
+      "query_params": [],
+      "has_body": true,
+      "schema_sha256": "bf6ffef075ea3bdea20ad247663c202853e1200cea8caa5036a8495b087e256b"
+    }
+  ]
+}

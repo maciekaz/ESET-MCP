@@ -23,6 +23,7 @@ from typing import Any, Literal
 
 from .errors import EsetApiError
 from .http_client import EsetHttpClient
+from .security import path_segment
 
 SearchKind = Literal["device", "user", "policy", "group"]
 ALL_KINDS: tuple[SearchKind, ...] = ("device", "user", "policy", "group")
@@ -269,7 +270,7 @@ async def device_full_profile(http: EsetHttpClient, device_uuid: str) -> dict[st
     instead of failing the whole call.
     """
     try:
-        device = await http.request("GET", "device-management", f"/v1/devices/{device_uuid}")
+        device = await http.request("GET", "device-management", f"/v1/devices/{path_segment(device_uuid)}")
     except EsetApiError as e:
         return {"error": f"Device fetch failed: {e}"}
 
@@ -305,7 +306,7 @@ async def incident_full_context(http: EsetHttpClient, incident_uuid: str) -> dic
     """
     try:
         incident_resp = await http.request(
-            "GET", "incident-management", f"/v2/incidents/{incident_uuid}"
+            "GET", "incident-management", f"/v2/incidents/{path_segment(incident_uuid)}"
         )
     except EsetApiError as e:
         return {"error": f"Incident fetch failed: {e}"}
@@ -315,7 +316,7 @@ async def incident_full_context(http: EsetHttpClient, incident_uuid: str) -> dic
     dev_uuids = list(incident.get("deviceUuids") or [])[:10]
 
     comments, detections, devices = await asyncio.gather(
-        _safe_get(http, "incident-management", f"/v2/incidents/{incident_uuid}/comments"),
+        _safe_get(http, "incident-management", f"/v2/incidents/{path_segment(incident_uuid)}/comments"),
         _gather_by_uuid(http, "incident-management", "/v2/detections/{uuid}", det_uuids),
         _gather_by_uuid(http, "device-management", "/v1/devices/{uuid}", dev_uuids),
     )
@@ -348,7 +349,7 @@ async def _gather_by_uuid(
     if not uuids:
         return []
     results = await asyncio.gather(
-        *(_safe_get(http, service, path_template.replace("{uuid}", u)) for u in uuids)
+        *(_safe_get(http, service, path_template.replace("{uuid}", path_segment(u))) for u in uuids)
     )
     return list(results)
 

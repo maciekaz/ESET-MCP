@@ -8,9 +8,9 @@ Two token managers, one per deployment kind:
 
 - :class:`OnPremTokenManager` - ESET PROTECT on-prem console. Bespoke
   ``POST /GetTokens`` endpoint with a JSON body and a **camelCase** response
-  (``accessToken`` / ``expiresIn``). No refresh-token flow exists; on expiry
-  the full username+password handshake is repeated. Refreshes 60 seconds
-  before expiry (matching the reference client behaviour).
+  (``accessToken`` / ``expiresIn``). The default legacy profile repeats the
+  password handshake; explicit ``v13`` enables the documented camelCase
+  password/refresh grants. Short token lifetimes use an adaptive margin.
 
 A token manager is tied to one set of credentials (one ESET account in one
 region OR one on-prem console). In multi-tenant mode each pooled
@@ -22,15 +22,17 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 
 import httpx
 
 from .credentials import Credentials
-from .errors import map_http_error
+from .errors import EsetApiError
 from .observability import inc_token_refresh, log_event
 from .regions import resolve_auth_url
+from .security import remember_secrets
+from .transport import response_json, send_request
 
 _LOG = logging.getLogger("eset_mcp.auth")
 
@@ -47,16 +49,17 @@ _AUTH_REQUEST_TIMEOUT_S = 30
 
 @dataclass
 class Token:
-    access_token: str
-    refresh_token: str | None
+    access_token: str = field(repr=False)
+    refresh_token: str | None = field(repr=False)
     expires_at: float  # epoch seconds
+    refresh_at: float | None = None
 
 
 class TokenManagerProto(Protocol):
     """Minimal interface required by :class:`EsetHttpClient`."""
 
     async def get_access_token(self) -> str: ...
-    async def force_refresh(self) -> str: ...
+    async def force_refresh(self, rejected_token: str | None = None) -> str: ...
 
 
 class _TokenManagerBase:
@@ -73,6 +76,8 @@ class _TokenManagerBase:
     def _expired_or_expiring(self, *, margin: int | None = None) -> bool:
         if self._token is None:
             return True
+        if margin is None and self._token.refresh_at is not None:
+            return time.time() >= self._token.refresh_at
         m = self._refresh_margin_s if margin is None else margin
         return time.time() >= self._token.expires_at - m
 
@@ -83,9 +88,10 @@ class _TokenManagerBase:
                 await self._refresh_locked()
                 self._record_refresh(reason)
             assert self._token is not None
+            self._remember()
             return self._token.access_token
 
-    async def force_refresh(self) -> str:
+    async def force_refresh(self, rejected_token: str | None = None) -> str:
         async with self._lock:
             # Coalesce: under a 401 burst (e.g. cloud-side token revoked),
             # N concurrent requests all call force_refresh(). The first
@@ -93,13 +99,55 @@ class _TokenManagerBase:
             # the cached token is fresh (just minted), and return it
             # without re-auth. Otherwise we'd do N identical OAuth
             # handshakes back-to-back.
-            if not self._expired_or_expiring():
+            if not self._expired_or_expiring() and (
+                rejected_token is None or self._token.access_token != rejected_token
+            ):
                 assert self._token is not None
+                self._remember()
                 return self._token.access_token
             await self._refresh_locked()
             self._record_refresh("forced_401")
             assert self._token is not None
+            self._remember()
             return self._token.access_token
+
+    def _remember(self) -> None:
+        remember_secrets(self._creds.password, self._creds.cf_access_client_secret)
+        if self._token:
+            remember_secrets(self._token.access_token, self._token.refresh_token)
+
+    def _set_token(self, payload, *, access_key: str, refresh_key: str | None, expiry_key: str,
+                   previous_refresh: str | None = None) -> None:
+        if not isinstance(payload, dict) or not isinstance(payload.get(access_key), str) or not payload[access_key]:
+            raise EsetApiError(502, f"ESET auth response is missing a valid {access_key}.")
+        access = payload[access_key]
+        if not access.isascii() or any(ord(c) <= 32 or ord(c) == 127 for c in access):
+            raise EsetApiError(502, "ESET auth response has an invalid access token.")
+        expiry = payload.get(expiry_key, 3600)
+        try:
+            seconds = int(expiry)
+            if isinstance(expiry, bool) or seconds <= 0 or seconds > 365 * 86400:
+                raise ValueError
+        except (TypeError, ValueError, OverflowError):
+            raise EsetApiError(502, "ESET auth response has an invalid token lifetime.") from None
+        refresh = payload.get(refresh_key, previous_refresh) if refresh_key else None
+        if refresh is not None and not isinstance(refresh, str):
+            raise EsetApiError(502, "ESET auth response has an invalid refresh token.")
+        now = time.time()
+        self._token = Token(payload[access_key], refresh, now + seconds,
+                            now + seconds - min(self._refresh_margin_s, seconds / 10))
+        self._remember()
+
+    async def _send_auth(self, *, form=None, body=None) -> httpx.Response:
+        headers = {"Content-Type": "application/x-www-form-urlencoded" if form is not None else "application/json"}
+        if body is not None:
+            headers["Accept"] = "application/json"
+        self._remember()
+        return await send_request(
+            self._http, "POST", resolve_auth_url(self._creds), deployment=self._creds.deployment,
+            headers=headers, timeout=_AUTH_REQUEST_TIMEOUT_S,
+            **({"data": form} if form is not None else {"json": body}),
+        )
 
     def _record_refresh(self, reason: str) -> None:
         """Emit metric + log entry for a successful token refresh."""
@@ -115,15 +163,25 @@ class _TokenManagerBase:
         raise NotImplementedError
 
 
+def _invalid_refresh(response: httpx.Response) -> bool:
+    if response.status_code not in {400, 401}:
+        return False
+    try:
+        payload = response.json()
+    except ValueError:
+        return False
+    return isinstance(payload, dict) and payload.get("error") == "invalid_grant"
+
+
 class CloudTokenManager(_TokenManagerBase):
     """OAuth2 password / refresh grant against the ESET Connect cloud."""
 
     _refresh_margin_s = _REFRESH_MARGIN_CLOUD_S
 
     async def _refresh_locked(self) -> None:
-        # If we have a refresh_token and it has not fully expired, use it.
-        # Otherwise - fall back to the password grant.
-        if self._token and self._token.refresh_token and not self._expired_or_expiring(margin=0):
+        # Access-token expiry does not imply refresh-token expiry. A rejected
+        # refresh may fall back once, only on explicit invalid_grant.
+        if self._token and self._token.refresh_token:
             data = {
                 "grant_type": "refresh_token",
                 "refresh_token": self._token.refresh_token,
@@ -136,27 +194,14 @@ class CloudTokenManager(_TokenManagerBase):
                 "refresh_token": "",
             }
 
-        url = resolve_auth_url(self._creds)
-        resp = await self._http.post(
-            url,
-            data=data,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            timeout=_AUTH_REQUEST_TIMEOUT_S,
-        )
-        if resp.status_code != 200:
-            raise map_http_error(
-                status=resp.status_code,
-                body=resp.text,
-                endpoint=url,
-                request_id=resp.headers.get("request-id"),
-            )
-
-        payload = resp.json()
-        self._token = Token(
-            access_token=payload["access_token"],
-            refresh_token=payload.get("refresh_token"),
-            expires_at=time.time() + int(payload.get("expires_in", 3600)),
-        )
+        resp = await self._send_auth(form=data)
+        previous_refresh = data.get("refresh_token") if data["grant_type"] == "refresh_token" else None
+        if data["grant_type"] == "refresh_token" and _invalid_refresh(resp):
+            previous_refresh = None
+            resp = await self._send_auth(form={"grant_type": "password", "username": self._creds.user,
+                                              "password": self._creds.password, "refresh_token": ""})
+        self._set_token(response_json(resp), access_key="access_token",
+                        refresh_key="refresh_token", expiry_key="expires_in", previous_refresh=previous_refresh)
 
 
 # Backwards-compatible alias - older imports / tests reference TokenManager.
@@ -179,47 +224,27 @@ class OnPremTokenManager(_TokenManagerBase):
         {"accessToken": "...", "expiresIn": 3600}
 
     Note: response keys are **camelCase**, unlike the cloud's snake_case.
-    There is no refresh-token field - on expiry we re-send the password.
+    Legacy mode preserves that request. Explicit v13 mode uses grantType
+    PASSWORD/REFRESH_TOKEN and retains refreshToken from the response.
     """
 
     _refresh_margin_s = _REFRESH_MARGIN_ONPREM_S
 
     async def _refresh_locked(self) -> None:
-        url = resolve_auth_url(self._creds)
-        body = {
-            "username": self._creds.user,
-            "password": self._creds.password,
-            "grant_type": "password",
-        }
-        resp = await self._http.post(
-            url,
-            json=body,
-            headers={"Content-Type": "application/json", "Accept": "application/json"},
-            timeout=_AUTH_REQUEST_TIMEOUT_S,
-        )
-        if resp.status_code != 200:
-            raise map_http_error(
-                status=resp.status_code,
-                body=resp.text,
-                endpoint=url,
-                request_id=resp.headers.get("request-id"),
-            )
-
-        payload = resp.json()
-        access = payload.get("accessToken")
-        if not access:
-            raise map_http_error(
-                status=resp.status_code,
-                body=f"On-prem /GetTokens response missing accessToken: {resp.text}",
-                endpoint=url,
-                request_id=resp.headers.get("request-id"),
-            )
-        expires_in = int(payload.get("expiresIn", 3600))
-        self._token = Token(
-            access_token=access,
-            refresh_token=None,  # on-prem has no refresh-token flow
-            expires_at=time.time() + expires_in,
-        )
+        modern = self._creds.onprem_auth_style == "v13"
+        password_body = {"username": self._creds.user, "password": self._creds.password,
+                         **({"grantType": "PASSWORD"} if modern else {"grant_type": "password"})}
+        refreshing = modern and self._token and self._token.refresh_token
+        body = {"grantType": "REFRESH_TOKEN", "refreshToken": self._token.refresh_token} if refreshing else password_body
+        resp = await self._send_auth(body=body)
+        previous_refresh = self._token.refresh_token if refreshing else None
+        # No dialect guessing, and no fallback on ambiguous 5xx/network errors.
+        if refreshing and _invalid_refresh(resp):
+            previous_refresh = None
+            resp = await self._send_auth(body=password_body)
+        self._set_token(response_json(resp), access_key="accessToken",
+                        refresh_key="refreshToken" if modern else None, expiry_key="expiresIn",
+                        previous_refresh=previous_refresh)
 
 
 def make_token_manager(credentials: Credentials, http: httpx.AsyncClient) -> TokenManagerProto:

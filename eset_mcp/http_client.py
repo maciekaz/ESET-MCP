@@ -4,7 +4,7 @@ Rules from the ESET Connect docs:
 - 202 Accepted = pending; poll with `response-id` header, up to 10 minutes.
 - 429 Too Many Requests = rate limit (10 req/s); exponential backoff, max 3 tries.
 - 401 = token expired; one forced refresh + retry.
-- 5xx = transient; single retry.
+- 5xx = a single retry for GET/HEAD only; mutations are never blindly replayed.
 
 This class is *credentials-bound*: a single client owns one OAuth session for
 one ESET account (cloud) or one PROTECT console (on-prem). In multi-tenant
@@ -18,8 +18,8 @@ the operator notices it once, without log spam on every request.
 """
 from __future__ import annotations
 
-import asyncio
 import logging
+import ssl
 import time
 from typing import Any
 
@@ -27,9 +27,12 @@ import httpx
 
 from .auth import TokenManagerProto, make_token_manager
 from .credentials import Credentials
-from .errors import EsetApiError, map_http_error
-from .observability import inc_http_retry, log_event
+from .egress import OnPremTransport
+from .errors import EsetApiError
+from .observability import log_event
 from .regions import resolve_base_url
+from .security import remember_secrets
+from .transport import parse_retry_after, response_json, send_request
 
 _LOG = logging.getLogger("eset_mcp.http")
 
@@ -38,14 +41,8 @@ _LOG = logging.getLogger("eset_mcp.http")
 # separately (see _PENDING_POLL_BUDGET_S).
 _REQUEST_TIMEOUT_S = 120
 
-# 202 polling.
-_PENDING_POLL_INTERVAL_S = 2.0
-_PENDING_POLL_INTERVAL_CAP_S = 30.0
-_PENDING_POLL_BUDGET_S = 600.0  # 10 minutes, per the docs.
-
-# Rate-limit retry.
-_RATE_LIMIT_MAX_TRIES = 3
-_RATE_LIMIT_BASE_BACKOFF_S = 1.0
+# Total budget for the business request, including polling and retry waits.
+_PENDING_POLL_BUDGET_S = 600.0
 
 
 class EsetHttpClient:
@@ -72,6 +69,8 @@ class EsetHttpClient:
         # TLS verification is configurable only for on-prem (which routinely
         # ships with self-signed certs). Cloud credentials always verify.
         verify = True if credentials.deployment == "cloud" else credentials.verify_ssl
+        if verify and credentials.ca_bundle:
+            verify = ssl.create_default_context(cafile=credentials.ca_bundle)
         if credentials.deployment == "onprem" and not verify:
             _LOG.warning(
                 "TLS certificate verification DISABLED for on-prem server %s - "
@@ -99,6 +98,9 @@ class EsetHttpClient:
             follow_redirects=False,
             verify=verify,
             headers=default_headers or None,
+            trust_env=False,
+            transport=OnPremTransport(verify=verify, networks=credentials.allowed_networks)
+            if credentials.deployment == "onprem" else None,
         )
         self._token_mgr: TokenManagerProto = make_token_manager(credentials, self._http)
 
@@ -130,124 +132,41 @@ class EsetHttpClient:
         ``path`` is the *template* path from the OpenAPI spec (with
         ``{placeholder}`` segments already substituted by the caller). We
         intentionally do NOT log the substituted URL - it can reveal device
-        UUIDs and other tenant data. Logs carry only the template-shaped
-        path the caller passed plus the upstream status code.
+        UUIDs and other tenant data. Logs carry only method, service and
+        status, with a local duration.
         """
+        # Tool dispatch may only issue business requests. Token endpoints stay
+        # private to the token managers, even if a caller bypasses the catalog.
+        from urllib.parse import unquote
+        decoded = unquote(path)
+        if (service == "business-account" or not path.startswith("/") or
+                path.startswith("//") or any(c in decoded for c in "?#\\\r\n\x00") or
+                any(part in {".", ".."} for part in decoded.split("/")) or
+                decoded.rstrip("/").lower() in {"/gettokens", "/oauth/token"}):
+            raise EsetApiError(400, "Invalid business API path.")
         url = resolve_base_url(self._creds, service) + path
+        remember_secrets(self._creds.password, self._creds.cf_access_client_secret)
         token = await self._token_mgr.get_access_token()
-        headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+        remember_secrets(token)
 
-        import time as _time
-        t0 = _time.monotonic()
-        resp = await self._http.request(method, url, params=query, json=json, headers=headers)
+        async def refresh() -> str:
+            renewed = await self._token_mgr.force_refresh(rejected_token=token)
+            remember_secrets(renewed)
+            return renewed
 
-        # 401 - token expired between get_access_token() and the request; force-refresh + retry.
-        if resp.status_code == 401 and _retry_after_401:
-            inc_http_retry(deployment=self._creds.deployment, status="401")
-            log_event(
-                _LOG, "http_request_retry",
-                deployment=self._creds.deployment,
-                method=method, service=service, status=401,
-                reason="token_expired",
-            )
-            await self._token_mgr.force_refresh()
-            return await self.request(
-                method, service, path, query=query, json=json, _retry_after_401=False
-            )
-
-        # 429 - rate limit, backoff.
-        if resp.status_code == 429:
-            for attempt in range(1, _RATE_LIMIT_MAX_TRIES + 1):
-                retry_after = _parse_retry_after(resp.headers.get("Retry-After"))
-                wait_s = retry_after or _RATE_LIMIT_BASE_BACKOFF_S * (2 ** (attempt - 1))
-                inc_http_retry(deployment=self._creds.deployment, status="429")
-                log_event(
-                    _LOG, "http_request_retry", level=logging.WARNING,
-                    deployment=self._creds.deployment,
-                    method=method, service=service, status=429,
-                    reason="rate_limited", wait_s=round(wait_s, 2),
-                    attempt=attempt, max_attempts=_RATE_LIMIT_MAX_TRIES,
-                )
-                await asyncio.sleep(wait_s)
-                resp = await self._http.request(method, url, params=query, json=json, headers=headers)
-                if resp.status_code != 429:
-                    break
-
-        # 202 - pending, long-poll with response-id.
-        if resp.status_code == 202:
-            response_id = resp.headers.get("response-id")
-            if not response_id:
-                raise map_http_error(202, resp.text, url, resp.headers.get("request-id"))
-            return await self._poll_pending(
-                method, url, response_id,
-                {"headers": headers, "params": query, "json": json},
-            )
-
-        if resp.status_code >= 400:
-            log_event(
-                _LOG, "http_request_complete", level=logging.WARNING,
-                deployment=self._creds.deployment,
-                method=method, service=service, status=resp.status_code,
-                duration_ms=int((_time.monotonic() - t0) * 1000),
-                request_id=resp.headers.get("request-id"),
-            )
-            raise map_http_error(
-                status=resp.status_code,
-                body=resp.text,
-                endpoint=url,
-                request_id=resp.headers.get("request-id"),
-            )
-
+        started = time.monotonic()
+        resp = await send_request(
+            self._http, method, url, deployment=self._creds.deployment,
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+            refresh=refresh if _retry_after_401 else None,
+            budget=_PENDING_POLL_BUDGET_S, params=query, json=json,
+        )
         log_event(
             _LOG, "http_request_complete",
-            deployment=self._creds.deployment,
-            method=method, service=service, status=resp.status_code,
-            duration_ms=int((_time.monotonic() - t0) * 1000),
-            request_id=resp.headers.get("request-id"),
+            deployment=self._creds.deployment, method=method, service=service,
+            status=resp.status_code, duration_ms=int((time.monotonic() - started) * 1000),
         )
-        return _parse_json(resp)
-
-    async def _poll_pending(
-        self,
-        method: str,
-        url: str,
-        response_id: str,
-        req: dict[str, Any],
-    ) -> dict[str, Any] | list[Any]:
-        """Poll 202 with exponential backoff, up to 10 minutes.
-
-        `req` carries the original call's transport context:
-        ``{"headers": ..., "params": ..., "json": ...}``. We re-issue the
-        same request with the `response-id` header added until the upstream
-        either resolves to a non-202 status or the budget expires.
-        """
-        deadline = time.monotonic() + _PENDING_POLL_BUDGET_S
-        interval = _PENDING_POLL_INTERVAL_S
-        poll_headers = {**req["headers"], "response-id": response_id}
-
-        while True:
-            if time.monotonic() > deadline:
-                raise EsetApiError(
-                    status=504,
-                    message="Pending response did not complete within 10 minutes - the cached query expired.",
-                    endpoint=url,
-                )
-            await asyncio.sleep(interval)
-            interval = min(interval * 1.5, _PENDING_POLL_INTERVAL_CAP_S)
-
-            resp = await self._http.request(
-                method, url, params=req["params"], json=req["json"], headers=poll_headers,
-            )
-            if resp.status_code == 202:
-                continue
-            if resp.status_code >= 400:
-                raise map_http_error(
-                    status=resp.status_code,
-                    body=resp.text,
-                    endpoint=url,
-                    request_id=resp.headers.get("request-id"),
-                )
-            return _parse_json(resp)
+        return response_json(resp)
 
     async def paginate(
         self,
@@ -280,16 +199,6 @@ class EsetHttpClient:
                 return
 
 
-def _parse_json(resp: httpx.Response) -> dict[str, Any] | list[Any]:
-    if not resp.content:
-        return {}
-    return resp.json()
-
-
-def _parse_retry_after(raw: str | None) -> float | None:
-    if not raw:
-        return None
-    try:
-        return float(raw)
-    except ValueError:
-        return None
+# Compatibility aliases for direct users of the old module helpers.
+_parse_json = response_json
+_parse_retry_after = parse_retry_after

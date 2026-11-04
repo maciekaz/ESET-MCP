@@ -15,27 +15,14 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
+from contextlib import asynccontextmanager
 
 from .config import Settings
 from .credentials import Credentials
 from .http_client import EsetHttpClient
 from .observability import set_pool_size
 
-# Hard cap on concurrently-cached clients. The cap exists to bound memory
-# if something goes wrong (e.g. random-credential spraying); realistic
-# multi-tenant MCP deployments fronting an ESET MSP will see well under
-# this number of active credentials at any time.
-#
-# Worth knowing: when the pool is at the cap and a new client is added,
-# the LRU entry is evicted and its underlying httpx.AsyncClient is
-# aclose()d in the background. If that evicted client happens to have a
-# request in flight at that exact moment, httpcore will tear the
-# connection down and the request fails (per
-# https://github.com/encode/httpcore - AsyncConnectionPool.aclose
-# clears all existing requests and connections). The default cap is
-# deliberately set high so this race is vanishingly unlikely in
-# practice; operators with extreme tenant counts can raise it further
-# via the constructor.
+# Cached clients are bounded; active leases survive eviction and close on release.
 _DEFAULT_MAX_CLIENTS = 256
 
 
@@ -44,14 +31,16 @@ class ClientPool:
 
     Usage:
         pool = ClientPool(settings)
-        client = await pool.get(credentials)
-        await client.request(...)
+        async with pool.acquire(credentials) as client:
+            await client.request(...)
 
     The caller does NOT close the returned client - the pool owns its lifecycle.
     On shutdown, call `await pool.close()` to drain every cached client.
     """
 
     def __init__(self, settings: Settings, *, max_clients: int = _DEFAULT_MAX_CLIENTS):
+        if max_clients < 1:
+            raise ValueError("max_clients must be positive")
         self._settings = settings
         self._max = max_clients
         # Key is (user, password_hash, deployment, region_or_server_url,
@@ -60,42 +49,78 @@ class ClientPool:
             tuple[str, str, str, str, str], EsetHttpClient
         ] = OrderedDict()
         self._lock = asyncio.Lock()
+        self._leases: dict[EsetHttpClient, int] = {}
+        self._retired: set[EsetHttpClient] = set()
+        self._closed = False
         # Hold strong refs to background eviction tasks so they don't get GC'd
         # before they finish closing the underlying httpx clients.
         self._eviction_tasks: set[asyncio.Task] = set()
 
     async def get(self, creds: Credentials) -> EsetHttpClient:
-        """Return a cached client for these credentials, creating one if needed."""
-        key = creds.cache_key()
+        """Return a client without a lease; use acquire() around concurrent API work."""
         async with self._lock:
-            existing = self._clients.get(key)
-            if existing is not None:
-                # Move to end of LRU.
-                self._clients.move_to_end(key)
-                return existing
+            return await self._get_locked(creds)
 
-            client = EsetHttpClient(creds)
-            self._clients[key] = client
-            await self._maybe_evict_locked()
-            set_pool_size(len(self._clients))
-            return client
+    async def _get_locked(self, creds):
+        if self._closed:
+            raise RuntimeError("Client pool is closed")
+        key = creds.cache_key()
+        existing = self._clients.get(key)
+        if existing is not None:
+            self._clients.move_to_end(key)
+            return existing
+        client = EsetHttpClient(creds)
+        self._clients[key] = client
+        await self._maybe_evict_locked()
+        set_pool_size(len(self._clients))
+        return client
+
+    @asynccontextmanager
+    async def acquire(self, creds: Credentials):
+        """Lease a client for a complete tool call, including its composites."""
+        async with self._lock:
+            client = await self._get_locked(creds)
+            self._leases[client] = self._leases.get(client, 0) + 1
+        try:
+            yield client
+        finally:
+            async with self._lock:
+                remaining = self._leases[client] - 1
+                if remaining:
+                    self._leases[client] = remaining
+                else:
+                    del self._leases[client]
+                    if client in self._retired:
+                        self._retired.remove(client)
+                        self._close_in_background(client)
+
+    def _close_in_background(self, client):
+        task = asyncio.create_task(client.aclose())
+        self._eviction_tasks.add(task)
+        task.add_done_callback(self._eviction_tasks.discard)
 
     async def _maybe_evict_locked(self) -> None:
         while len(self._clients) > self._max:
             _, evicted = self._clients.popitem(last=False)
-            # Close in background - don't block the get() that triggered eviction.
-            task = asyncio.create_task(evicted.aclose())
-            self._eviction_tasks.add(task)
-            task.add_done_callback(self._eviction_tasks.discard)
+            if self._leases.get(evicted):
+                self._retired.add(evicted)
+            else:
+                self._close_in_background(evicted)
 
     async def close(self) -> None:
         """Close every cached client. Call on shutdown."""
         async with self._lock:
+            self._closed = True
             clients = list(self._clients.values())
             self._clients.clear()
+            for client in clients:
+                if self._leases.get(client):
+                    self._retired.add(client)
+                else:
+                    self._close_in_background(client)
         set_pool_size(0)
         # Best-effort close of all clients in parallel.
-        await asyncio.gather(*(c.aclose() for c in clients), return_exceptions=True)
+        await asyncio.gather(*tuple(self._eviction_tasks), return_exceptions=True)
 
     def __len__(self) -> int:
         return len(self._clients)

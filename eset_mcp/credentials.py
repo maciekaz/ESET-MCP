@@ -33,7 +33,7 @@ from __future__ import annotations
 import base64
 import binascii
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .config import VALID_REGIONS, Deployment, Region, Settings, _normalize_server_url
 
@@ -41,7 +41,7 @@ from .config import VALID_REGIONS, Deployment, Region, Settings, _normalize_serv
 @dataclass(frozen=True)
 class Credentials:
     user: str
-    password: str
+    password: str = field(repr=False)
     region: Region
     deployment: Deployment = "cloud"
     # On-prem only: full origin URL (e.g. "https://protect.example.com:9443").
@@ -55,7 +55,10 @@ class Credentials:
     # request (auth + API) as CF-Access-Client-Id / CF-Access-Client-Secret.
     # Empty strings mean "no CF Access in front of the origin".
     cf_access_client_id: str = ""
-    cf_access_client_secret: str = ""
+    cf_access_client_secret: str = field(default="", repr=False)
+    onprem_auth_style: str = "legacy"
+    allowed_networks: tuple[str, ...] = ()
+    ca_bundle: str = ""
 
     def cache_key(self) -> tuple[str, str, str, str, str]:
         """Identity used by the client pool.
@@ -63,8 +66,8 @@ class Credentials:
         Includes a *hash* of the password so that changing the password (e.g.
         after a rotation) forces a new client + fresh OAuth login, rather
         than reusing a cached client whose token was minted with the old
-        password. We hash rather than embed the raw value so the key is safe
-        to log / inspect for debugging.
+        password. The digest avoids storing the raw password in the index.
+        Treat these hashes as sensitive and never log the key.
 
         For cloud credentials the fourth tuple element is the region
         (``"eu"``/``"us"``/…). For on-prem it is the server URL. This way
@@ -72,22 +75,23 @@ class Credentials:
         on-prem console hit via two different URLs (e.g. IP vs hostname)
         gets two pool entries.
 
-        The fifth slot carries a hash of the Cloudflare Access secret (or
-        empty string when none is configured). Two requests against the
+        The fifth slot hashes the CF pair, TLS settings, auth profile and
+        network policy, even when no CF pair is configured. Two requests against the
         same on-prem URL with different CF tokens get separate pool entries
         because the CF headers are baked into the httpx client's defaults
         at construction time - swapping them per-request on a shared
         instance would race.
         """
         import hashlib
-        pw_hash = hashlib.sha256(self.password.encode("utf-8")).hexdigest()[:16]
+        pw_hash = hashlib.sha256(self.password.encode("utf-8")).hexdigest()
         # The fourth slot is "region OR server_url" - unique per deployment.
         endpoint = self.server_url if self.deployment == "onprem" else self.region
-        cf_hash = ""
-        if self.cf_access_client_secret:
-            cf_hash = hashlib.sha256(
-                self.cf_access_client_secret.encode("utf-8")
-            ).hexdigest()[:16]
+        # Include every connection-affecting setting. Never log this key.
+        import json
+        cf_hash = hashlib.sha256(json.dumps([
+            self.cf_access_client_id, self.cf_access_client_secret, self.verify_ssl,
+            self.onprem_auth_style, self.allowed_networks, self.ca_bundle,
+        ]).encode()).hexdigest()
         return (self.user, pw_hash, self.deployment, endpoint, cf_hash)
 
 
@@ -116,6 +120,9 @@ class EnvCredentialResolver:
             verify_ssl=settings.onprem_verify_ssl,
             cf_access_client_id=settings.onprem_cf_access_client_id,
             cf_access_client_secret=settings.onprem_cf_access_client_secret,
+            onprem_auth_style=getattr(settings, "onprem_auth_style", "legacy"),
+            allowed_networks=getattr(settings, "onprem_networks", ()),
+            ca_bundle=getattr(settings, "ca_bundle", ""),
         )
 
     def resolve(self) -> Credentials:
@@ -123,7 +130,7 @@ class EnvCredentialResolver:
 
 
 class BasicAuthCredentialResolver:
-    """Returns credentials pulled from the per-request ContextVar.
+    """Returns credentials from the explicit HTTP request passed by the SDK.
 
     Defaults - used for fields the client did not override via headers - come
     from the server's ``.env`` (region, deployment, server URL, verify-SSL).
@@ -132,8 +139,10 @@ class BasicAuthCredentialResolver:
     def __init__(self, settings: Settings):
         self._settings = settings
 
-    def resolve(self) -> Credentials:
-        creds = request_credentials.get()
+    def resolve(self, request=None) -> Credentials:
+        # Production handlers MUST supply the request delivered by the SDK.
+        # ContextVar fallback is retained only for direct middleware/unit users.
+        creds = request.scope.get("eset.credentials") if request is not None else request_credentials.get()
         if creds is None:
             raise CredentialResolverError(
                 "No request-scoped credentials. ESET_AUTH_MODE=basic requires the client to send "
@@ -154,8 +163,8 @@ def parse_basic_auth_header(value: str) -> tuple[str, str]:
     token = value.split(" ", 1)[1].strip()
     try:
         decoded = base64.b64decode(token, validate=True).decode("utf-8", errors="strict")
-    except (binascii.Error, UnicodeDecodeError) as e:
-        raise CredentialResolverError(f"Invalid Basic auth payload: {e}") from e
+    except (binascii.Error, UnicodeDecodeError):
+        raise CredentialResolverError("Invalid Basic auth payload") from None
     if ":" not in decoded:
         raise CredentialResolverError("Basic auth payload must contain ':'.")
     user, password = decoded.split(":", 1)
@@ -171,7 +180,7 @@ def normalize_region(raw: str | None, default: Region) -> Region:
     val = raw.strip().lower()
     if val not in VALID_REGIONS:
         raise CredentialResolverError(
-            f"X-ESET-Region must be one of {VALID_REGIONS}; got {raw!r}."
+            f"X-ESET-Region must be one of {VALID_REGIONS}."
         )
     return val  # type: ignore[return-value]
 
