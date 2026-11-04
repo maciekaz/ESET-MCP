@@ -20,7 +20,8 @@ def _count_operations_in_specs() -> int:
     total = 0
     pkg = resources.files("eset_mcp") / "openapi"
     for entry in sorted(pkg.iterdir()):
-        if entry.suffix != ".json":
+        # Authentication is an internal transport capability, never a model tool.
+        if entry.suffix != ".json" or entry.name == "business-account.json":
             continue
         spec = json.loads(entry.read_text(encoding="utf-8"))
         for _, ops in spec.get("paths", {}).items():

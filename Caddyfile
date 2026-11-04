@@ -7,32 +7,42 @@
 # (HTTP-01 challenge on port 80) and serves the MCP server on HTTPS/443.
 # The MCP container itself only listens on the internal docker network — it
 # is never exposed to the outside world directly.
+{
+	# Runtime error logs can include request headers even with access logs off.
+	log {
+		format filter {
+			wrap json
+			fields {
+				request>headers delete
+				request>uri delete
+				resp_headers delete
+			}
+		}
+	}
+}
 
 {$ESET_PUBLIC_DOMAIN} {
-    # Let's Encrypt cert auto-provisioning.
-    tls {$ESET_ACME_EMAIL}
+	# Let's Encrypt cert auto-provisioning.
+	tls {$ESET_ACME_EMAIL}
 
-    # Hard cap on request body — MCP messages are small.
-    request_body {
-        max_size 4MB
-    }
+	# Hard cap on request body — MCP messages are small.
+	request_body {
+		max_size 4MB
+	}
 
-    # Pass everything through to the MCP server (Streamable HTTP transport).
-    # The /mcp prefix is fixed by our Starlette Mount in eset_mcp/__main__.py.
-    reverse_proxy eset-mcp-http:8765 {
-        # Stream large/long-running responses (202-polled jobs etc).
-        flush_interval -1
-        # Forward client IP — used by ESET-MCP logs and (downstream) by ESET
-        # rate-limit accounting.
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-    }
+	# Metrics stay private even when enabled on the MCP container.
+	@privateMetrics not path /mcp /mcp/*
+	respond @privateMetrics 404
 
-    encode gzip zstd
+	# Pass everything through to the MCP server (Streamable HTTP transport).
+	# The /mcp prefix is fixed by our Starlette Mount in eset_mcp/__main__.py.
+	reverse_proxy eset-mcp-http-prod:8765 {
+		# Stream large/long-running responses (202-polled jobs etc).
+		flush_interval -1
+	}
 
-    # Modest access log to stdout — let docker collect it.
-    log {
-        output stdout
-        format json
-    }
+	encode gzip zstd
+
+	# Access logs are disabled: custom X-ESET-CF-* headers contain secrets.
+	# Use the application's redacted structured events for request telemetry.
 }

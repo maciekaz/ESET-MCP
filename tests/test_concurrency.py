@@ -183,30 +183,20 @@ async def test_pool_eviction_closes_evicted_clients_eventually() -> None:
         await pool.close()
 
 
-async def test_pool_eviction_race_documented_in_client_pool_module() -> None:
-    """The eviction-vs-in-flight-request race is a known production edge
-    case documented in :mod:`eset_mcp.client_pool` at the _DEFAULT_MAX_CLIENTS
-    constant. We can't reproduce it cleanly here because respx intercepts
-    the transport BEFORE httpcore's connection pool gets involved, so
-    aclose() on a respx-mocked client doesn't disturb pending mock calls.
-
-    This test asserts the documentation is present so it doesn't silently
-    drift if someone refactors the pool. The mitigation is the high
-    default cap (256) which makes the race effectively never fire in
-    realistic multi-tenant deployments.
-    """
-    import inspect
-
-    from eset_mcp import client_pool
-    src = inspect.getsource(client_pool)
-    assert "in flight" in src or "in-flight" in src, (
-        "The pool-eviction race must remain documented in client_pool.py"
-    )
-    assert client_pool._DEFAULT_MAX_CLIENTS >= 256, (
-        "Default pool cap was lowered below 256, which makes the "
-        "eviction-vs-in-flight race more likely. If you intend this, "
-        "update the documentation in client_pool.py and this test."
-    )
+async def test_multiple_leases_keep_evicted_client_open_until_last_release():
+    pool = ClientPool(_make_settings(), max_clients=1)
+    try:
+        async with pool.acquire(Credentials("first", "pw", "eu")) as outer:
+            async with pool.acquire(Credentials("first", "pw", "eu")) as inner:
+                assert inner is outer
+                await pool.get(Credentials("second", "pw", "eu"))
+                await asyncio.sleep(0)
+                assert not inner._http.is_closed
+            assert not outer._http.is_closed
+        await pool.close()
+        assert outer._http.is_closed
+    finally:
+        await pool.close()
 
 
 # --- Token refresh serialisation ---
@@ -358,7 +348,10 @@ async def test_concurrent_basic_auth_requests_carry_their_own_creds() -> None:
             seen.append((creds.user, creds.deployment, creds.server_url))
         return JSONResponse({"ok": True})
 
-    settings = _make_settings(ESET_AUTH_MODE="basic", ESET_MCP_TRANSPORT="http")
+    import json
+    settings = _make_settings(ESET_AUTH_MODE="basic", ESET_MCP_TRANSPORT="http",
+                             ESET_ONPREM_ORIGINS=json.dumps({f"user-{i}": [f"https://onprem-{i}.local:9443"]
+                                                            for i in range(0, 50, 2)}))
     app = Starlette(routes=[Route("/echo", _echo)])
     app.add_middleware(BasicAuthCredentialsMiddleware, settings=settings)
 

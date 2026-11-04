@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/maciekaz/ESET-MCP/actions/workflows/integration.yml/badge.svg)](https://github.com/maciekaz/ESET-MCP/actions/workflows/integration.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
-[![MCP spec](https://img.shields.io/badge/MCP%20spec-2025--11--25-informational)](https://modelcontextprotocol.io/specification/2025-11-25)
+[![MCP spec](https://img.shields.io/badge/MCP%20spec-2026--07--28-informational)](https://modelcontextprotocol.io/specification/2026-07-28)
 
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server for the
@@ -13,9 +13,9 @@ or a custom agent) through tools, resources, and prompts.
 
 Built as a **single hub for any number of ESET deployments**. One process
 fronts cloud and on-prem consoles at the same time; clients pick the target
-per request via headers. As long as MCP receives valid credentials (Basic
+per request via headers; non-default on-prem origins require an operator allowlist. MCP receives credentials (Basic
 auth, plus an optional URL override and optional Cloudflare Access service
-token) it routes the call to the right backend, mints its own tokens, and
+token), routes the call to the right backend, mints its own tokens, and
 keeps tenants isolated in the pool.
 
 > **⚠️ Just to be clear, fellas**  
@@ -23,6 +23,15 @@ keeps tenants isolated in the pool.
 > 
 > While every effort has been made to ensure this software is safe and robust (including the strict Read-Only mode gate), this code is provided "AS IS", without any warranty of any kind. You are solely responsible for how you use this tool and any changes made to your ESET environment.
 > 
+
+**2.0.0 — breaking security update:** See the [v1 → v2 migration guide](docs/migration-v2.md). Authentication endpoints are private to the
+adapter and never exposed as tools. The 101 business tools, their input
+schemas and four composites retain their existing contracts. Read the
+[upgrade settings and remaining risks](docs/security-migration-status.md)
+before updating an HTTP or On-Prem deployment. MCP 2026 base protocol and
+transports are supported; the existing custom Basic profile is retained,
+**not** advertised as MCP OAuth 2.1 authorization.
+
 ## Table of contents
 
 - [Features](#features)
@@ -45,7 +54,7 @@ keeps tenants isolated in the pool.
 
 ### Complete API coverage
 
-- **102 tools** auto-generated from 16 official ESET Connect OpenAPI 3.0.1
+- **101 business tools** auto-generated from 16 official ESET Connect OpenAPI 3.0.1
   specs, covering application-management, asset-management, automation,
   device-management, identity, incident-management, installer-management,
   mobile-device-management, network-access-protection, patch-management,
@@ -59,7 +68,7 @@ keeps tenants isolated in the pool.
 
 - `ESET_MODE=RO` → catalog exposes **only** read-only tools (51 total).
   Write tools are hidden from `list_tools` entirely.
-- `ESET_MODE=RW` → all 106 tools advertised; mutating tools carry
+- `ESET_MODE=RW` → all 105 tools advertised; mutating tools carry
   `destructiveHint: true` in their MCP annotations.
 - Independent of the ESET account's underlying permissions.
 - A defence-in-depth in-memory gate rejects RW tool names in RO mode
@@ -81,7 +90,7 @@ keeps tenants isolated in the pool.
 ### Transports
 
 - **stdio** - JSON-RPC over stdin/stdout for local hosts.
-- **Streamable HTTP** - the current MCP transport (Nov 2025 spec).
+- **Streamable HTTP** - MCP 2026-07-28, with legacy 2025-11-25 compatibility.
 
 ### Multi-region
 
@@ -221,7 +230,7 @@ the server with Caddy + Let's Encrypt.
 
 Missing / malformed `Authorization` in `basic` mode → HTTP 401 with a
 `WWW-Authenticate: Basic` challenge. Unknown region in `X-ESET-Region`
-→ HTTP 401.
+→ HTTP 400. An unapproved on-prem origin is rejected with HTTP 403.
 
 ### RO / RW isolation
 
@@ -241,31 +250,35 @@ that respect annotations can require a per-call confirmation.
 ### Per-tenant isolation (basic-auth mode)
 
 - Auth headers are parsed in dedicated ASGI middleware and stashed in a
-  `ContextVar`; they never enter request bodies or logs.
+  request scope. Handlers use the SDK's explicit HTTP request, so legacy
+  session tasks cannot retain another request's identity. Legacy sessions
+  are bound to credentials, region/origin, CF pair and TLS/network policy.
 - Each request resolves to a `Credentials` instance keyed by
-  `(user, password_hash, region)`.
+  the complete connection identity. Passwords and CF values are hashed in the index; hashes must not be logged.
 - An LRU bound on the client pool prevents unbounded memory growth from
   random-credential spraying.
 
 ### Network surface
 
-- In dev (`docker compose up`) the MCP server publishes `:8765`.
+- The explicit `http`/`dev` profiles publish only `127.0.0.1:8765` and require Basic credentials.
 - In the `prod` profile the MCP container has **no published port** -
   Caddy joins the same docker bridge network and proxies HTTPS in. The
   only host ports are 80 (HTTP-01 ACME) and 443 (HTTPS).
-- No outbound traffic except to `*.eset.systems` (auth + APIs).
+- Cloud traffic goes to fixed ESET regional domains. On-prem traffic goes to
+  the configured default or an explicitly allowed origin. DNS is checked at
+  connection time; redirects and implicit environment proxies are disabled.
 
 ### Dependency & code audit
 
-- **Snyk Code**: 0 issues in `eset_mcp/`.
 - **Ruff**: clean (`select = E F W I B UP RUF`).
-- Runtime dependencies: `mcp`, `httpx`, `pydantic`, `python-dotenv`.
+- Runtime dependencies include `mcp`, `httpx`, `httpcore`, `jsonschema`,
+  `pydantic` and `python-dotenv`; exact versions are in `requirements.lock`.
   Plus `starlette` + `uvicorn` when running HTTP.
 
 ### Out of scope (by design)
 
 - No webhook receivers.
-- No persistent storage; logs go to stdout.
+- No persistent token storage; application logs go to stderr. Caddy error logs remove request headers and URI.
 - No on-disk caching of OAuth tokens.
 - No write-back of `basic`-mode credentials to disk.
 
@@ -278,22 +291,20 @@ Please open a private security advisory rather than a public issue:
 
 ## Quick start
 
-The fastest path is the published Docker image. No Python install, no
-venv, no source checkout - just `.env` + `docker run`. The image is
-multi-arch (amd64 + arm64), signed with cosign, ships with SBOM +
-build provenance, and is published to GHCR on every release.
+Use the signed 2.0.0 image. Upgrading from v1 requires the
+[configuration changes below](docs/migration-v2.md); the `:1` tag stays on the v1 line.
 
 ```bash
 cp .env.example .env          # fill in ESET_USER / ESET_PASSWORD / ESET_REGION
-docker run --rm -i --env-file .env ghcr.io/maciekaz/eset-mcp:1
+docker run --rm -i --env-file .env ghcr.io/maciekaz/eset-mcp:2.0.0
 ```
 
-Pin policy:
+Published-image pin policy:
 
-- `:1` - latest 1.x.x (auto-updates within the major)
-- `:1.0` - latest 1.0.x (auto-updates within the minor)
-- `:1.0.1` - exact version (production)
-- `:latest` - most recent stable release
+- `:2` - latest 2.x.x (updates within the major)
+- `:2.0` - latest 2.0.x (updates within the minor)
+- `:2.0.0` - exact version
+- `:latest` - most recent stable release; may cross major versions
 - `:main` / `:sha-<short>` - edge builds from main (not for production)
 
 ### Wire up to Claude Desktop / Claude Code (stdio)
@@ -305,29 +316,35 @@ Pin policy:
     "eset": {
       "command": "docker",
       "args": ["run", "--rm", "-i", "--env-file", "/absolute/path/to/.env",
-               "ghcr.io/maciekaz/eset-mcp:1"]
+               "ghcr.io/maciekaz/eset-mcp:2.0.0"]
     }
   }
 }
 ```
 
-### HTTP transport (single-tenant or behind your own proxy)
+### HTTP transport (local Basic authentication)
 
 ```bash
 docker run -d --name eset-mcp \
-  --env-file .env -p 8765:8765 \
-  -e ESET_MCP_TRANSPORT=http \
-  ghcr.io/maciekaz/eset-mcp:1
+  --env-file .env -p 127.0.0.1:8765:8765 \
+  -e ESET_MCP_TRANSPORT=http -e ESET_MCP_HTTP_HOST=0.0.0.0 \
+  -e ESET_AUTH_MODE=basic \
+  ghcr.io/maciekaz/eset-mcp:2.0.0
 # MCP endpoint: http://localhost:8765/mcp
 ```
 
+Send the ESET credentials in the Basic header as shown below. For remote
+access, use the production HTTPS profile and configure its public host.
+
 ### Verify the image (cosign keyless)
+
+Verify the release workflow identity and pin the resolved image digest for deployments:
 
 ```bash
 cosign verify \
-  --certificate-identity-regexp '^https://github.com/maciekaz/ESET-MCP/' \
+  --certificate-identity 'https://github.com/maciekaz/ESET-MCP/.github/workflows/publish-image.yml@refs/tags/v2.0.0' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  ghcr.io/maciekaz/eset-mcp:1
+  ghcr.io/maciekaz/eset-mcp:2.0.0
 ```
 
 ### From source (contributors / local hacking)
@@ -337,25 +354,26 @@ git clone https://github.com/maciekaz/ESET-MCP.git
 cd ESET-MCP
 cp .env.example .env
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+pip install --require-hashes -r requirements-dev.lock
+pip install --no-deps --no-build-isolation -e .
 eset-mcp
 ```
 
-### Docker Compose (uses the published image)
+### Docker Compose (builds this checkout)
 
 ```bash
-docker compose up -d eset-mcp-http
+docker compose --profile http up --build -d eset-mcp-http
 # MCP endpoint: http://localhost:8765/mcp
 ```
 
-By default the compose file pulls `ghcr.io/maciekaz/eset-mcp:1` - no
-local build, fast first start. Pin a specific version by editing the
-`image:` line in `docker-compose.yml`.
+The compose file builds this checkout as `eset-mcp:2.0.0-local`. HTTP
+profiles use Basic authentication. Published images described above are
+release artifacts; this working tree does not publish or update them.
 
 One-off stdio via compose:
 
 ```bash
-docker compose --profile stdio run --rm eset-mcp-stdio
+docker compose --profile stdio run --build --rm eset-mcp-stdio
 ```
 
 Hacking on the source? Use the dev profile to build from your local
@@ -390,6 +408,13 @@ All settings live in `.env`. Required fields are marked in
 | `ESET_DEPLOYMENT`              | `cloud`       | `cloud` (ESET Connect) or `onprem` (customer-hosted PROTECT)  |
 | `ESET_ONPREM_SERVER_URL`       | -             | `https://host[:port]` of the on-prem console (req. in env+onprem) |
 | `ESET_ONPREM_VERIFY_SSL`       | `true`        | Set `false` for on-prem consoles with self-signed certs       |
+| `ESET_ONPREM_AUTH_STYLE` | `legacy` | Preserve historical JSON login; `v13` explicitly enables documented camelCase grants |
+| `ESET_ONPREM_ORIGINS` | `{}` | JSON mapping ESET usernames to allowed non-default HTTPS origins |
+| `ESET_ONPREM_NETWORKS` | empty | Optional comma-separated CIDRs; default allows private networks, rejects loopback/link-local/special addresses |
+| `ESET_CA_BUNDLE` | empty | Explicit PEM CA file for Cloud/On-Prem; use instead of disabling verification |
+| `ESET_MCP_ALLOWED_HOSTS` | loopback hosts | Comma-separated HTTP Host values, optional `:*` port suffix; configure public domain behind a proxy |
+| `ESET_MCP_ALLOWED_ORIGINS` | empty | Explicit browser origins; an absent Origin is accepted |
+| `ESET_MCP_ALLOW_UNAUTHENTICATED_HTTP` | `false` | Explicit override for env-auth on non-loopback listeners behind an authenticated gateway |
 | `ESET_ONPREM_CF_ACCESS_CLIENT_ID` | -          | Cloudflare Access Service Token client-id (on-prem behind CF) |
 | `ESET_ONPREM_CF_ACCESS_CLIENT_SECRET` | -      | Cloudflare Access Service Token client-secret (paired with the above) |
 | `ESET_PUBLIC_DOMAIN`           | -             | Domain Caddy issues a TLS cert for (`prod` profile only)      |
@@ -482,6 +507,7 @@ ESET_AUTH_MODE=basic
 ESET_MCP_TRANSPORT=http
 ESET_DEPLOYMENT=cloud            # default; clients opt into on-prem per-request
 # ESET_ONPREM_SERVER_URL is optional - if set it becomes the on-prem default
+ESET_ONPREM_ORIGINS='{"api-user@example.com":["https://protect.client-a.local:9443"]}'
 ```
 
 Client targeting on-prem:
@@ -498,18 +524,19 @@ Same MCP server, different request - same headers minus `X-ESET-Server-URL`
 
 ### What works on on-prem vs cloud
 
-The tool catalog is identical for both deployments (all 102 OpenAPI-derived
+The tool catalog is identical for both deployments (all 101 OpenAPI-derived
 tools plus the 4 composites). At call time the server uses cloud paths for
 cloud credentials and on-prem paths for on-prem credentials.
 
-- **Shared & verified**: `device_*`, `asset_groups_*`, `policy_*` and most
-  of `task_*` (Automation) work the same on cloud and on-prem.
+- **Historical mappings retained**: `device_*`, `asset_groups_*`, `policy_*`
+  and `task_*` retain their existing paths and overrides. Offline parity
+  does not establish availability on every PROTECT version.
 - **Cloud-only modules**: `incident_*`, `mobile_*`, `wap_*`, `nap_*`,
   `quarantine_*` and most of `vuln_*` correspond to separate ESET products
   (ESET Inspect, Cloud Office Security, MDM) that are not part of the
   on-prem PROTECT installation. Calling them against an on-prem console
-  returns a plain 404 from ESET - surfaced to the agent as an
-  `ESET API error: 404` text response with no special handling.
+  may return an ESET error; failures are sanitized and returned with
+  `isError=true`. The historical catalog is preserved for compatibility.
 - **Path overrides**: a few endpoints have a different URL on-prem - e.g.
   `POST /v1/devices/{uuid}:rename` is `:renameDevice` on-prem. These are
   declared in [`eset_mcp/openapi/onprem-path-overrides.json`](eset_mcp/openapi/onprem-path-overrides.json)
@@ -583,7 +610,7 @@ ESET_AUTH_MODE=basic
 ESET_PUBLIC_DOMAIN=eset-mcp.example.com
 ESET_ACME_EMAIL=ops@example.com
 
-docker compose --profile prod up -d
+docker compose --profile prod up --build -d
 # MCP endpoint: https://eset-mcp.example.com/mcp
 ```
 
@@ -592,7 +619,8 @@ You get:
 - HTTPS on 443 with auto-renewing Let's Encrypt cert.
 - HTTP-01 challenge on 80.
 - MCP container bound only to the docker bridge network - no published port.
-- gzip / zstd compression, JSON access logs on stdout.
+- gzip / zstd compression; raw access logs disabled and error-log headers removed.
+- Only `/mcp` is public; metrics stay on the private container network.
 
 ---
 
@@ -616,7 +644,7 @@ Each composite degrades gracefully when a sub-call returns 403/404
 - `eset://config/mode` - `RO` or `RW`.
 - `eset://config/region` - current region (per-request in basic-auth mode).
 - `eset://config/deployment` - `cloud` or `onprem (<server-url>)` for this request.
-- `eset://config/tools-catalog` - JSON catalog of all 106 tools (name,
+- `eset://config/tools-catalog` - JSON catalog of mode-allowed raw business tools (name,
   mode, method, path, service, description).
 - `eset://docs/rate-limits` - quick reminder about the 10 req/s ceiling.
 
@@ -634,7 +662,7 @@ Each composite degrades gracefully when a sub-call returns 403/404
 eset_mcp/
 ├── __main__.py         # entrypoint - stdio or HTTP, wires resolver + pool
 ├── server.py           # MCP server (tools / resources / prompts) + telemetry
-├── credentials.py      # Credentials + EnvResolver / BasicAuthResolver + ContextVar
+├── credentials.py      # Credentials + explicit per-request resolution
 ├── middleware.py       # ASGI Basic-auth middleware (basic mode only)
 ├── client_pool.py      # LRU pool of EsetHttpClient keyed by (user, region, ...)
 ├── http_client.py      # async httpx + 202 polling + 429 retry + 401 refresh
@@ -655,16 +683,18 @@ eset_mcp/
 ## Tests
 
 ```bash
-pytest                  # full suite (RO smoke + unit + integration)
-pytest -m "not rw"      # RO only (default in CI)
-pytest -m rw            # RW (requires an account with RW permissions)
+PYTHON_DOTENV_DISABLED=1 ESET_RUN_LIVE_TESTS=0 python -m pytest tests audits -q
+ruff check eset_mcp tests audits
 ```
 
-Integration tests hit a real ESET tenant - credentials supplied via the
-same `.env`. CI workflow:
-[`.github/workflows/integration.yml`](.github/workflows/integration.yml)
-runs on PR, on push to `main`, and once a day at 03:17 UTC. The cron
-catches drift between the server and ESET's published OpenAPI specs.
+Default tests are offline and never load `.env`. They include frozen old/new
+wire comparisons, synthetic API failures, raw MCP 2025/2026 HTTP and stdio,
+and real loopback TLS. External socket connections are blocked. CI runs
+Python 3.11–3.14 and also probes the new server with a real SDK 1.27.1 client.
+A separately provisioned ESET environment can explicitly opt into integration
+tests with `ESET_RUN_LIVE_TESTS=1`; this migration did not run those tests.
+See [validation and remaining risks](docs/security-migration-status.md) and
+[audit reproduction](audits/README.md).
 
 ---
 

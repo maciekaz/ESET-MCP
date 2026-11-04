@@ -6,25 +6,30 @@ what went wrong and what to do about it - especially for 403 (permissions),
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from uuid import uuid4
 
 
 @dataclass
 class EsetApiError(Exception):
     status: int
     message: str
-    body: str | None = None
+    body: str | None = field(default=None, repr=False)
     request_id: str | None = None
     endpoint: str | None = None
 
+    def __post_init__(self):
+        # Upstream diagnostics are untrusted and may contain Authorization or
+        # password echoes. Do not even retain them on a printable exception.
+        self.body = None
+        self.endpoint = None
+        self.request_id = uuid4().hex
+        self.args = (self.status, self.message)
+
     def __str__(self) -> str:
         parts = [f"[{self.status}] {self.message}"]
-        if self.endpoint:
-            parts.append(f"endpoint={self.endpoint}")
         if self.request_id:
-            parts.append(f"request-id={self.request_id}")
-        if self.body and len(self.body) < 500:
-            parts.append(f"body={self.body}")
+            parts.append(f"correlation-id={self.request_id}")
         return " | ".join(parts)
 
 
@@ -77,7 +82,4 @@ def map_http_error(status: int, body: str, endpoint: str, request_id: str | None
     return EsetApiError(
         status=status,
         message=msg,
-        body=body[:500] if body else None,
-        request_id=request_id,
-        endpoint=endpoint,
     )

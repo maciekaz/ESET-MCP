@@ -22,7 +22,10 @@ from eset_mcp.http_client import EsetHttpClient
 from eset_mcp.server import build_server
 
 # Load .env from repo root before anything reads os.getenv.
-load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
+if os.getenv("ESET_RUN_LIVE_TESTS") == "1":
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
+else:
+    os.environ["PYTHON_DOTENV_DISABLED"] = "1"
 
 # Integration tests always run in env-auth mode against the configured tenant
 # credentials. Multi-tenant (basic auth) behaviour has its own unit tests in
@@ -33,7 +36,7 @@ os.environ["ESET_AUTH_MODE"] = "env"
 
 
 def _have_credentials() -> bool:
-    return bool(os.getenv("ESET_USER") and os.getenv("ESET_PASSWORD"))
+    return os.getenv("ESET_RUN_LIVE_TESTS") == "1" and bool(os.getenv("ESET_USER") and os.getenv("ESET_PASSWORD"))
 
 
 # Without credentials, skip every integration test (we still keep the unit-level
@@ -79,15 +82,47 @@ def mcp_session(settings: Settings):
 
     @contextlib.asynccontextmanager
     async def _factory():
-        from mcp.shared.memory import create_connected_server_and_client_session
+        from mcp import Client
         pool = ClientPool(settings)
         resolver = EnvCredentialResolver(settings)
         try:
             server = build_server(settings, pool, resolver)
-            async with create_connected_server_and_client_session(server) as client:
-                await client.initialize()
+            async with Client(server, cache=None) as client:
                 yield client
         finally:
             await pool.close()
 
     return _factory
+
+
+@pytest.fixture(autouse=True)
+def prevent_accidental_external_connections(monkeypatch):
+    """Live API access requires an explicit opt-in, never just a local .env."""
+    if os.getenv("ESET_RUN_LIVE_TESTS") == "1":
+        return
+    import ipaddress
+    import socket
+
+    connect = socket.socket.connect
+    connect_ex = socket.socket.connect_ex
+
+    def allowed(address):
+        if not isinstance(address, tuple):  # local Unix sockets used by test runtimes
+            return
+        try:
+            local = ipaddress.ip_address(address[0]).is_loopback
+        except ValueError:
+            local = False
+        if not local:
+            raise AssertionError("External socket connections are forbidden in offline tests")
+
+    def guarded(sock, address):
+        allowed(address)
+        return connect(sock, address)
+
+    def guarded_ex(sock, address):
+        allowed(address)
+        return connect_ex(sock, address)
+
+    monkeypatch.setattr(socket.socket, "connect", guarded)
+    monkeypatch.setattr(socket.socket, "connect_ex", guarded_ex)

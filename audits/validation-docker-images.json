@@ -1,0 +1,22 @@
+[
+  {
+    "tag": "eset-mcp:1.1.0-local",
+    "id": "sha256:c596cf2597eada08522ee200ef49b2604aac11b90766cb80849057d525b599ba",
+    "platform": "linux/arm64",
+    "bytes": 271726709,
+    "user": "esetmcp",
+    "entrypoint": [
+      "eset-mcp"
+    ]
+  },
+  {
+    "tag": "eset-mcp:1.1.0-amd64-check",
+    "id": "sha256:8b41b44d86dd8c4e13d1b51c8dc395c2ed3fe6d8122e1bb062af4188f304a722",
+    "platform": "linux/amd64",
+    "bytes": 247472352,
+    "user": "esetmcp",
+    "entrypoint": [
+      "eset-mcp"
+    ]
+  }
+]

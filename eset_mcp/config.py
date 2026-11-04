@@ -1,8 +1,10 @@
 """Configuration loaded from .env / environment variables."""
 from __future__ import annotations
 
+import ipaddress
+import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
@@ -21,7 +23,7 @@ VALID_REGIONS: tuple[Region, ...] = ("eu", "de", "us", "ca", "jpn")
 @dataclass(frozen=True)
 class Settings:
     user: str
-    password: str
+    password: str = field(repr=False)
     mode: Mode
     region: Region
     transport: Transport
@@ -59,7 +61,7 @@ class Settings:
     # Cloud credentials always ignore these (ESET Connect is a public SaaS
     # and is not fronted by anyone's Cloudflare Access).
     onprem_cf_access_client_id: str
-    onprem_cf_access_client_secret: str
+    onprem_cf_access_client_secret: str = field(repr=False)
 
     # --- Observability ---
     # ``text`` (default) - human-readable single line per record, ideal for
@@ -72,6 +74,14 @@ class Settings:
     # Protect at the network layer instead.
     metrics_enabled: bool
     metrics_path: str
+    # Explicit authorization for non-default on-prem origins, by ESET username.
+    onprem_origins: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    onprem_auth_style: str = "legacy"
+    onprem_networks: tuple[str, ...] = ()
+    http_allowed_hosts: tuple[str, ...] = ("localhost", "localhost:*", "127.0.0.1", "127.0.0.1:*", "[::1]", "[::1]:*")
+    http_allowed_origins: tuple[str, ...] = ()
+    allow_unauthenticated_http: bool = False
+    ca_bundle: str = ""
 
     @property
     def has_env_credentials(self) -> bool:
@@ -93,9 +103,8 @@ class Settings:
         transport = _parse_transport(os.getenv("ESET_MCP_TRANSPORT", "stdio"))
 
         # In `env` mode the .env credentials are mandatory (they're used for
-        # every request). In `basic` mode they are optional: if present they
-        # serve as a fallback when the client sends none, otherwise the request
-        # is rejected with 401. `basic` mode also requires the HTTP transport.
+        # every request). In `basic` mode they are optional and never replace
+        # missing caller credentials; such a request is rejected with 401. `basic` mode also requires the HTTP transport.
         if auth_mode == "basic" and transport != "http":
             raise RuntimeError(
                 "ESET_AUTH_MODE=basic requires ESET_MCP_TRANSPORT=http "
@@ -159,8 +168,26 @@ class Settings:
                 os.getenv("ESET_MCP_METRICS_ENABLED", "false"),
                 "ESET_MCP_METRICS_ENABLED",
             ),
-            metrics_path=os.getenv("ESET_MCP_METRICS_PATH", "/metrics"),
+            metrics_path=_parse_metrics_path(os.getenv("ESET_MCP_METRICS_PATH", "/metrics")),
+            onprem_origins=_parse_origins(os.getenv("ESET_ONPREM_ORIGINS", "{}")),
+            onprem_auth_style=_parse_auth_style(os.getenv("ESET_ONPREM_AUTH_STYLE", "legacy")),
+            onprem_networks=_parse_networks(os.getenv("ESET_ONPREM_NETWORKS", "")),
+            http_allowed_hosts=tuple(v.strip() for v in os.getenv(
+                "ESET_MCP_ALLOWED_HOSTS", "localhost,localhost:*,127.0.0.1,127.0.0.1:*,[::1],[::1]:*"
+            ).split(",") if v.strip()),
+            http_allowed_origins=tuple(v.strip() for v in os.getenv("ESET_MCP_ALLOWED_ORIGINS", "").split(",") if v.strip()),
+            allow_unauthenticated_http=_parse_bool(os.getenv("ESET_MCP_ALLOW_UNAUTHENTICATED_HTTP", "false"),
+                                                 "ESET_MCP_ALLOW_UNAUTHENTICATED_HTTP"),
+            ca_bundle=os.getenv("ESET_CA_BUNDLE", ""),
         )
+
+
+def _parse_metrics_path(raw: str) -> str:
+    import re
+    value = raw.rstrip("/")
+    if not re.fullmatch(r"/[A-Za-z0-9_-]+", value) or value.lower() == "/mcp":
+        raise RuntimeError("Metrics path must be a distinct top-level path, excluding /mcp")
+    return value
 
 
 def _parse_mode(raw: str) -> Mode:
@@ -234,22 +261,62 @@ def _normalize_server_url(raw: str) -> str:
     TLS and ``basic`` auth over plain HTTP would leak credentials regardless
     of deployment kind.
     """
-    parts = urlsplit(raw)
+    if any(c.isspace() or ord(c) < 32 for c in raw) or "\\" in raw:
+        raise RuntimeError("Invalid characters in on-prem server URL")
+    try:
+        parts = urlsplit(raw)
+        port = parts.port
+    except ValueError:
+        raise RuntimeError("Invalid on-prem server URL or port") from None
     if parts.scheme != "https":
-        raise RuntimeError(
-            f"ESET on-prem server URL must use https://, got {raw!r}. "
-            "On-prem PROTECT consoles default to port 9443 over TLS; "
-            "basic auth over plain HTTP would leak credentials."
-        )
+        raise RuntimeError("ESET on-prem server URL must use https://")
     if not parts.hostname:
-        raise RuntimeError(f"ESET on-prem server URL is missing a hostname: {raw!r}")
+        raise RuntimeError("ESET on-prem server URL is missing a hostname")
+    if parts.username is not None or parts.password is not None or "%" in parts.netloc:
+        raise RuntimeError("On-prem server URL must not contain userinfo or encoded authority")
+    if port is not None and not 1 <= port <= 65535:
+        raise RuntimeError("Invalid on-prem server port")
     if parts.path and parts.path != "/":
-        raise RuntimeError(
-            f"ESET on-prem server URL must not include a path; got {raw!r}. "
-            "Use just the origin (e.g. https://protect.example.com:9443)."
-        )
+        raise RuntimeError("ESET on-prem server URL must not include a path")
     if parts.query or parts.fragment:
-        raise RuntimeError(f"ESET on-prem server URL must not include query/fragment: {raw!r}")
-    # Rebuild with no path, no trailing slash.
-    netloc = parts.netloc
-    return f"https://{netloc}"
+        raise RuntimeError("ESET on-prem server URL must not include query/fragment")
+    try:
+        host = parts.hostname.encode("idna").decode().lower().rstrip(".")
+    except UnicodeError:
+        raise RuntimeError("Invalid on-prem hostname") from None
+    if not host or any(c in host for c in '<>"{}|^`'):
+        raise RuntimeError("Invalid on-prem hostname")
+    if ":" in host:
+        host = f"[{host}]"
+    return f"https://{host}" + (f":{port}" if port and port != 443 else "")
+
+
+def _parse_origins(raw: str) -> dict[str, tuple[str, ...]]:
+    try:
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            raise ValueError
+        result = {}
+        for user, origins in data.items():
+            if not user or user == "*" or not isinstance(origins, list):
+                raise ValueError
+            if not all(isinstance(v, str) for v in origins):
+                raise ValueError
+            result[user] = tuple(_normalize_server_url(v) for v in origins)
+        return result
+    except (ValueError, TypeError, RuntimeError):
+        raise RuntimeError("ESET_ONPREM_ORIGINS must map usernames to lists of HTTPS origins") from None
+
+
+def _parse_auth_style(raw: str) -> str:
+    if raw not in {"legacy", "v13"}:
+        raise RuntimeError("ESET_ONPREM_AUTH_STYLE must be legacy or v13")
+    return raw
+
+
+def _parse_networks(raw: str) -> tuple[str, ...]:
+    try:
+        return tuple(str(ipaddress.ip_network(v.strip(), strict=False))
+                     for v in raw.split(",") if v.strip())
+    except ValueError:
+        raise RuntimeError("ESET_ONPREM_NETWORKS must contain comma-separated IP networks") from None

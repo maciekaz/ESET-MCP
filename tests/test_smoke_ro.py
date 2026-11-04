@@ -25,7 +25,7 @@ async def test_catalog_size_in_ro_mode(mcp_session) -> None:
         )
         # Every listed tool must declare readOnlyHint=True.
         for t in tools.tools:
-            assert t.annotations and t.annotations.readOnlyHint, (
+            assert t.annotations and t.annotations.read_only_hint, (
                 f"{t.name} surfaced in RO mode despite readOnlyHint != True"
             )
 

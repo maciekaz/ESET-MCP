@@ -1,6 +1,6 @@
 """MCP server - registers tools, resources and prompts.
 
-Targets MCP spec 2025-11-25 (Streamable HTTP). Uses the official `mcp` Python SDK.
+Targets MCP 2026-07-28, with legacy 2025 Streamable HTTP compatibility. Uses the official `mcp` Python SDK.
 """
 from __future__ import annotations
 
@@ -8,14 +8,21 @@ import json
 import logging
 from typing import Any
 
+from jsonschema import Draft202012Validator
 from mcp.server import Server
 from mcp.types import (
+    CallToolResult,
     GetPromptResult,
+    ListPromptsResult,
+    ListResourcesResult,
+    ListToolsResult,
     Prompt,
     PromptArgument,
     PromptMessage,
+    ReadResourceResult,
     Resource,
     TextContent,
+    TextResourceContents,
     Tool,
     ToolAnnotations,
 )
@@ -30,7 +37,7 @@ from .composite_tools import (
     latest_detections,
 )
 from .config import Settings
-from .credentials import CredentialResolverError
+from .credentials import BasicAuthCredentialResolver, CredentialResolverError
 from .errors import EsetApiError, ModeForbiddenError
 from .http_client import EsetHttpClient
 from .modes import check_mode_allows
@@ -42,6 +49,7 @@ from .observability import (
     observe_tool_duration,
 )
 from .response_shaping import apply_fields_projection, cap_response_size
+from .security import clean_output, path_segment, secret_scope
 from .tools_loader import ToolDef, load_all_tools
 
 # Resolver protocol - anything with a no-arg `resolve()` returning Credentials.
@@ -194,100 +202,92 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
     in multi-tenant mode - see eset_mcp.credentials).
     `pool` is the shared ClientPool keyed by (user, region).
     """
-    server = Server(name="eset-mcp", version=__version__)
     tools = load_all_tools()
     tools_by_name = {t.name: t for t in tools}
+    catalog = [*_COMPOSITE_TOOLS, *(_tool_to_mcp(t) for t in tools
+                                  if settings.mode == "RW" or t.read_only)]
+    schemas = {t.name: t.input_schema for t in catalog}
+    validators = {name: Draft202012Validator(schema) for name, schema in schemas.items()}
 
-    async def _http() -> EsetHttpClient:
-        """Resolve current request's credentials → fetch a pooled client."""
-        creds = resolver.resolve()
-        return await pool.get(creds)
+    def _resolve(ctx):
+        if isinstance(resolver, BasicAuthCredentialResolver):
+            if ctx.request is None:
+                raise CredentialResolverError("HTTP request credentials are required")
+            return resolver.resolve(ctx.request)
+        return resolver.resolve()
 
-    # --- TOOLS ---
-    @server.list_tools()
-    async def _list_tools() -> list[Tool]:
-        # In RO mode we hide RW tools entirely - the agent never sees them in
-        # the catalog. Earlier design kept them visible-but-blocked, but that
-        # wasted the agent's context and tempted it to call something that
-        # could never succeed. Composite tools are all RO and always shown.
-        if settings.mode == "RO":
-            return [
-                *_COMPOSITE_TOOLS,
-                *(_tool_to_mcp(t) for t in tools if t.read_only),
-            ]
-        return [*_COMPOSITE_TOOLS, *(_tool_to_mcp(t) for t in tools)]
+    async def _list_tools(ctx, params):
+        return ListToolsResult(tools=catalog, ttl_ms=0, cache_scope="private")
 
-    @server.call_tool()
-    async def _call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
-        import time as _time
+    async def _call_tool(ctx, params):
+        import time
+        import uuid
 
-        # All mutable telemetry state lives in this dict so the finally
-        # block can read it without resorting to `locals().get(...)`.
-        tel: dict[str, Any] = {
-            "t0": _time.monotonic(),
-            "deployment": "unknown",
-            "user": "",
-            "status": "error",
-            "bytes_out": 0,
-        }
-        try:
-            return await _dispatch(name, arguments, tel)
-        finally:
-            # Telemetry must NEVER kill a tool call. Wrap defensively so
-            # that a misbehaving metrics registry or formatter cannot
-            # turn a successful tool call into a 500 to the agent.
+        name, arguments = params.name, params.arguments or {}
+        # Unknown names are never put into telemetry (unbounded attacker input).
+        tel = {"t0": time.monotonic(), "deployment": "unknown", "user": "",
+               "status": "error", "bytes_out": 0}
+        with secret_scope() as secrets:
             try:
-                _emit_tool_call_telemetry(name, settings.mode, tel)
-            except Exception:  # observability MUST be best-effort
-                _LOG.exception("telemetry emission failed for tool=%s", name)
-
-    async def _dispatch(name: str, arguments: dict[str, Any], tel: dict[str, Any]) -> list[TextContent]:
-        try:
-            http = await _http()
-        except CredentialResolverError as e:
-            tel["status"] = "auth_error"
-            return [TextContent(type="text", text=f"Auth error: {e}")]
-        tel["deployment"] = http.credentials.deployment
-        tel["user"] = getattr(http.credentials, "user", "")
-
-        # `fields` is a *synthetic* parameter we add to every read-only tool
-        # (see tools_loader._build_input_schema). It is a server-side
-        # projection, never forwarded to ESET - so we pop it before dispatch.
-        arguments = dict(arguments)
-        fields = arguments.pop("fields", None)
-        max_bytes = settings.response_bytes_max
-
-        # Composite tools dispatch first (they are not OpenAPI-derived).
-        composite = await _dispatch_composite(http, name, arguments, fields, max_bytes)
-        if composite is not None:
-            tel["status"] = "200"
-            if composite and composite[0].text:
-                tel["bytes_out"] = len(composite[0].text.encode("utf-8"))
-            return composite
-
-        tool = tools_by_name.get(name)
-        if tool is None:
-            tel["status"] = "unknown_tool"
-            raise ValueError(f"Unknown tool: {name}")
-        check_mode_allows(tool.required_mode, settings.mode, name)
-        try:
-            result = await _execute_tool(http, tool, arguments)
-        except ModeForbiddenError as e:
-            tel["status"] = "mode_forbidden"
-            return [TextContent(type="text", text=str(e))]
-        except EsetApiError as e:
-            tel["status"] = str(getattr(e, "status", "error"))
-            return [TextContent(type="text", text=f"ESET API error: {e}")]
-        shaped = _shape(result, fields, max_bytes)
-        if isinstance(shaped, dict) and "_capped" in shaped:
-            inc_capped(tool=name)
-        text = _to_text(shaped)
-        tel["bytes_out"] = len(text.encode("utf-8"))
-        tel["status"] = "200"
-        return [TextContent(type="text", text=text)]
+                creds = _resolve(ctx)
+                secrets.add(creds.password, creds.cf_access_client_secret,
+                            f"{creds.user}:{creds.password}")
+                tel.update(deployment=creds.deployment, user=creds.user)
+                tool = tools_by_name.get(name)
+                if tool:
+                    check_mode_allows(tool.required_mode, settings.mode, name)
+                if name not in validators:
+                    raise ValueError("Unknown tool")
+                if not validators[name].is_valid(arguments):
+                    raise ValueError("Invalid tool arguments; see inputSchema")
+                arguments = dict(arguments)
+                fields = arguments.pop("fields", None)
+                async with pool.acquire(creds) as http:
+                    composite = await _dispatch_composite(
+                        http, name, arguments, fields, settings.response_bytes_max)
+                    if composite is not None:
+                        content, is_error = composite
+                    else:
+                        result = await _execute_tool(http, tool, arguments)
+                        shaped = _shape(result, fields, settings.response_bytes_max)
+                        if isinstance(shaped, dict) and "_capped" in shaped:
+                            inc_capped(tool=name)
+                        content = [TextContent(type="text", text=_to_text(shaped))]
+                        is_error = False
+                content = [TextContent(type="text", text=clean_output(c.text)) for c in content]
+                tel.update(status="error" if is_error else "200",
+                           bytes_out=sum(len(c.text.encode()) for c in content))
+                return CallToolResult(content=content, is_error=is_error)
+            except (EsetApiError, CredentialResolverError, ModeForbiddenError, ValueError) as exc:
+                # Validation/credential errors contain only our fixed messages.
+                # Upstream bodies, URLs and arbitrary exception strings never cross here.
+                if isinstance(exc, EsetApiError):
+                    message = f"ESET API error: {exc}"
+                    tel["status"] = str(exc.status)
+                elif isinstance(exc, ModeForbiddenError):
+                    message = "This tool requires RW mode; server is in RO mode"
+                    tel["status"] = "mode_forbidden"
+                elif isinstance(exc, CredentialResolverError):
+                    message = "Request credentials are unavailable"
+                    tel["status"] = "auth_error"
+                else:
+                    message = "Invalid tool or arguments; see tools/list"
+                    tel["status"] = "invalid_arguments"
+                return CallToolResult(is_error=True, content=[
+                    TextContent(type="text", text=clean_output(message))])
+            except Exception:
+                # Do not log traceback locals or the exception's upstream text.
+                reference = uuid.uuid4().hex
+                log_event(_LOG, "tool_failed", correlation_id=reference)
+                return CallToolResult(is_error=True, content=[TextContent(
+                    type="text", text=f"Tool failed; correlation-id={reference}")])
+            finally:
+                try:
+                    _emit_tool_call_telemetry(name if name in schemas else "unknown", settings.mode, tel)
+                except Exception:
+                    _LOG.warning("Tool telemetry emission failed")
 
     # --- RESOURCES ---
-    @server.list_resources()
     async def _list_resources() -> list[Resource]:
         return [
             Resource(
@@ -327,8 +327,7 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
             ),
         ]
 
-    @server.read_resource()
-    async def _read_resource(uri) -> str:
+    async def _resource_text(ctx, uri) -> str:
         # MCP SDK passes a pydantic AnyUrl; coerce to str so string comparisons work.
         uri = str(uri)
         if uri == "eset://config/mode":
@@ -337,17 +336,11 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
             # In basic-auth mode this reflects the *current request's* region,
             # not just the .env default - agents can use this to confirm
             # which tenant they're hitting.
-            try:
-                return resolver.resolve().region
-            except CredentialResolverError:
-                return settings.region
+            return _resolve(ctx).region
         if uri == "eset://config/deployment":
             # For on-prem credentials we surface the server URL too - it's
             # the only useful "where am I" hint the agent has.
-            try:
-                creds = resolver.resolve()
-            except CredentialResolverError:
-                return settings.deployment
+            creds = _resolve(ctx)
             if creds.deployment == "onprem":
                 return f"onprem ({creds.server_url})"
             return "cloud"
@@ -361,7 +354,7 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
                     "service": t.service,
                     "description": t.description,
                 }
-                for t in tools
+                for t in tools if settings.mode == "RW" or t.read_only
             ]
             return json.dumps(catalog, indent=2, ensure_ascii=False)
         if uri == "eset://docs/rate-limits":
@@ -372,10 +365,9 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
                 "- Bursts >1000 requests trip the Fair Use Policy: some get 202, "
                 "some 50x (must be retried later).\n"
             )
-        raise ValueError(f"Unknown resource URI: {uri}")
+        raise ValueError("Unknown resource URI")
 
     # --- PROMPTS ---
-    @server.list_prompts()
     async def _list_prompts() -> list[Prompt]:
         return [
             Prompt(
@@ -397,11 +389,12 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
             ),
         ]
 
-    @server.get_prompt()
     async def _get_prompt(name: str, arguments: dict[str, str] | None) -> GetPromptResult:
         args = arguments or {}
         if name == "audit_inactive_devices":
-            days = args.get("days", "30")
+            days = int(args.get("days", "30"))
+            if not 1 <= days <= 36500:
+                raise ValueError("Invalid days threshold")
             text = (
                 f"Use the ESET MCP tools to list devices inactive for at least {days} days.\n"
                 f"Steps:\n"
@@ -424,13 +417,42 @@ def build_server(settings: Settings, pool: ClientPool, resolver: Any) -> Server:
                 "3. Sort by severity and first-detection time. Propose priorities.\n"
             )
         else:
-            raise ValueError(f"Unknown prompt: {name}")
+            raise ValueError("Unknown prompt")
         return GetPromptResult(
             description=name,
             messages=[PromptMessage(role="user", content=TextContent(type="text", text=text))],
         )
 
-    return server
+    async def list_resources(ctx, params):
+        return ListResourcesResult(resources=await _list_resources(), ttl_ms=0, cache_scope="private")
+
+    async def read_resource(ctx, params):
+        with secret_scope() as secrets:
+            creds = _resolve(ctx)
+            secrets.add(creds.password, creds.cf_access_client_secret)
+            value = clean_output(await _resource_text(ctx, params.uri))
+            return ReadResourceResult(contents=[TextResourceContents(
+                uri=str(params.uri), text=value)], ttl_ms=0, cache_scope="private")
+
+    async def list_prompts(ctx, params):
+        return ListPromptsResult(prompts=await _list_prompts(), ttl_ms=0, cache_scope="private")
+
+    async def get_prompt(ctx, params):
+        with secret_scope() as secrets:
+            creds = _resolve(ctx)
+            secrets.add(creds.password, creds.cf_access_client_secret)
+            try:
+                return await _get_prompt(params.name, params.arguments)
+            except (ValueError, TypeError):
+                raise ValueError("Invalid prompt or arguments") from None
+
+    return Server(
+        name="eset-mcp", version=__version__,
+        get_tool_input_schema=schemas.get,
+        on_list_tools=_list_tools, on_call_tool=_call_tool,
+        on_list_resources=list_resources, on_read_resource=read_resource,
+        on_list_prompts=list_prompts, on_get_prompt=get_prompt,
+    )
 
 
 def _tool_to_mcp(t: ToolDef) -> Tool:
@@ -471,7 +493,7 @@ async def _execute_tool(
     for pname in tool.path_params:
         if pname not in args:
             raise ValueError(f"Missing required path parameter: {pname}")
-        path = path.replace("{" + pname + "}", str(args.pop(pname)))
+        path = path.replace("{" + pname + "}", path_segment(args.pop(pname)))
 
     # Query params: keep only the declared ones, leave the rest in args (e.g. body).
     query = {pname: args.pop(pname) for pname in tool.query_params if pname in args}
@@ -528,6 +550,7 @@ def _shape(result: Any, fields: list[str] | None, max_bytes: int) -> Any:
     Projection happens first so the cap, when it kicks in, kicks in on
     already-skinnier rows - giving the agent more items per call.
     """
+    result = clean_output(result)
     if fields:
         result = apply_fields_projection(result, fields)
     if max_bytes > 0:
@@ -541,7 +564,7 @@ async def _dispatch_composite(
     arguments: dict[str, Any],
     fields: list[str] | None,
     max_bytes: int,
-) -> list[TextContent] | None:
+) -> tuple[list[TextContent], bool] | None:
     """If `name` is one of the composite tools, run it and return MCP content.
 
     Returns None when `name` is not a composite - caller falls through to the
@@ -571,5 +594,7 @@ async def _dispatch_composite(
         else:
             return None
     except EsetApiError as e:
-        return [TextContent(type="text", text=f"ESET API error: {e}")]
-    return [TextContent(type="text", text=_to_text(_shape(result, fields, max_bytes)))]
+        result = {"error": f"ESET API error: {e}"}
+    # Determine failure before projection/capping can remove its error field.
+    is_error = isinstance(result, dict) and bool(result.get("error"))
+    return [TextContent(type="text", text=_to_text(_shape(result, fields, max_bytes)))], is_error

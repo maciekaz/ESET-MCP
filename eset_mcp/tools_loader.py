@@ -169,6 +169,9 @@ def _disambiguate_names(tools: list[ToolDef]) -> None:
 
 
 def _tools_from_spec(service: str, spec: dict[str, Any]) -> list[ToolDef]:
+    # Authentication is an internal capability, never part of the model's API.
+    if service == "business-account":
+        return []
     prefix = _SERVICE_PREFIX.get(service, service.replace("-", "_"))
     out: list[ToolDef] = []
     for path, ops in spec.get("paths", {}).items():

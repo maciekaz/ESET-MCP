@@ -1,25 +1,30 @@
 services:
-  # --- Dev / single-host HTTP server (uses the published GHCR image) ---
-  # HTTP mode (Streamable HTTP, MCP spec 2025-11-25) on 0.0.0.0:8765/mcp.
-  # Default - pulls the public image so first 'up' is fast (no local build).
+  # --- Local HTTP server built from this checkout ---
+  # HTTP mode (Streamable HTTP, MCP spec 2026-07-28 (legacy clients supported)) on 0.0.0.0:8765/mcp.
+  # Start with: docker compose --profile http up --build -d
   # Contributors hacking on source: see eset-mcp-http-dev below.
   eset-mcp-http:
-    image: ghcr.io/maciekaz/eset-mcp:1
+    profiles: ["http"]
+    build: .
+    image: eset-mcp:2.0.0-local
     container_name: eset-mcp-http
     restart: unless-stopped
     env_file: .env
     environment:
       ESET_MCP_TRANSPORT: http
       ESET_MCP_HTTP_HOST: 0.0.0.0
+      ESET_AUTH_MODE: basic
       ESET_MCP_HTTP_PORT: "8765"
+      ESET_MCP_ALLOWED_HOSTS: ${ESET_MCP_ALLOWED_HOSTS:-localhost,localhost:*,127.0.0.1,127.0.0.1:*}
     ports:
-      - "8765:8765"
+      - "127.0.0.1:8765:8765"
     networks: [eset-mcp]
 
   # --- stdio one-shot (Claude Desktop / Claude Code locally) ---
-  # `docker compose run --rm eset-mcp-stdio` - uses the GHCR image too.
+  # `docker compose --profile stdio run --build --rm eset-mcp-stdio`
   eset-mcp-stdio:
-    image: ghcr.io/maciekaz/eset-mcp:1
+    build: .
+    image: eset-mcp:2.0.0-local
     profiles: ["stdio"]
     env_file: .env
     environment:
@@ -29,7 +34,7 @@ services:
 
   # --- Contributor / source-built profile ---
   # `docker compose --profile dev up --build eset-mcp-http-dev`
-  # Builds from the local Dockerfile instead of pulling the GHCR image.
+  # Builds from the local Dockerfile.
   # Use this when iterating on code; otherwise stick with eset-mcp-http.
   eset-mcp-http-dev:
     build: .
@@ -40,9 +45,11 @@ services:
     environment:
       ESET_MCP_TRANSPORT: http
       ESET_MCP_HTTP_HOST: 0.0.0.0
+      ESET_AUTH_MODE: basic
       ESET_MCP_HTTP_PORT: "8765"
+      ESET_MCP_ALLOWED_HOSTS: ${ESET_MCP_ALLOWED_HOSTS:-localhost,localhost:*,127.0.0.1,127.0.0.1:*}
     ports:
-      - "8765:8765"
+      - "127.0.0.1:8765:8765"
     networks: [eset-mcp]
 
   # --- Production (prod profile): Caddy + auto-HTTPS in front of MCP ---
@@ -50,10 +57,13 @@ services:
   # Requires ESET_PUBLIC_DOMAIN and ESET_ACME_EMAIL in .env, plus the host
   # being reachable from the public internet on ports 80 and 443.
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2.11.7-alpine
     profiles: ["prod"]
     restart: unless-stopped
-    env_file: .env
+    environment:
+      # Defer prod validation to Caddy so local profiles need no public domain.
+      ESET_PUBLIC_DOMAIN: ${ESET_PUBLIC_DOMAIN:-}
+      ESET_ACME_EMAIL: ${ESET_ACME_EMAIL:-}
     ports:
       - "80:80"
       - "443:443"
@@ -65,10 +75,11 @@ services:
     networks: [eset-mcp]
     depends_on: [eset-mcp-http-prod]
 
-  # Same image as eset-mcp-http but internal-only in prod (no published
+  # Source build, internal-only in prod (no published
   # port) and joined to the same network as Caddy.
   eset-mcp-http-prod:
-    image: ghcr.io/maciekaz/eset-mcp:1
+    build: .
+    image: eset-mcp:2.0.0-local
     profiles: ["prod"]
     container_name: eset-mcp-http-prod
     restart: unless-stopped
@@ -76,16 +87,12 @@ services:
     environment:
       ESET_MCP_TRANSPORT: http
       ESET_MCP_HTTP_HOST: 0.0.0.0
-      ESET_MCP_HTTP_PORT: "8765"
-      # Strongly recommended in production - basic auth is meaningless without
-      # TLS, which Caddy supplies in front of us.
       ESET_AUTH_MODE: basic
+      ESET_MCP_HTTP_PORT: "8765"
+      ESET_MCP_ALLOWED_HOSTS: ${ESET_PUBLIC_DOMAIN:-localhost}
     expose:
       - "8765"
-    networks:
-      eset-mcp:
-        aliases:
-          - eset-mcp-http   # Caddyfile reverse_proxy points here
+    networks: [eset-mcp]
 
 
 networks:

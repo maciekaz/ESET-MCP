@@ -1,0 +1,18 @@
+x.xxxxxxxxx.xx.......................................................... [ 32%]
+........................................................................ [ 64%]
+........................................................................ [ 96%]
+........                                                                 [100%]
+=========================== short test summary info ============================
+XFAIL audits/test_security_boundaries.py::test_authentication_not_in_model_catalog - S1: auth endpoint is exposed as an RW tool
+XFAIL audits/test_security_boundaries.py::test_error_body_never_returns_token - S2: short upstream error body reaches model
+XFAIL audits/test_security_boundaries.py::test_success_body_never_returns_token - S2: successful nested payload is not sanitized
+XFAIL audits/test_security_boundaries.py::test_composite_error_never_returns_token - S2: composite error embeds upstream body
+XFAIL audits/test_security_boundaries.py::test_upstream_error_sets_is_error - F2: caught ESET error is serialized as MCP success
+XFAIL audits/test_security_boundaries.py::test_401_replaces_rejected_unexpired_token - F1: fresh-but-revoked token is reused on 401
+XFAIL audits/test_security_boundaries.py::test_log_nested_values_are_sanitized[_JsonFormatter] - S5: nested fields and free-form messages bypass log scrubber
+XFAIL audits/test_security_boundaries.py::test_log_nested_values_are_sanitized[_TextFormatter] - S5: nested fields and free-form messages bypass log scrubber
+XFAIL audits/test_security_boundaries.py::test_unapproved_origin_does_not_receive_default_cf_secret - S3: arbitrary HTTPS origin inherits server CF secret
+XFAIL audits/test_security_boundaries.py::test_http_session_cannot_be_reused_as_another_principal - S4: MCP session retains creator credentials on another user's request
+XFAIL audits/test_security_boundaries.py::test_http_tool_cannot_use_session_creators_account - S4: tool call executes using the session creator's ESET account
+XFAIL audits/test_security_boundaries.py::test_onprem_auth_uses_documented_grant_type - F3: current on-prem request differs from official 13.0 schema
+212 passed, 12 xfailed in 1.06s

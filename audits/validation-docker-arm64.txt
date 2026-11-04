@@ -1,0 +1,25 @@
+PASS: stdio / legacy / cloud / RO
+PASS: stdio / legacy / cloud / RW
+PASS: stdio / legacy / onprem / RO
+PASS: stdio / legacy / onprem / RW
+PASS: stdio / legacy / onprem-v13 / RO
+PASS: stdio / legacy / onprem-v13 / RW
+PASS: stdio / modern / cloud / RO
+PASS: stdio / modern / cloud / RW
+PASS: stdio / modern / onprem / RO
+PASS: stdio / modern / onprem / RW
+PASS: stdio / modern / onprem-v13 / RO
+PASS: stdio / modern / onprem-v13 / RW
+PASS: http / legacy / cloud / RO
+PASS: http / legacy / cloud / RW
+PASS: http / legacy / onprem / RO
+PASS: http / legacy / onprem / RW
+PASS: http / legacy / onprem-v13 / RO
+PASS: http / legacy / onprem-v13 / RW
+PASS: http / modern / cloud / RO
+PASS: http / modern / cloud / RW
+PASS: http / modern / onprem / RO
+PASS: http / modern / onprem / RW
+PASS: http / modern / onprem-v13 / RO
+PASS: http / modern / onprem-v13 / RW
+PASS: 24 CLI scenarios, 300 additional concurrent reads, real verified TLS/Host/SNI, CF headers, RO/RW, secret filtering and clean shutdown; external network disabled
